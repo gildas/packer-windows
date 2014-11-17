@@ -1,0 +1,65 @@
+{
+  "variables":
+  {
+    "version":           "0.1.0",
+    "license_type":      "evaluation",
+    "iso_url":           "iso/en_.iso",
+    "iso_checksum_type": "md5",
+    "iso_checksum":      "1233234234",
+  },
+  "builders":
+  [
+    {
+      "type":                 "virtualbox-iso",
+      "guest_os_type":        "windows2012_64",
+      "iso_url":              "{{ user `iso_url` }}",
+      "iso_checksum_type":    "{{ user `iso_checksum_type` }}",
+      "iso_checksum":         "{{ user `iso_checksum` }}",
+      "headless":             false,
+      "boot_wait":            "2m",
+      "ssh_username":         "vagrant",
+      "ssh_password":         "vagrant",
+      "ssh_wait_timeout":     "10m",
+      "shutdown_command":     "shutdown /s /t 5 /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_additions_path": "/cygdrive/c/Users/vagrant/VBoxGuestAdditions.iso",
+      "disk_size":            81920,
+      "floppy_files":
+      [
+        "./Autounattend.xml",
+        "../../data/oracle-cert.cer",
+        "../../data/vagrant.pub"
+      ],
+      "vboxmanage":
+      [
+        ["modifyvm", "{{.Name}}", "--memory", "2048"],
+	["modifyvm", "{{.Name}}", "--cpus",   "2"]
+      ]
+    }
+  ],
+  "provisioners":
+  [
+    {
+      "type":            "shell",
+      "remote_path":     "/tmp/script.bat",
+      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/scri[t.bat",
+      "scripts":
+      [
+        "scripts/config-winrm.bat"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline":          [ "rm -f /tmp/script.bat" ]
+    }
+  ],
+  "post-processors":
+  [
+    {
+      "type": "vagrant",
+      "keep_input_artifact": false,
+      "compression_level":   1,
+      "vagrantfile_template": "templates/windows-2012R2-standard-64/windows-2012R2-standard-64.vagrantfile",
+      "output": "box/{{.Provider}}/windows-2012R2-standard-{{user `license_type` }}-{{user `version`}}.box"
+    }
+  ]
+}
