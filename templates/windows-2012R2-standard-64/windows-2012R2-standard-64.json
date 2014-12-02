@@ -41,7 +41,7 @@
     {
       "type":            "shell",
       "remote_path":     "/tmp/script.bat",
-      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/scri[t.bat",
+      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts":
       [
         "scripts/config-winrm.bat"
