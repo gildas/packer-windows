@@ -5,7 +5,7 @@
     "license_type":      "evaluation",
     "iso_url":           "iso/en_.iso",
     "iso_checksum_type": "md5",
-    "iso_checksum":      "1233234234",
+    "iso_checksum":      "1233234234"
   },
   "builders":
   [
