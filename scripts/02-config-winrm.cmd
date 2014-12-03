@@ -1,3 +1,6 @@
+setlocal EnableDelayedExpansion EnableExtensions
+title Configuring Windows Remote Management...
+
 cmd /c winrm quickconfig -q
 cmd /c winrm quickconfig -transport:http
 cmd /c winrm set winrm/config @{MaxTimeoutms="1800000"}
