@@ -70,6 +70,10 @@ echo ==^> Adding missing environment variables to %USERPROFILE%\.ssh\environment
 
 if not exist "%USERPROFILE%\.ssh" mkdir "%USERPROFILE%\.ssh"
 
+if exist a:\vagrant.pub (
+  copy a:\vagrant.pub %USERPROFILE%\.ssh\authorized_keys
+)
+
 set SSHENV=%USERPROFILE%\.ssh\environment
 
 echo APPDATA=%SystemDrive%\Users\%USERNAME%\AppData\Roaming>>"%SSHENV%"
