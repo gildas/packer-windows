@@ -51,7 +51,7 @@
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts":
       [
-        "../../scripts/config-winrm.cmd"
+        "../../scripts/02-config-winrm.cmd"
       ]
     },
     {
