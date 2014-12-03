@@ -5,6 +5,7 @@ packer_cache/
 iso/
 
 # For built boxes
+output-*/
 *.box
 
 # temp folder
