@@ -52,7 +52,7 @@
       "scripts":
       [
         "../../scripts/install-chocolatey.cmd",
-        "../../scripts/install-vim.cmd",
+        "../../scripts/install-vim.cmd"
       ]
     },
     {
