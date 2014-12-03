@@ -53,7 +53,8 @@
       "scripts":
       [
         "../../scripts/install-vim.cmd",
-        "../../scripts/install-puppet.cmd"
+        "../../scripts/install-puppet.cmd",
+        "../../scripts/install-virtualbox-additions.cmd"
       ]
     },
     {
