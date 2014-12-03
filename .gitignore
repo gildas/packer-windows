@@ -6,3 +6,9 @@ iso/
 
 # For built boxes
 *.box
+
+# temp folder
+tmp/
+
+# log folder
+log/
