@@ -1,5 +1,8 @@
 # Cache objects
 packer_cache/
 
+# iso files
+iso/
+
 # For built boxes
 *.box
