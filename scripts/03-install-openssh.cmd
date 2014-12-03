@@ -1,5 +1,5 @@
 setlocal EnableDelayedExpansion EnableExtensions
-title Installing Openssh. Please wait...
+title Installing Openssh...
 
 if not defined OPENSSH_32_URL set OPENSSH_32_URL=http://www.mls-software.com/files/setupssh-6.7p1-1-v1.exe
 if not defined OPENSSH_64_URL set OPENSSH_64_URL=http://www.mls-software.com/files/setupssh-6.7p1-1-v1(x64).exe
