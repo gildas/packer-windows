@@ -1,4 +1,4 @@
 setlocal EnableDelayedExpansion EnableExtensions
-title Installing Puppet...
+title Installing Chocolatey...
 
-chocolatey install puppet
+@powershell -NoProfile -ExecutionPolicy unrestricted -Command "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))"
