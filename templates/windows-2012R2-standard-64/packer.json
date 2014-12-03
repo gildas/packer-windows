@@ -51,7 +51,8 @@
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts":
       [
-        "../../scripts/02-config-winrm.cmd"
+        "../../scripts/install-chocolatey.cmd",
+        "../../scripts/install-vim.cmd",
       ]
     },
     {
