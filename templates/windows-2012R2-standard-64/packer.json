@@ -29,7 +29,8 @@
         "../../scripts/00-run-all-scripts.cmd",
         "../../scripts/01-config-posh.cmd",
         "../../scripts/02-config-winrm.cmd",
-        "../../scripts/03-install-openssh.cmd",
+        "../../scripts/03-install-chocolatey.cmd",
+        "../../scripts/04-install-openssh.cmd",
         "../../scripts/99-start-services.cmd",
         "../../data/oracle-cert.cer",
         "../../data/vagrant.pub"
@@ -50,7 +51,6 @@
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts":
       [
-        "../../scripts/install-chocolatey.cmd",
         "../../scripts/install-vim.cmd",
         "../../scripts/install-puppet.cmd"
       ]
