@@ -11,6 +11,38 @@
   "builders":
   [
     {
+      "type":              "vmware-iso",
+      "vm_name":           "win2012r2-standard",
+      "guest_os_type":     "windows8srv-64",
+      "iso_url":           "{{ user `iso_url` }}",
+      "iso_checksum_type": "{{ user `iso_checksum_type` }}",
+      "iso_checksum":      "{{ user `iso_checksum` }}",
+      "ssh_username":      "vagrant",
+      "ssh_password":      "vagrant",
+      "ssh_wait_timeout":  "10m",
+      "shutdown_command":  "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
+      "disk_size":         81920,
+      "floppy_files": [
+        "./Autounattend.xml",
+        "../../scripts/00-run-all-scripts.cmd",
+        "../../scripts/01-config-posh.cmd",
+        "../../scripts/02-config-winrm.cmd",
+        "../../scripts/03-install-chocolatey.cmd",
+        "../../scripts/04-install-openssh.cmd",
+        "../../scripts/99-start-services.cmd",
+        "../../data/oracle-cert.cer",
+        "../../data/vagrant.pub"
+      ],
+      "tools_upload_flavor": "windows",
+      "vmx_data":
+      {
+        "memsize":              "2048",
+        "numvcpus":             "2",
+        "cpuid.coresPerSocket": "1",
+        "scsi0.virtualDev":     "lsisas1068"
+      }
+    },
+    {
       "type":                 "virtualbox-iso",
       "guest_os_type":        "Windows2012_64",
       "iso_url":              "{{ user `iso_url` }}",
