@@ -102,12 +102,8 @@
       "type":                "vagrant",
       "keep_input_artifact": false,
       "compression_level":   1,
-      "include":
-      [
-        "./templates/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}/metadata.json"
-      ],
       "vagrantfile_template": "./templates/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}/vagrantfile.template",
-      "output": "box/{{.Provider}}/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}-{{user `version`}}.box"
+      "output": "./box/{{.Provider}}/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}-{{user `version`}}.box"
     }
   ]
 }
