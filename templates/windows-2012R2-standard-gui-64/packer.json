@@ -86,7 +86,7 @@
       [
         "../../scripts/install-vim.cmd",
         "../../scripts/install-puppet.cmd",
-        "../../scripts/install-virtualbox-additions.cmd"
+        "../../scripts/install-vmhost-additions.cmd"
       ]
     },
     {
