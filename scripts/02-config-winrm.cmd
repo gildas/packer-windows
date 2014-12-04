@@ -1,3 +1,4 @@
+@if not defined PACKER_DEBUG (@echo off) else (@echo on)
 setlocal EnableDelayedExpansion EnableExtensions
 title Configuring Windows Remote Management...
 

@@ -1,3 +1,4 @@
+@if not defined PACKER_DEBUG (@echo off) else (@echo on)
 setlocal EnableDelayedExpansion EnableExtensions
 
 if not defined PACKER_SERVICES set PACKER_SERVICES=opensshd sshd winrm
