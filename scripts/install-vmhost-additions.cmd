@@ -1,8 +1,8 @@
 setlocal EnableDelayedExpansion EnableExtensions
 title Installing Virtualbox Guest Additions...
 
-if "%PACKER_BUILDER_TYPE%" = "virtualbox-iso" goto :Virtualbox
-if "%PACKER_BUILDER_TYPE%" = "vmware-iso"     goto :VMWare
+if "%PACKER_BUILDER_TYPE%" == "virtualbox-iso" goto :Virtualbox
+if "%PACKER_BUILDER_TYPE%" == "vmware-iso"     goto :VMWare
 
 echo "ERROR Unknown Packer builder type: %PACKER_BUILDER_TYPE%"
 exit 1
@@ -19,6 +19,12 @@ cmd /c E:\VBoxWindowsAdditions.exe /S
 goto :end
 
 :VMWare
+@powershell -NoProfile -ExecutionPolicy unrestricted -Command "Mount-DiskImage C:\Users\vagrant\windows.iso"
+@if errorlevel 1 echo "ERROR %ERRORLEVEL% while mounting the VMWare Guest Additions ISO"
+cmd /c E:\vmware\setup.exe /S /v "/qn REBOOT=R ADDLOCAL=ALL"
+@if errorlevel 1 echo "ERROR %ERRORLEVEL% while installing VMWare Guest Additions"
+@powershell -NoProfile -ExecutionPolicy unrestricted -Command "Dismount-DiskImage C:\Users\vagrant\windows.iso"
+@if errorlevel 1 echo "ERROR %ERRORLEVEL% while unmounting the VMWare Guest Additions ISO"
 goto :end
 
 :end
