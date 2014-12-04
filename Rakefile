@@ -8,7 +8,7 @@ template_dir     = 'templates'
 os_version       = $1
 os_install       = $2 || 'core'            # validate(os_install, [ 'core', 'full' ])
 os_edition       = $3 || 'standard'        # validate(os_edition, [ 'standard', 'datacenter', '...' ])
-os_license       = $4 || 'evaluation'      # validate(os_license [ 'retail', 'msdn', 'eval', 'volume' ])
+os_license       = $4 || 'eval'            # validate(os_license [ 'retail', 'msdn', 'eval', 'volume' ])
 provisioner      = $2
 template         = "windows-#{os_version}-#{os_install}-#{os_edition}"
 vagrant_box      = "#{template}-#{provisioner}"
@@ -20,7 +20,7 @@ vagrant_provider = case provisioner
 
 desc "Builds a packer template"
 task :build, [:provisioner] do
-%x(packer build -only=#{provisioner}-iso #{template_dir}/#{template}/packer.json}
+%x(packer build -only=#{provisioner}-iso #{template_dir}/#{template}/packer.json})
 end
 
 desc "Loads a packer template"
