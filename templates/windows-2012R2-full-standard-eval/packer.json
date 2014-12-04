@@ -10,7 +10,7 @@
     "disk_size":         81920,
     "mem_size":          2048,
     "cpus":              2,
-    "iso_url":           "../../iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+    "iso_url":           "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
     "iso_checksum_type": "md5",
     "iso_checksum":      "458ff91f8abc21b75cb544744bf92e6a"
   },
@@ -87,9 +87,9 @@
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts":
       [
-        "../../scripts/install-vmhost-additions.cmd",
-        "../../scripts/install-vim.cmd",
-        "../../scripts/install-puppet.cmd"
+        "./scripts/install-vmhost-additions.cmd",
+        "./scripts/install-vim.cmd",
+        "./scripts/install-puppet.cmd"
       ]
     },
     {
@@ -103,13 +103,12 @@
       "type": "vagrant",
       "keep_input_artifact": false,
       "compression_level":   1,
+      "include":
       [
         "./templates/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}/metadata.json"
       ],
       "vagrantfile_template": "./templates/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}/vagrantfile.template",
       "output": "box/{{.Provider}}/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}-{{user `version`}}.box"
-      "vagrantfile_template": "./vagrantfile.template",
-      "output": "box/{{.Provider}}/windows-2012R2-standard-{{user `installation_type` }}-{{user `license_type` }}-{{user `version`}}.box"
     }
   ]
 }
