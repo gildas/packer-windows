@@ -2,42 +2,45 @@
   "variables":
   {
     "version":           "0.1.0",
-    "license_type":      "evaluation",
-    "installation_type": "core",
-    "iso_url":           "../../iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+    "os":                "windows",
+    "os_version":        "2012R2",
+    "os_install":        "core",
+    "os_edition":        "standard",
+    "os_license":        "eval",
+    "disk_size":         81920,
+    "mem_size":          2048,
+    "cpus":              2,
+    "iso_url":           "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
     "iso_checksum_type": "md5",
     "iso_checksum":      "458ff91f8abc21b75cb544744bf92e6a"
   },
   "builders":
   [
     {
-      "type":              "vmware-iso",
-      "vm_name":           "win2012r2-standard",
-      "guest_os_type":     "windows8srv-64",
-      "iso_url":           "{{ user `iso_url` }}",
-      "iso_checksum_type": "{{ user `iso_checksum_type` }}",
-      "iso_checksum":      "{{ user `iso_checksum` }}",
-      "ssh_username":      "vagrant",
-      "ssh_password":      "vagrant",
-      "ssh_wait_timeout":  "10m",
-      "shutdown_command":  "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
-      "disk_size":         81920,
-      "floppy_files": [
-        "./Autounattend.xml",
-        "../../scripts/00-run-all-scripts.cmd",
-        "../../scripts/01-config-posh.cmd",
-        "../../scripts/02-config-winrm.cmd",
-        "../../scripts/03-install-chocolatey.cmd",
-        "../../scripts/04-install-openssh.cmd",
-        "../../scripts/99-start-services.cmd",
-        "../../data/oracle-cert.cer",
-        "../../data/vagrant.pub"
-      ],
+      "type":                "vmware-iso",
+      "guest_os_type":       "windows8srv-64",
+      "iso_url":             "{{ user `iso_url` }}",
+      "iso_checksum_type":   "{{ user `iso_checksum_type` }}",
+      "iso_checksum":        "{{ user `iso_checksum` }}",
+      "ssh_username":        "vagrant",
+      "ssh_password":        "vagrant",
+      "ssh_wait_timeout":    "20m",
+      "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
       "tools_upload_flavor": "windows",
+      "disk_size":           "{{user `disk_size`}}",
+      "floppy_files": [
+        "./templates/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}/Autounattend.xml",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-posh.cmd",
+        "./scripts/02-config-winrm.cmd",
+        "./scripts/03-install-chocolatey.cmd",
+        "./scripts/04-install-openssh.cmd",
+        "./scripts/99-start-services.cmd"
+      ],
       "vmx_data":
       {
-        "memsize":              "2048",
-        "numvcpus":             "2",
+        "memsize":              "{{user `mem_size`}}",
+        "numvcpus":             "{{user `cpus`}}",
         "cpuid.coresPerSocket": "1",
         "scsi0.virtualDev":     "lsisas1068"
       }
@@ -49,29 +52,28 @@
       "iso_checksum_type":    "{{ user `iso_checksum_type` }}",
       "iso_checksum":         "{{ user `iso_checksum` }}",
       "headless":             false,
-      "boot_wait":            "5m",
       "ssh_username":         "vagrant",
       "ssh_password":         "vagrant",
       "ssh_wait_timeout":     "20m",
       "shutdown_command":     "shutdown /s /t 5 /d p:4:1 /c \"Packer Shutdown\"",
-      "guest_additions_path": "/cygdrive/c/Users/vagrant/VBoxGuestAdditions.iso",
-      "disk_size":            81920,
+      "guest_additions_mode": "attach",
+      "disk_size":            "{{user `disk_size`}}",
       "floppy_files":
       [
-        "./Autounattend.xml",
-        "../../scripts/00-run-all-scripts.cmd",
-        "../../scripts/01-config-posh.cmd",
-        "../../scripts/02-config-winrm.cmd",
-        "../../scripts/03-install-chocolatey.cmd",
-        "../../scripts/04-install-openssh.cmd",
-        "../../scripts/99-start-services.cmd",
-        "../../data/oracle-cert.cer",
-        "../../data/vagrant.pub"
+        "./templates/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}/Autounattend.xml",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-posh.cmd",
+        "./scripts/02-config-winrm.cmd",
+        "./scripts/03-install-chocolatey.cmd",
+        "./scripts/04-install-openssh.cmd",
+        "./scripts/99-start-services.cmd",
+        "./data/oracle-cert.cer",
+        "./data/vagrant.pub"
       ],
       "vboxmanage":
       [
-        ["modifyvm", "{{.Name}}", "--memory", "2048"],
-        ["modifyvm", "{{.Name}}", "--cpus",   "2"],
+        ["modifyvm", "{{.Name}}", "--memory", "{{user `mem_size`}}"],
+        ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
         ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"]
       ]
     }
@@ -84,24 +86,28 @@
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts":
       [
-        "../../scripts/install-vim.cmd",
-        "../../scripts/install-puppet.cmd",
-        "../../scripts/install-vmhost-additions.cmd"
+        "./scripts/install-vmhost-additions.cmd",
+        "./scripts/install-vim.cmd",
+        "./scripts/install-puppet.cmd"
       ]
     },
     {
-      "type": "shell",
-      "inline":          [ "rm -f /tmp/script.bat" ]
+      "type":   "shell",
+      "inline": [ "rm -f /tmp/script.bat" ]
     }
   ],
   "post-processors":
   [
     {
-      "type": "vagrant",
+      "type":                "vagrant",
       "keep_input_artifact": false,
       "compression_level":   1,
-      "vagrantfile_template": "./vagrantfile.template",
-      "output": "box/{{.Provider}}/windows-2012R2-standard-{{user `installation_type` }}-{{user `license_type` }}-{{user `version`}}.box"
+      "include":
+      [
+        "./templates/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}/metadata.json"
+      ],
+      "vagrantfile_template": "./templates/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}/vagrantfile.template",
+      "output": "box/{{.Provider}}/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}-{{user `version`}}.box"
     }
   ]
 }
