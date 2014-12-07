@@ -1,0 +1,7 @@
+{
+  "name": "gildas/windows-2012R2-core-standard-eval",
+  "description": "This box contains Windows 2012 R2 core with the Evaluation license",
+  "version": "0.1.0",
+  "provider":"{{.Provider}}"
+}
+  
