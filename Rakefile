@@ -75,6 +75,11 @@ Dir.glob("#{templates_dir}/*/packer.json") do |filename|
       Rake::Task[:build].invoke(template, 'vmware-iso')
     end
   end
+  if has_virtualbox?
+    file "#{boxes_dir}/virtualbox/#{template}-#{version}.box" => filename do
+      Rake::Task[:build].invoke(template, 'virtualbox-iso')
+    end
+  end
 end
 
 desc "Builds all packer templates"
