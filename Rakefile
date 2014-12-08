@@ -58,10 +58,8 @@ rule '.box' => ->(box) { source_for_box(box) } do |_rule|
   puts "Building #{_rule.name} from #{_rule.source}"
 end
 
-task :box_folders => [boxes_dir, "#{boxes_dir}/virtualbox", "#{boxes_dir}/vmware"]
-
 desc "Builds a packer template"
-task :build, [:template, :builder] => [temp_dir, :box_folders] do |_task, _args|
+task :build, [:template, :builder] do |_task, _args|
   puts " Building #{_args[:template]} for #{_args[:builder]}"
   build_metadata(template: "#{templates_dir}/#{_args[:template]}/metadata.json", builder: _args[:builder])
   puts " Command line: packer build -only=#{_args[:builder]} -var-file=#{templates_dir}/#{_args[:template]}/config.json #{templates_dir}/#{_args[:template]}/packer.json"
