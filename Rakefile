@@ -15,31 +15,41 @@ builders = {
 
 TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/packer.json")
 
+directory boxes_dir
+directory temp_dir
+
 def load_json(filename)
   return {} unless File.exist? filename
   return File.open(filename) { |file| JSON.parse(file.read) }
 end
 
-def build_metadata(template:, builder:)
-  if File.exist?(template)
-    config = load_json("#{File.dirname(template)}/config.json")
-    config['Provider'] = builder
-    File.open("./tmp/metadata.json", "w") do |output|
-      File.open(template) do |file|
-        while line = file.gets do
-          line.chomp!
-          while (match = /{{\s*user `(?<key>[^`]+)`\s*}}/i.match(line) || /{{\s*\.(?<key>\w+)\s*}}/i.match(line)) != nil
-            line.gsub!(/{{[^}]+}}/, config[match['key']])
-          end
-          output.puts line
+def source_for_metadata(metadata_file)
+  source = TEMPLATE_FILES.detect do |template_source|
+    template_source.pathmap("%d")
+    template_name = File.basename(File.dirname(template_source))
+    File.dirname(metadata_file) =~ /#{template_name}-\d+\.\d+\.\d+$/
+  end
+  source.pathmap("%{packer,metadata}p.template")
+end
+
+rule 'metadata.json' => [->(metadata) { source_for_metadata(metadata) }, temp_dir] do |_rule|
+  builder = builders[File.basename(File.dirname(_rule.name.pathmap("%d"))).to_sym]
+  mkdir_p _rule.name.pathmap("%d")
+  puts "Building #{_rule.name.pathmap("%f")} for #{builder[:name]}"
+  config = load_json(_rule.source.pathmap("%d/config.json"))
+  config['Provider'] = builder[:packer_type]
+  File.open(_rule.name, "w") do |output|
+    File.open(_rule.source) do |file|
+      while line = file.gets do
+        line.chomp!
+        while (match = /{{\s*user `(?<key>[^`]+)`\s*}}/i.match(line) || /{{\s*\.(?<key>\w+)\s*}}/i.match(line)) != nil
+          line.gsub!(/{{[^}]+}}/, config[match['key']])
         end
+        output.puts line
       end
     end
   end
 end
-
-directory boxes_dir
-directory temp_dir
 
 def source_for_box(box_file)
   TEMPLATE_FILES.detect do |template_source|
@@ -48,13 +58,15 @@ def source_for_box(box_file)
   end
 end
 
-rule '.box' => [->(box) { source_for_box(box) }, boxes_dir] do |_rule|
+def metadata_for_box(box_file, temp_dir)
+  box_file.pathmap("#{temp_dir}/%{box/,}d/%n/metadata.json")
+end
+
+rule '.box' => [->(box) { source_for_box(box) }, boxes_dir, ->(box) { metadata_for_box(box, temp_dir) }] do |_rule|
   builder = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
   mkdir_p _rule.name.pathmap("%d")
-  puts "Building #{_rule.name} from #{_rule.source} using #{builder[:name]}"
-  puts " build_metadata(template: \"#{_rule.source.pathmap("%d")}/metadata.json\", builder: _args[:builder])"
-  puts " Command line: packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}}/config.json #{_rule.source}"
-#  sh "packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}}/config.json #{_rule.source}"
+  puts "Building #{_rule.name.pathmap("%f")} using #{builder[:name]}"
+  sh "packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}}/config.json #{_rule.source}"
 end
 
 builders.each do |builder_name, builder|
