@@ -101,3 +101,5 @@ end
 
 desc "Runs the RSpec tests"
 task :test => [:build, :load, :start, :spec, :delete]
+
+task :default => :build_all
