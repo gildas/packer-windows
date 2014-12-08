@@ -70,11 +70,12 @@ TEMPLATE_FILES.each do |filename|
         Rake::Task[:build].invoke(template, builder[:packer_type])
       end
 
+      build_box = "build_#{builder[:name]}_#{template}".to_sym
       desc "Build #{builder[:name]} #{template} version #{version}" 
-      task "build_#{builder[:name]}_#{template}".to_sym => box
+      task build_box => box
      
       desc "Builds all templates"
-      task :build_all => box
+      task :build_all => build_box
     end
   end
 end
