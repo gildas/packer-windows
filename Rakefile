@@ -41,12 +41,6 @@ end
 directory boxes_dir
 directory temp_dir
 
-builders.each do |name, builder|
-  if builder[:supported][]
-    directory "#{boxes_dir}/#{builder[:folder]}" => boxes_dir
-  end
-end
-
 def source_for_box(box_file)
   TEMPLATE_FILES.detect do |template_source|
     template_name = File.basename(File.dirname(template_source))
@@ -54,7 +48,8 @@ def source_for_box(box_file)
   end
 end
 
-rule '.box' => ->(box) { source_for_box(box) } do |_rule|
+rule '.box' => [->(box) { source_for_box(box) }, boxes_dir] do |_rule|
+  puts "make folder: #{_rule.name.pathmap("%d")}"
   puts "Building #{_rule.name} from #{_rule.source}"
 end
 
