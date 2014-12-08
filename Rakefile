@@ -57,47 +57,48 @@ rule '.box' => [->(box) { source_for_box(box) }, boxes_dir] do |_rule|
 #  sh "packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}}/config.json #{_rule.source}"
 end
 
-TEMPLATE_FILES.each do |filename|
-  template_dir = File.dirname(filename)
-  template     = File.basename(template_dir)
-  config       = load_json("#{template_dir}/config.json")
-  version      = config['version'] || '0.1.0'
-  
-  builders.each do |name, builder|
-    if builder[:supported][]
-      box       = "#{boxes_dir}/#{builder[:folder]}/#{template}-#{version}.box"
-      build_box = "build_#{builder[:name]}_#{template}".to_sym
+builders.each do |builder_name, builder|
+  if builder[:supported][]
+    TEMPLATE_FILES.each do |template_file|
+      config   = load_json(template_file.pathmap("%d/config.json"))
+      version  = config['version'] || '0.1.0'
+      box_name = template_file.pathmap("%{templates/,}d")
+      box_file = "#{boxes_dir}/#{builder[:folder]}/#{box_name}-#{version}.box"
 
-      desc "Build #{builder[:name]} #{template} version #{version}" 
-      task build_box => box
-     
-      desc "Builds all templates"
-      task :build_all => build_box
+      namespace :build do
+        desc "Build box #{box_name} version #{version}"
+        task box_name => box_file
+      end
+
+      desc "Build all templates"
+      task :build_all => "build:#{box_name}"
+
+      namespace :load do
+        desc "Load box #{box_name} version #{version} in vagrant"
+        task box_name => "build:#{box_name}" do
+          puts "vagrant box add --force --name #{box_name} #{box_file}"
+        end
+      end
+
+      desc "Load all boxes in vagrant"
+      task :load_all => "load:#{box_name}"
     end
   end
 end
 
-desc "Loads a packer template"
-task :load do
-  %x(vagrant box add --force --name #{template} #{vagrant_box})
-end
-
-desc "Starts a packer template"
+desc "Start a packer template"
 task :start do
   %x(BOX="#{vagrant_box} TEMPLATE="#{template} vagrant up --provider=#{provider} --provision)
 end
 
-desc "Stops a packer template"
+desc "Stop a packer template"
 task :stop do
   %x(BOX="#{vagrant_box} TEMPLATE="#{template} vagrant halt --provider=#{provider})
 end
 
-desc "Starts a packer template"
+desc "Delete a packer template"
 task :delete do
   %x(BOX="#{vagrant_box} TEMPLATE="#{template} vagrant destroy -f)
 end
-
-desc "Runs the RSpec tests"
-task :test => [:build, :load, :start, :spec, :delete]
 
 task :default => :build_all
