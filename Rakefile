@@ -49,7 +49,7 @@ def source_for_box(box_file)
 end
 
 rule '.box' => [->(box) { source_for_box(box) }, boxes_dir] do |_rule|
-  puts "make folder: #{_rule.name.pathmap("%d")}"
+  mkdir_p _rule.name.pathmap("%d")
   puts "Building #{_rule.name} from #{_rule.source}"
 end
 
