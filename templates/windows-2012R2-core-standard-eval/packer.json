@@ -30,7 +30,7 @@
       "tools_upload_flavor": "windows",
       "disk_size":           "{{user `disk_size`}}",
       "floppy_files": [
-        "./templates/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}/Autounattend.xml",
+        "./templates/{{user `template`}}/Autounattend.xml",
         "./scripts/00-run-all-scripts.cmd",
         "./scripts/01-config-posh.cmd",
         "./scripts/02-config-winrm.cmd",
@@ -61,7 +61,7 @@
       "disk_size":            "{{user `disk_size`}}",
       "floppy_files":
       [
-        "./templates/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}/Autounattend.xml",
+        "./templates/{{user `template`}}/Autounattend.xml",
         "./scripts/00-run-all-scripts.cmd",
         "./scripts/01-config-posh.cmd",
         "./scripts/02-config-winrm.cmd",
@@ -103,8 +103,9 @@
       "type":                "vagrant",
       "keep_input_artifact": false,
       "compression_level":   1,
-      "vagrantfile_template": "./templates/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}/vagrantfile.template",
-      "output": "./box/{{.Provider}}/{{user `os`}}-{{user `os_version`}}-{{user `os_install`}}-{{user `os_edition`}}-{{user `os_license`}}-{{user `version`}}.box"
+      "include": [ "./tmp/metadata.json" ],
+      "vagrantfile_template": "./templates/{{user `template`}}/vagrantfile.template",
+      "output": "./box/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
     }
   ]
 }
