@@ -41,6 +41,12 @@ end
 directory boxes_dir
 directory temp_dir
 
+builders.each do |name, builder|
+  if builder[:supported][]
+    directory "#{boxes_dir}/#{builder[:folder]}" => boxes_dir
+  end
+end
+
 task :box_folders => [boxes_dir, "#{boxes_dir}/virtualbox", "#{boxes_dir}/vmware"]
 
 desc "Builds a packer template"
@@ -49,12 +55,6 @@ task :build, [:template, :builder] => [temp_dir, :box_folders] do |_task, _args|
   build_metadata(template: "#{templates_dir}/#{_args[:template]}/metadata.json", builder: _args[:builder])
   puts " Command line: packer build -only=#{_args[:builder]} -var-file=#{templates_dir}/#{_args[:template]}/config.json #{templates_dir}/#{_args[:template]}/packer.json"
 #  sh "packer build -only=#{_args[:builder]} -var-file=#{templates_dir}/#{_args[:template]}/config.json #{templates_dir}/#{_args[:template]}/packer.json"
-end
-
-builders.each do |name, builder|
-  if builder[:supported][]
-    directory "#{boxes_dir}/#{builder[:folder]}" => boxes_dir
-  end
 end
 
 TEMPLATE_FILES.each do |filename|
