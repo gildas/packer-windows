@@ -47,6 +47,17 @@ builders.each do |name, builder|
   end
 end
 
+def source_for_box(box_file)
+  TEMPLATE_FILES.detect do |template_source|
+    template_name = File.basename(File.dirname(template_source))
+    File.basename(box_file) =~ /^#{template_name}-\d+\.\d+\.\d+\.box/
+  end
+end
+
+rule '.box' => ->(box) { source_for_box(box) } do |_rule|
+  puts "Building #{_rule.name} from #{_rule.source}"
+end
+
 task :box_folders => [boxes_dir, "#{boxes_dir}/virtualbox", "#{boxes_dir}/vmware"]
 
 desc "Builds a packer template"
@@ -66,9 +77,6 @@ TEMPLATE_FILES.each do |filename|
   builders.each do |name, builder|
     if builder[:supported][]
       box = "#{boxes_dir}/#{builder[:folder]}/#{template}-#{version}.box"
-      file box => [ "#{boxes_dir}/#{builder[:folder]}", temp_dir, filename] do
-        Rake::Task[:build].invoke(template, builder[:packer_type])
-      end
 
       build_box = "build_#{builder[:name]}_#{template}".to_sym
       desc "Build #{builder[:name]} #{template} version #{version}" 
