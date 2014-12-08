@@ -49,16 +49,12 @@ def source_for_box(box_file)
 end
 
 rule '.box' => [->(box) { source_for_box(box) }, boxes_dir] do |_rule|
+  builder = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
   mkdir_p _rule.name.pathmap("%d")
-  puts "Building #{_rule.name} from #{_rule.source}"
-end
-
-desc "Builds a packer template"
-task :build, [:template, :builder] do |_task, _args|
-  puts " Building #{_args[:template]} for #{_args[:builder]}"
-  build_metadata(template: "#{templates_dir}/#{_args[:template]}/metadata.json", builder: _args[:builder])
-  puts " Command line: packer build -only=#{_args[:builder]} -var-file=#{templates_dir}/#{_args[:template]}/config.json #{templates_dir}/#{_args[:template]}/packer.json"
-#  sh "packer build -only=#{_args[:builder]} -var-file=#{templates_dir}/#{_args[:template]}/config.json #{templates_dir}/#{_args[:template]}/packer.json"
+  puts "Building #{_rule.name} from #{_rule.source} using #{builder[:name]}"
+  puts " build_metadata(template: \"#{_rule.source.pathmap("%d")}/metadata.json\", builder: _args[:builder])"
+  puts " Command line: packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}}/config.json #{_rule.source}"
+#  sh "packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}}/config.json #{_rule.source}"
 end
 
 TEMPLATE_FILES.each do |filename|
