@@ -76,9 +76,9 @@ TEMPLATE_FILES.each do |filename|
   
   builders.each do |name, builder|
     if builder[:supported][]
-      box = "#{boxes_dir}/#{builder[:folder]}/#{template}-#{version}.box"
-
+      box       = "#{boxes_dir}/#{builder[:folder]}/#{template}-#{version}.box"
       build_box = "build_#{builder[:name]}_#{template}".to_sym
+
       desc "Build #{builder[:name]} #{template} version #{version}" 
       task build_box => box
      
