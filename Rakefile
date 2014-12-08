@@ -9,13 +9,10 @@ templates_dir = 'templates'
 boxes_dir     = 'box'
 temp_dir      = 'tmp'
 
-def has_virtualbox?
-  !%x(which VBoxManage).empty?
-end
-
-def has_vmware?
-  File.exists? '/Applications/VMware Fusion.app/Contents/Library/vmrun'
-end
+builders = {
+  virtualbox: { name: 'virtualbox', folder: 'virtualbox', packer_type: 'virtualbox-iso', supported: lambda { ! %x(which VBoxManage).empty? } },
+  vmware:     { name: 'vmware',     folder: 'vmware',     packer_type: 'vmware-iso',     supported: lambda { File.exists? '/Applications/VMware Fusion.app/Contents/Library/vmrun' } },
+}
 
 def validate(argument, value, valid_values=[])
   raise ArgumentError, argument unless valid_values.include? value
@@ -45,8 +42,8 @@ def build_metadata(template:, builder:)
 end
 
 directory boxes_dir
-directory "#{boxes_dir}/virtualbox"
-directory "#{boxes_dir}/vmware"
+directory "#{boxes_dir}/virtualbox" => boxes_dir
+directory "#{boxes_dir}/vmware" => boxes_dir
 directory temp_dir
 
 task :box_folders => [boxes_dir, "#{boxes_dir}/virtualbox", "#{boxes_dir}/vmware"]
@@ -64,20 +61,19 @@ Dir.glob("#{templates_dir}/*/packer.json") do |filename|
   template     = File.basename(template_dir)
   config       = load_json("#{template_dir}/config.json")
   version      = config['version'] || '0.1.0'
-  puts "template: #{template}, folder: #{template_dir}"
-  if has_virtualbox?
-    file "#{boxes_dir}/virtualbox/#{template}-#{version}.box" => filename do
-      Rake::Task[:build].invoke(template, 'virtualbox-iso')
-    end
-  end
-  if has_vmware?
-    file "#{boxes_dir}/vmware/#{template}-#{version}.box" => filename do
-      Rake::Task[:build].invoke(template, 'vmware-iso')
-    end
-  end
-  if has_virtualbox?
-    file "#{boxes_dir}/virtualbox/#{template}-#{version}.box" => filename do
-      Rake::Task[:build].invoke(template, 'virtualbox-iso')
+  
+  builders.each do |name, builder|
+    if builder[:supported][]
+      box = "#{boxes_dir}/#{builder[:folder]}/#{template}-#{version}.box"
+      file box => [ "#{boxes_dir}/#{builder[:folder]}", temp_dir, filename] do
+        Rake::Task[:build].invoke(template, builder[:packer_type])
+      end
+
+      desc "Build #{builder[:name]} #{template} version #{version}" 
+      task "build_#{builder[:name]}_#{template}".to_sym => box
+     
+      desc "Builds all templates"
+      task :build_all => box
     end
   end
 end
