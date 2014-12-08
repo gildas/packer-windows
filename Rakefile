@@ -14,6 +14,8 @@ builders = {
   vmware:     { name: 'vmware',     folder: 'vmware',     packer_type: 'vmware-iso',     supported: lambda { File.exists? '/Applications/VMware Fusion.app/Contents/Library/vmrun' } },
 }
 
+TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/packer.json")
+
 def validate(argument, value, valid_values=[])
   raise ArgumentError, argument unless valid_values.include? value
 end
@@ -42,8 +44,6 @@ def build_metadata(template:, builder:)
 end
 
 directory boxes_dir
-directory "#{boxes_dir}/virtualbox" => boxes_dir
-directory "#{boxes_dir}/vmware" => boxes_dir
 directory temp_dir
 
 task :box_folders => [boxes_dir, "#{boxes_dir}/virtualbox", "#{boxes_dir}/vmware"]
@@ -56,7 +56,12 @@ task :build, [:template, :builder] => [temp_dir, :box_folders] do |_task, _args|
 #  sh "packer build -only=#{_args[:builder]} -var-file=#{templates_dir}/#{_args[:template]}/config.json #{templates_dir}/#{_args[:template]}/packer.json"
 end
 
-Dir.glob("#{templates_dir}/*/packer.json") do |filename|
+builders.each do |name, builder|
+  if builder[:supported][]
+    directory "#{boxes_dir}/#{builder[:folder]}" => boxes_dir
+  end
+end
+TEMPLATE_FILES.each do |filename|
   template_dir = File.dirname(filename)
   template     = File.basename(template_dir)
   config       = load_json("#{template_dir}/config.json")
