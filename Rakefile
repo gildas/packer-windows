@@ -1,6 +1,5 @@
 require 'rake'
 require 'json'
-#require 'bundler/gem_tasks'
 require 'rspec/core/rake_task'
 
 RSpec::Core::RakeTask.new
@@ -15,10 +14,6 @@ builders = {
 }
 
 TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/packer.json")
-
-def validate(argument, value, valid_values=[])
-  raise ArgumentError, argument unless valid_values.include? value
-end
 
 def load_json(filename)
   return {} unless File.exist? filename
@@ -61,6 +56,7 @@ builders.each do |name, builder|
     directory "#{boxes_dir}/#{builder[:folder]}" => boxes_dir
   end
 end
+
 TEMPLATE_FILES.each do |filename|
   template_dir = File.dirname(filename)
   template     = File.basename(template_dir)
@@ -81,10 +77,6 @@ TEMPLATE_FILES.each do |filename|
       task :build_all => box
     end
   end
-end
-
-desc "Builds all packer templates"
-task :build_all do |_task, _args|
 end
 
 desc "Loads a packer template"
