@@ -49,6 +49,12 @@ rule 'metadata.json' => [->(metadata) { source_for_metadata(metadata) }, temp_di
       end
     end
   end
+  # This is a temporary workaround until we can figure out how to use variables in include, like this:
+  # "include": [ "./tmp/{{.Provider}}/{{user `template`}}-{{user `version`}}/metadata.json" ],
+  # until then, we will write:
+  # "include": [ "./tmp/metadata.json" ],
+  rm_f _rule.name.pathmap("./tmp/%f")
+  cp   _rule.name "./tmp"
 end
 
 def source_for_box(box_file)

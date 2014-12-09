@@ -103,7 +103,7 @@
       "type":                "vagrant",
       "keep_input_artifact": false,
       "compression_level":   1,
-      "include": [ "./tmp/{{.Provider}}/{{user `template`}}-{{user `version`}}/metadata.json" ],
+      "include": [ "./tmp/metadata.json" ],
       "vagrantfile_template": "./templates/{{user `template`}}/vagrantfile.template",
       "output": "./box/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
     }
