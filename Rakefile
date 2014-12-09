@@ -9,8 +9,8 @@ boxes_dir     = 'box'
 temp_dir      = 'tmp'
 
 builders = {
-  virtualbox: { name: 'virtualbox', folder: 'virtualbox', packer_type: 'virtualbox-iso', supported: lambda { ! %x(which VBoxManage).empty? } },
-  vmware:     { name: 'vmware',     folder: 'vmware',     packer_type: 'vmware-iso',     supported: lambda { File.exists? '/Applications/VMware Fusion.app/Contents/Library/vmrun' } },
+  virtualbox: { name: 'virtualbox', folder: 'virtualbox', vagrant_type: 'virtualbox', packer_type: 'virtualbox-iso', supported: lambda { ! %x(which VBoxManage).empty? } },
+  vmware:     { name: 'vmware',     folder: 'vmware',     vagrant_type: 'vmware',     packer_type: 'vmware-iso',     supported: lambda { File.exists? '/Applications/VMware Fusion.app/Contents/Library/vmrun' } },
 }
 
 TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/packer.json")
@@ -25,7 +25,6 @@ end
 
 def source_for_metadata(metadata_file)
   source = TEMPLATE_FILES.detect do |template_source|
-    template_source.pathmap("%d")
     template_name = File.basename(File.dirname(template_source))
     File.dirname(metadata_file) =~ /#{template_name}-\d+\.\d+\.\d+$/
   end
@@ -37,7 +36,7 @@ rule 'metadata.json' => [->(metadata) { source_for_metadata(metadata) }, temp_di
   mkdir_p _rule.name.pathmap("%d")
   puts "Building #{_rule.name.pathmap("%f")} for #{builder[:name]}"
   config = load_json(_rule.source.pathmap("%d/config.json"))
-  config['Provider'] = builder[:packer_type]
+  config['Provider'] = builder[:vagrant_type]
   File.open(_rule.name, "w") do |output|
     File.open(_rule.source) do |file|
       while line = file.gets do
@@ -53,8 +52,8 @@ rule 'metadata.json' => [->(metadata) { source_for_metadata(metadata) }, temp_di
   # "include": [ "./tmp/{{.Provider}}/{{user `template`}}-{{user `version`}}/metadata.json" ],
   # until then, we will write:
   # "include": [ "./tmp/metadata.json" ],
-  rm_f _rule.name.pathmap("./tmp/%f")
-  cp   _rule.name "./tmp"
+  rm_f _rule.name.pathmap("./tmp/%f") if File.exist?(_rule.name.pathmap("./tmp/%f"))
+  cp   _rule.name, "./tmp"
 end
 
 def source_for_box(box_file)
