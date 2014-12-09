@@ -94,7 +94,7 @@ builders.each do |builder_name, builder|
       namespace :load do
         desc "Load box #{box_name} version #{version} in vagrant"
         task box_name => "build:#{box_name}" do
-          puts "vagrant box add --force --name #{box_name} #{box_file}"
+          sh "vagrant box add --force --name #{box_name} #{box_file}"
         end
       end
 
