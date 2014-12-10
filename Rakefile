@@ -6,7 +6,7 @@ require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new
 
 templates_dir = 'templates'
-boxes_dir     = 'box'
+boxes_dir     = 'boxes'
 temp_dir      = 'tmp'
 
 builders = {
@@ -52,10 +52,14 @@ rule 'metadata.json' => [->(metadata) { source_for_metadata(metadata) }, temp_di
 end
 
 def source_for_box(box_file)
-  TEMPLATE_FILES.detect do |template_source|
+  # box_file should be like: boxes/#{box_name}/#{provider}/#{box_name}-#{box_version}.box
+  box_name = File.basename(File.dirname(box_file.pathmap("%d")))
+  box_source = TEMPLATE_FILES.detect do |template_source|
     template_name = File.basename(File.dirname(template_source))
-    File.basename(box_file) =~ /^#{template_name}-\d+\.\d+\.\d+\.box/
+    box_name == template_name
   end
+  raise Errno::ENOENT, "no source for #{box_file}" if box_source.nil?
+  box_source
 end
 
 def metadata_for_box(box_file, temp_dir)
@@ -76,7 +80,7 @@ builders.each do |builder_name, builder|
       config   = load_json(template_file.pathmap("%d/config.json"))
       version  = config['version'] || '0.1.0'
       box_name = template_file.pathmap("%{templates/,}d")
-      box_file = "#{boxes_dir}/#{builder[:folder]}/#{box_name}-#{version}.box"
+      box_file = "#{boxes_dir}/#{box_name}/#{builder[:folder]}/#{box_name}-#{version}.box"
 
       namespace :build do
         desc "Build box #{box_name} version #{version}"

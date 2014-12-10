@@ -106,7 +106,7 @@
       "keep_input_artifact": false,
       "compression_level":   1,
       "vagrantfile_template": "./templates/{{user `template`}}/vagrantfile.template",
-      "output": "./box/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
+      "output": "./boxes/{{user `template`}}/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
     }
   ]
 }
