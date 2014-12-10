@@ -97,7 +97,7 @@ builders.each do |builder_name, builder|
       namespace :load do
         desc "Load box #{box_name} version #{version} in vagrant"
         task box_name => ["build:#{box_name}", metadata_file] do
-          sh "vagrant box add --force #{metadata_file}"
+          sh "vagrant box add --force #{box_name} #{box_file}"
         end
       end
 
