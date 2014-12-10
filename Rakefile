@@ -105,7 +105,7 @@ builders.each do |builder_name, builder|
       task :load_all => "load:#{box_name}"
 
       CLOBBER << box_file
-      CLEAN.include("tmp/#{builder[:folder]}/#{box_name}-#{version}/metadata.json")
+      CLOBBER << metadata_file
     end
   end
 end
