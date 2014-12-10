@@ -49,12 +49,6 @@ rule 'metadata.json' => [->(metadata) { source_for_metadata(metadata) }, temp_di
       end
     end
   end
-  # This is a temporary workaround until we can figure out how to use variables in include, like this:
-  # "include": [ "./tmp/{{.Provider}}/{{user `template`}}-{{user `version`}}/metadata.json" ],
-  # until then, we will write:
-  # "include": [ "./tmp/metadata.json" ],
-  rm_f _rule.name.pathmap("./tmp/%f") if File.exist?(_rule.name.pathmap("./tmp/%f"))
-  cp   _rule.name, "./tmp"
 end
 
 def source_for_box(box_file)
@@ -68,7 +62,8 @@ def metadata_for_box(box_file, temp_dir)
   box_file.pathmap("#{temp_dir}/%{box/,}d/%n/metadata.json")
 end
 
-rule '.box' => [->(box) { source_for_box(box) }, boxes_dir, ->(box) { metadata_for_box(box, temp_dir) }] do |_rule|
+#rule '.box' => [->(box) { source_for_box(box) }, boxes_dir, ->(box) { metadata_for_box(box, temp_dir) }] do |_rule|
+rule '.box' => [->(box) { source_for_box(box) }, boxes_dir] do |_rule|
   builder = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
   mkdir_p _rule.name.pathmap("%d")
   puts "Building #{_rule.name.pathmap("%f")} using #{builder[:name]}"
@@ -103,9 +98,6 @@ builders.each do |builder_name, builder|
 
       CLOBBER << box_file
       CLEAN.include("tmp/#{builder[:folder]}/#{box_name}-#{version}/metadata.json")
-
-      # This is a temporary file, hopefully
-      CLEAN.include "tmp/metadata.json"
     end
   end
 end

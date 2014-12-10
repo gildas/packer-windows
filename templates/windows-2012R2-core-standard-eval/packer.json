@@ -1,13 +1,15 @@
 {
   "variables":
   {
+    "template":          "box",
+    "organization":      "{{env `USERNAME` }}",
+    "description":       "This is a packer generated box",
     "version":           "0.1.0",
     "os":                "",
     "os_version":        "",
     "os_install":        "",
     "os_edition":        "",
     "os_license":        "",
-    "template":          "template",
     "disk_size":         "40960",
     "mem_size":          "1024",
     "cpus":              "1",
@@ -103,7 +105,6 @@
       "type":                "vagrant",
       "keep_input_artifact": false,
       "compression_level":   1,
-      "include": [ "./tmp/metadata.json" ],
       "vagrantfile_template": "./templates/{{user `template`}}/vagrantfile.template",
       "output": "./box/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
     }
