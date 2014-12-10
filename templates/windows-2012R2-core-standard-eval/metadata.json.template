@@ -1,5 +1,5 @@
 {
-  "name": "gildas/{{user `template`}}",
+  "name": "{{user `template`}}",
   "description": "This box contains Windows 2012 R2 core with the Evaluation license",
   "version": "{{user `version`}}",
   "provider":"{{.Provider}}"
