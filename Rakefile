@@ -104,25 +104,34 @@ builders.each do |builder_name, builder|
       desc "Load all boxes in vagrant"
       task :load_all => "load:#{box_name}"
 
+    current_dir = %x(pwd).split.first
+    box_url     = "file://#{current_dir}/#{box_file}"
+
+      namespace :start do
+        desc "Start a packer template in vagrant"
+        task box_name do
+          sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant up --provider=#{builder[:vagrant_type]} --provision"
+        end
+      end
+
+      namespace :stop do
+        desc "Stop a packer template in vagrant"
+        task box_name do
+          sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant halt"
+        end
+      end
+
+      namespace :delete do
+        desc "Delete a packer template from vagrant"
+        task box_name do
+          sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant destroy -f"
+        end
+      end
+
       CLOBBER << box_file
       CLOBBER << metadata_file
     end
   end
-end
-
-desc "Start a packer template"
-task :start do
-  %x(BOX="#{vagrant_box} TEMPLATE="#{template} vagrant up --provider=#{provider} --provision)
-end
-
-desc "Stop a packer template"
-task :stop do
-  %x(BOX="#{vagrant_box} TEMPLATE="#{template} vagrant halt --provider=#{provider})
-end
-
-desc "Delete a packer template"
-task :delete do
-  %x(BOX="#{vagrant_box} TEMPLATE="#{template} vagrant destroy -f)
 end
 
 task :default => :build_all

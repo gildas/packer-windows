@@ -1,0 +1,31 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure('2') do |config|
+  config.vm.box     = "#{ENV['BOX']}"
+  config.vm.box_url = "#{ENV['BOX_URL']}"
+
+  config.vm.guest             = :windows
+  config.windows.halt_timeout = 15
+  config.vm.communicator      = 'winrm'
+
+  config.winrm.username = 'vagrant'
+  config.winrm.password = 'vagrant'
+
+  config.vm.box_check_update = false
+
+  config.vm.network :forwarded_port, guest: 5985, host: 5985, id: 'winrm', auto_correct: true
+  config.vm.network :forwarded_port, guest: 3389, host: 3389, id: 'rdp',   auto_correct: true
+
+  config.vm.provider :virtualbox do |provider, override|
+    provider.gui = true
+    provider.customize ['modifyvm', :id, '--memory', 2048]
+    provider.customize ['modifyvm', :id, '--cpus', 2]
+  end
+
+  config.vm.provider :vmware_fusion do |provider, override|
+    provider.gui = true
+    provider.vmx['memsize']  = '2048'
+    provider.vmx['numvcpus'] = '2'
+  end
+end
