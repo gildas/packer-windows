@@ -1,5 +1,6 @@
 require 'rake'
 require 'json'
+require 'rake/clean'
 require 'rspec/core/rake_task'
 
 RSpec::Core::RakeTask.new
@@ -99,6 +100,12 @@ builders.each do |builder_name, builder|
 
       desc "Load all boxes in vagrant"
       task :load_all => "load:#{box_name}"
+
+      CLOBBER << box_file
+      CLEAN.include("tmp/#{builder[:folder]}/#{box_name}-#{version}/metadata.json")
+
+      # This is a temporary file, hopefully
+      CLEAN.include "tmp/metadata.json"
     end
   end
 end
