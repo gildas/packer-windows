@@ -1,0 +1,21 @@
+{
+  "name": "<%= template %>",
+  "description": "<%= description %>",
+  "versions":
+  [
+    {
+      "version": "<%= version %>",
+      "providers:
+      [
+<%     providers.each_with_index do |provider, index| -%>
+        {
+          "name":          "<%= provider.name %>",
+          "url":           "<%= provider.url%>",
+          "checksum_type": "<%= provider.checksum_type %>",
+          "checksum":      "<%= provider.checksum %>"
+        }<%= ',' if index < providers.size - 1%>
+<%      end -%>
+      ]
+    }
+  ]
+}
