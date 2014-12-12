@@ -84,12 +84,18 @@
   "provisioners":
   [
     {
+      "type": "file",
+      "source": "./data/inin-extras.zip",
+      "destination": "C:/Windows/Temp/inin-extras.zip"
+    },
+    {
       "type":            "shell",
       "remote_path":     "/tmp/script.bat",
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts":
       [
         "./scripts/install-vmhost-additions.cmd",
+        "./scripts/install-ininextras.cmd",
         "./scripts/install-sysinternals.cmd",
         "./scripts/install-vim.cmd",
         "./scripts/install-puppet.cmd"
