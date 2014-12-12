@@ -71,7 +71,6 @@
         "./scripts/03-install-chocolatey.cmd",
         "./scripts/04-install-openssh.cmd",
         "./scripts/99-start-services.cmd",
-        "./data/oracle-cert.cer",
         "./data/vagrant.pub"
       ],
       "vboxmanage":

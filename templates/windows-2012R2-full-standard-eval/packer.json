@@ -72,7 +72,6 @@
         "./scripts/03-install-chocolatey.cmd",
         "./scripts/04-install-openssh.cmd",
         "./scripts/99-start-services.cmd",
-        "./data/oracle-cert.cer",
         "./data/vagrant.pub"
       ],
       "vboxmanage":
@@ -86,6 +85,11 @@
   "provisioners":
   [
     {
+      "type": "file",
+      "source": "./data/inin-extras.zip",
+      "destination": "C:/Windows/Temp/inin-extras.zip"
+    },
+    {
       "type":            "shell",
       "remote_path":     "/tmp/script.bat",
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
@@ -93,6 +97,7 @@
       [
         "./scripts/install-vmhost-additions.cmd",
         "./scripts/install-sysinternals.cmd",
+        "./scripts/install-ininextras.cmd",
         "./scripts/install-vim.cmd",
         "./scripts/install-puppet.cmd"
       ]
