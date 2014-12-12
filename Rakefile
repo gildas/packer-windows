@@ -100,7 +100,7 @@ builders.each do |builder_name, builder|
 
       namespace :metadata do
         desc "Generate the metadata for box #{box_name}"
-        task box_name => [metadata_file, "build:#{box_name}"]
+        task box_name => [metadata_file, "build:#{builder_name}:#{box_name}"]
 
         desc "Generate the metadata for all boxes"
         task :all => box_name
@@ -109,7 +109,7 @@ builders.each do |builder_name, builder|
       namespace :load do
         namespace builder_name.to_sym do
           desc "Load box #{box_name} version #{version} in vagrant for #{builder_name}"
-          task box_name => ["build:#{box_name}", "metadata:#{box_name}"] do
+          task box_name => ["build:#{builder_name}:#{box_name}", "metadata:#{box_name}"] do
             sh "vagrant box add --force #{box_name} #{box_file}"
           end
 
@@ -121,18 +121,18 @@ builders.each do |builder_name, builder|
         task :all => "#{builder_name}:all"
       end
 
-      namespace :start do
+      namespace :up do
         namespace builder_name.to_sym do
-          desc "Start box #{box_name} in #{builder_name}"
-          task box_name => "load:#{box_name}" do
+          desc "Start a Virtual Machine after the box #{box_name} in #{builder_name}"
+          task box_name => "load:#{builder_name}:#{box_name}" do
             sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant up --provider=#{builder[:vagrant_type]} --provision"
           end
         end
       end
 
-      namespace :stop do
+      namespace :halt do
         namespace builder_name.to_sym do
-          desc "Stop box #{box_name} in #{builder_name}"
+          desc "Stop the Virtual Machine from the box #{box_name} in #{builder_name}"
           task box_name do
             sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant halt"
           end
@@ -145,18 +145,33 @@ builders.each do |builder_name, builder|
         task :all => "#{builder_name}:all"
       end
 
-      namespace :delete do
+      namespace :destroy do
         namespace builder_name.to_sym do
-          desc "Delete box #{box_name} from #{builder_name}"
+          desc "Destroy the Virtual Machine from the box #{box_name} from #{builder_name}"
           task box_name do
             sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant destroy -f"
           end
 
-          desc "Delete all boxes from #{builder_name}"
+          desc "Destroy all Virtual Machines from all boxes from #{builder_name}"
           task :all => box_name
         end
 
-        desc "Delete all boxes from all providers"
+        desc "Destroy all Virtual Machines from all boxes from all providers"
+        task :all => "#{builder_name}:all"
+      end
+
+      namespace :remove do
+        namespace builder_name.to_sym do
+          desc "Remove box #{box_name} from #{builder_name}"
+          task box_name => "destroy:#{builder_name}:#{box_name}" do
+            sh "vagrant box remove -f #{box_name}"
+          end
+
+          desc "Remove all boxes from #{builder_name}"
+          task :all => box_name
+        end
+
+        desc "Remove all boxes from all providers"
         task :all => "#{builder_name}:all"
       end
 
