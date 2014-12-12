@@ -72,6 +72,7 @@ rule 'metadata.json' => ["#{templates_dir}/metadata.json.erb"] do |_rule|
   File.open(_rule.name, 'w') { |output| output.puts renderer.result(binds.get_binding) }
 end
 
+current_dir = %x(pwd).split.first
 builders.each do |builder_name, builder|
   if builder[:supported][]
     TEMPLATE_FILES.each do |template_file|
@@ -79,53 +80,84 @@ builders.each do |builder_name, builder|
       version       = config['version'] || '0.1.0'
       box_name      = template_file.pathmap("%{templates/,}d")
       box_file      = "#{boxes_dir}/#{box_name}/#{builder[:folder]}/#{box_name}-#{version}.box"
+      box_url       = "file://#{current_dir}/#{box_file}"
       metadata_file = "#{boxes_dir}/#{box_name}/metadata.json"
 
       file metadata_file => box_file
 
       namespace :build do
-        desc "Build box #{box_name} version #{version}"
-        task box_name => box_file
-        
-        desc "Generate the metadata for all built boxes"
-        task :metadata => metadata_file
+        namespace builder_name.to_sym do
+          desc "Build box #{box_name} version #{version} with #{builder_name}"
+          task box_name => box_file
+
+          desc "Build all boxes for #{builder_name}"
+          task :all => box_name
+        end
+
+        desc "Build all boxes for all providers"
+        task :all => "#{builder_name}:all"
       end
 
-      desc "Build all templates"
-      task :build_all => "build:#{box_name}"
+      namespace :metadata do
+        desc "Generate the metadata for box #{box_name}"
+        task box_name => [metadata_file, "build:#{box_name}"]
+
+        desc "Generate the metadata for all boxes"
+        task :all => box_name
+      end
 
       namespace :load do
-        desc "Load box #{box_name} version #{version} in vagrant"
-        task box_name => ["build:#{box_name}", metadata_file] do
-          sh "vagrant box add --force #{box_name} #{box_file}"
+        namespace builder_name.to_sym do
+          desc "Load box #{box_name} version #{version} in vagrant for #{builder_name}"
+          task box_name => ["build:#{box_name}", "metadata:#{box_name}"] do
+            sh "vagrant box add --force #{box_name} #{box_file}"
+          end
+
+          desc "Load all boxes in vagrant for #{builder_name}"
+          task :all => box_name
         end
+
+        desc "Load all boxes in vagrant"
+        task :all => "#{builder_name}:all"
       end
 
-      desc "Load all boxes in vagrant"
-      task :load_all => "load:#{box_name}"
-
-    current_dir = %x(pwd).split.first
-    box_url     = "file://#{current_dir}/#{box_file}"
-
       namespace :start do
-        desc "Start a packer template in vagrant"
-        task box_name do
-          sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant up --provider=#{builder[:vagrant_type]} --provision"
+        namespace builder_name.to_sym do
+          desc "Start box #{box_name} in #{builder_name}"
+          task box_name => "load:#{box_name}" do
+            sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant up --provider=#{builder[:vagrant_type]} --provision"
+          end
         end
       end
 
       namespace :stop do
-        desc "Stop a packer template in vagrant"
-        task box_name do
-          sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant halt"
+        namespace builder_name.to_sym do
+          desc "Stop box #{box_name} in #{builder_name}"
+          task box_name do
+            sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant halt"
+          end
+
+          desc "Stop all boxes in #{builder_name}"
+          task :all => box_name
         end
+
+        desc "Stop all boxes in all providers"
+        task :all => "#{builder_name}:all"
       end
 
       namespace :delete do
-        desc "Delete a packer template from vagrant"
-        task box_name do
-          sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant destroy -f"
+        namespace builder_name.to_sym do
+          desc "Delete box #{box_name} from #{builder_name}"
+          task box_name do
+            sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant destroy -f"
+          end
+
+          desc "Delete all boxes from #{builder_name}"
+          task :all => box_name
         end
+
+        desc "Delete all boxes from all providers"
+        task :all => "#{builder_name}:all"
       end
 
       CLOBBER << box_file
@@ -134,4 +166,4 @@ builders.each do |builder_name, builder|
   end
 end
 
-task :default => :build_all
+task :default => ['build:all', 'metadata:all']
