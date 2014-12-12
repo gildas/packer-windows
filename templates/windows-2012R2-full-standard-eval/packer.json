@@ -12,10 +12,7 @@
     "os_license":        "",
     "disk_size":         "40960",
     "mem_size":          "1024",
-    "cpus":              "1",
-    "iso_url":           "",
-    "iso_checksum_type": "md5",
-    "iso_checksum":      ""
+    "cpus":              "1"
   },
   "builders":
   [
@@ -23,9 +20,13 @@
       "type":                "vmware-iso",
       "vm_name":             "win2012r2-standard",
       "guest_os_type":       "windows8srv-64",
-      "iso_url":             "{{ user `iso_url` }}",
-      "iso_checksum_type":   "{{ user `iso_checksum_type` }}",
-      "iso_checksum":        "{{ user `iso_checksum` }}",
+      "iso_urls": [
+        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
+      ],
+      "iso_checksum_type": "md5",
+      "iso_checksum":      "458ff91f8abc21b75cb544744bf92e6a",
       "ssh_username":        "vagrant",
       "ssh_password":        "vagrant",
       "ssh_wait_timeout":    "20m",
@@ -52,9 +53,13 @@
     {
       "type":                 "virtualbox-iso",
       "guest_os_type":        "Windows2012_64",
-      "iso_url":              "{{ user `iso_url` }}",
-      "iso_checksum_type":    "{{ user `iso_checksum_type` }}",
-      "iso_checksum":         "{{ user `iso_checksum` }}",
+      "iso_urls": [
+        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
+      ],
+      "iso_checksum_type": "md5",
+      "iso_checksum":      "458ff91f8abc21b75cb544744bf92e6a",
       "headless":             false,
       "ssh_username":         "vagrant",
       "ssh_password":         "vagrant",
