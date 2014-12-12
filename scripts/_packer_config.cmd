@@ -21,7 +21,7 @@
 :: Uncomment the following to pause if a script run by
 :: floppy/00-run-all-scripts.cmd returns a non-zero exit value
 :: Default: (unset)
-:: set PACKER_PAUSE_ON_ERROR=1
+set PACKER_PAUSE_ON_ERROR=1
 
 :: Uncomment the following to shutdown if a script run by
 :: floppy/00-run-all-scripts.cmd returns a non-zero exit value

@@ -65,6 +65,7 @@
       "floppy_files":
       [
         "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/_packer_config.cmd",
         "./scripts/00-run-all-scripts.cmd",
         "./scripts/01-config-posh.cmd",
         "./scripts/02-config-winrm.cmd",
