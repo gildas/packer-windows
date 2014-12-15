@@ -4,9 +4,13 @@ require 'erb'
 require 'ostruct'
 require 'digest/sha1'
 require 'rake/clean'
-require 'rspec/core/rake_task'
+begin
+  require 'rspec/core/rake_task'
 
-RSpec::Core::RakeTask.new
+  RSpec::Core::RakeTask.new
+rescue LoadError
+  puts "Warning: Test Framework not loaded."
+end
 
 templates_dir = 'templates'
 boxes_dir     = 'boxes'
