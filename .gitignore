@@ -6,7 +6,10 @@ iso/
 
 # For built boxes
 output-*/
+output/
+output
 boxes/
+boxes
 *.box
 
 # temp folder
