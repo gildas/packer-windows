@@ -97,7 +97,7 @@
     },
     {
       "type":            "shell",
-      "remote_path":     "/tmp/script.bat",
+      "remote_path":     "/cygdrive/c/Windows/Temp/script.bat",
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts":
       [
@@ -109,8 +109,8 @@
       ]
     },
     {
-      "type": "shell",
-      "inline":          [ "rm -f /tmp/script.bat" ]
+      "type":   "shell",
+      "inline": [ "rm -f /cygdrive/c/Windows/Temp/script.bat" ]
     }
   ],
   "post-processors":
