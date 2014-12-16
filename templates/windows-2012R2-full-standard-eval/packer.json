@@ -96,6 +96,11 @@
       "destination": "C:/Windows/Temp/inin-extras.zip"
     },
     {
+      "type":        "file",
+      "source":      "./data/GeoTrust_Global_CA.pem",
+      "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
+    },
+    {
       "type":            "shell",
       "remote_path":     "/cygdrive/c/Windows/Temp/script.bat",
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
@@ -105,7 +110,8 @@
         "./scripts/install-ininextras.cmd",
         "./scripts/install-sysinternals.cmd",
         "./scripts/install-vim.cmd",
-        "./scripts/install-puppet.cmd"
+        "./scripts/install-puppet.cmd",
+        "./scripts/install-puppet-modules.cmd"
       ]
     },
     {
