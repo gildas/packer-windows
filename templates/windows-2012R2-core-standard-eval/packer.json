@@ -96,8 +96,8 @@
     },
     {
       "type":            "shell",
-      "remote_path":     "/Windows/Temp/script.ps1",
-      "execute_command": "Powershell.exe -NoLogo -Executionpolicy Unrestricted -File {{.Path}}",
+      "remote_path":     "/cygdrive/c/Windows/Temp/script.ps1",
+      "execute_command": "Powershell.exe -NoLogo -Executionpolicy Unrestricted -File C:/Windows/Temp/script.ps1",
       "scripts":
       [
         "./scripts/config-shell.ps1"
@@ -105,11 +105,11 @@
     },
     {
       "type":   "shell",
-      "inline": [ "rm -f /Windows/Temp/script.ps1" ]
+      "inline": [ "rm -f /cygdrive/c/Windows/Temp/script.ps1" ]
     },
     {
       "type":            "shell",
-      "remote_path":     "/tmp/script.bat",
+      "remote_path":     "/cygdrive/c/Windows/Temp/script.bat",
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts":
       [
@@ -122,7 +122,7 @@
     },
     {
       "type":   "shell",
-      "inline": [ "rm -f /tmp/script.bat" ]
+      "inline": [ "rm -f /cygdrive/c/Windows/Temp/script.bat" ]
     }
   ],
   "post-processors":
