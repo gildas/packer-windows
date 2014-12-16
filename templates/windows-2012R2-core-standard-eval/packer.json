@@ -119,6 +119,7 @@
       "scripts":
       [
         "./scripts/install-vmhost-additions.cmd",
+        "./scripts/install-git.cmd",
         "./scripts/install-ininextras.cmd",
         "./scripts/install-sysinternals.cmd",
         "./scripts/install-vim.cmd",
