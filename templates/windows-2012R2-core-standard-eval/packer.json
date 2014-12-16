@@ -96,6 +96,19 @@
     },
     {
       "type":            "shell",
+      "remote_path":     "/Windows/Temp/script.ps1",
+      "execute_command": "Powershell.exe -NoLogo -Executionpolicy Unrestricted -File {{.Path}}",
+      "scripts":
+      [
+        "./scripts/config-shell.ps1"
+      ]
+    },
+    {
+      "type":   "shell",
+      "inline": [ "rm -f /Windows/Temp/script.ps1" ]
+    },
+    {
+      "type":            "shell",
       "remote_path":     "/tmp/script.bat",
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts":
