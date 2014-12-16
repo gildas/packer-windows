@@ -89,6 +89,21 @@ builders.each do |builder_name, builder|
 
       file metadata_file => box_file
 
+      namespace :validate do
+        namespace builder_name.to_sym do
+          desc "Validate template #{box_name} version #{version} with #{builder_name}"
+          task box_name do
+            sh "packer validate -only=#{builder[:packer_type]} -var-file=#{template_file.pathmap("%d")}/config.json #{template_file}"
+          end
+
+          desc "Validate all templates for #{builder_name}"
+          task :all => box_name
+        end
+
+        desc "Validate all templates for all providers"
+        task :all => "#{builder_name}:all"
+      end
+
       namespace :build do
         namespace builder_name.to_sym do
           desc "Build box #{box_name} version #{version} with #{builder_name}"
