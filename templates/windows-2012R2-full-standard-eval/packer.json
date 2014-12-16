@@ -91,8 +91,8 @@
   "provisioners":
   [
     {
-      "type": "file",
-      "source": "./data/inin-extras.zip",
+      "type":        "file",
+      "source":      "./data/inin-extras.zip",
       "destination": "C:/Windows/Temp/inin-extras.zip"
     },
     {
