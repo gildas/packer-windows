@@ -1,57 +1,110 @@
-$icadminpassword = "vagrant"
+<# # Documentation {{{
+  .Synopsis
+  Installs CIC
+#> # }}}
+[CmdletBinding()] 
+Param(
+  [Parameter(Mandatory=$false)][string] $User            = 'vagrant',
+  [Parameter(Mandatory=$false)][string] $Password        = 'vagrant',
+  [Parameter(Mandatory=$false)][string] $InstallDiskPath = 'E:\',
+  [Parameter(Mandatory=$false)][string] $InstallPath     = 'C:\I3\IC',
+  [Parameter(Mandatory=$false)][switch] $Reboot
+)
 
-if($PSVersionTable.PSVersion.Major -lt 3){
-    Write-Host "powershell version 3 required" -foreground "red"
-    Write-host "Download it from http://www.microsoft.com/en-us/download/details.aspx?id=34595"
-    return
-}
-
-$installFramework = test-path InteractionFirmware*msi
-$installIcServer = test-path ICServer*msi
-
-if( !$installFramework){
-    write-host "Interaction Firmware install is not present in this directory" -ForegroundColor Red
-    return
-}
-
-if( !$installIcServer){
-    write-host "CIC server install is not present in this directory" -ForegroundColor Red
-    return
-}
-
-function WaitForMsiToFinish
+# Prerequisites: {{{
+# Prerequisite: Powershell 3 {{{2
+if($PSVersionTable.PSVersion.Major -lt 3)
 {
-    $fullInstall = $false
-    [System.Console]::Write("Waiting for install to finish...")
-    do{
-        sleep 10
-        $procCount = @(Get-Process | ? { $_.ProcessName -eq "msiexec" }).Count
+    Write-Error "Powershell version 3 or more recent is required"
+    #TODO: Should we return values or raise exceptions?
+    return -1
+}
+# 2}}}
 
-        if($procCount -gt 1){
-            $fullInstall = $true
-        }
+# Prerequisite: .Net 3.5 {{{2
+if ((Get-WindowsFeature Net-Framework-Core).InstallState -ne 'Installed')
+{
+  Write-Verbose "Installing .Net 3.5"
+  Install-WindowsFeature -Name Net-Framework-Core
+  # TODO: Check for errors
+}
+# 2}}}
+# Prerequisites }}}
 
-        $isDone = $fullInstall -and ($procCount -le 1)
-    }while ($isDone -ne $true)
+$InstalledProducts=0
+$Product = 'Interaction Center Server 2015 R1'
+if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product)
+{
+  Write-Verbose "$Product is already installed"
+}
+elseif (! (Test-Path 'E:\Installs\ServerComponents\ICServer_2015_R1.msi'))
+{
+  #TODO: Should we return values or raise exceptions?
+  Write-Error "Cannot install $Product, MSI not found"
+  return -1
+}
+else
+{
+  Write-Verbose "Installing $Product"
+  #TODO: Capture the domain if it is in $User
+  $Domain = $env:COMPUTERNAME
 
-    sleep 5
-    #this is a hack.  msiexec doesn't full exit, so we need to kill it.
-    Stop-Process -processname msiexec -erroraction 'silentlycontinue' -Force
+  $parms  = '/i','E:\Installs\ServerComponents\ICServer_2015_R1.msi'
+  $parms += "PROMPTEDUSER=$User"
+  $parms += "PROMPTEDDOMAIN=$Domain"
+  $parms += "PROMPTEDPASSWORD=$Password"
+  $parms += "INTERACTIVEINTELLIGENCE=$InstallPath"
+  $parms += "TRACING_LOGS=$InstallPath\Logs"
+  $parms += 'STARTEDBYEXEORIUPDATE=1'
+  $parms += 'CANCELBIG4COPY=1'
+  $parms += 'OVERRIDEKBREQUIREMENT=1'
+  $parms += 'REBOOT=ReallySuppress'
+  $parms += '/l*v'
+  $parms += 'C:\Windows\Logs\icserver.log'
+  $parms += '/qb!'
+  $parms += '/norestart'
 
-    Write-Host "DONE" -foreground "green"
+  Start-Process -FilePath msiexec -ArgumentList $parms -Wait
+  # TODO: Check for errors
+  $InstalledProducts += 1
 }
 
-Write-Host "This install and setup process can take a long time, please do not interrupt the process"  -foregroundcolor cyan
-write-host "When complete, you should not see any error in the console"  -foregroundcolor cyan
+$Product = 'Interaction Firmware 2015 R1'
+if (Get-ItemProperty HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product)
+{
+  Write-Verbose "$Product is already installed"
+}
+elseif (! (Test-Path 'E:\Installs\ServerComponents\InteractionFirmware_2015_R1.msi'))
+{
+  #TODO: Should we return values or raise exceptions?
+  Write-Error "Cannot install $Product, MSI not found"
+  return -1
+}
+else
+{
+  Write-Verbose "Installing $Product"
 
-Write-Host "Installing CIC"
-Invoke-Expression "msiexec /i ICServer_2015_R1.msi PROMPTEDUSER=$env:username PROMPTEDDOMAIN=$env:userdomain PROMPTEDPASSWORD=$icadminpassword INTERACTIVEINTELLIGENCE='c:\i3\ic' TRACING_LOGS='c:\i3\ic\logs' STARTEDBYEXEORIUPDATE=1 CANCELBIG4COPY=1 OVERRIDEKBREQUIREMENT=1 REBOOT=ReallySuppress /l*v icserver.log /qb! /norestart"
-WaitForMsiToFinish
+  $parms  = '/i','E:\Installs\ServerComponents\InteractionFirmware_2015_R1.msi'
+  $parms += 'STARTEDBYEXEORIUPDATE=1'
+  $parms += 'REBOOT=ReallySuppress'
+  $parms += '/l*v'
+  $parms += 'C:\Windows\Logs\icfirmware.log'
+  $parms += '/qb!'
+  $parms += '/norestart'
 
-[System.Console]::Write("Installing Interaction Firmware...")
-$args = "/i InteractionFirmware_2015_R1.msi STARTEDBYEXEORIUPDATE=1 REBOOT=ReallySuppress /l*v icfirmware.log /qb! /norestart"
-Start-Process -FilePath "msiexec" -ArgumentList $args -Wait
+  Start-Process -FilePath msiexec -ArgumentList $parms -Wait
+  # TODO: Check for errors
+  $InstalledProducts += 1
+}
 
-Write-Host "DONE" -foreground "green"
-
-write-host "INSTALL IS COMPLETE, PLEASE REBOOT THIS SERVER" -foreground Green
+if ($InstalledProducts -ge 1)
+{
+  if ($Reboot)
+  {
+    Restart-Computer
+  }
+  else
+  {
+    Write-Warning "Do not forget to reboot the computer once"
+  }
+}
