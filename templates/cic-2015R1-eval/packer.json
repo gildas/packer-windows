@@ -1,0 +1,133 @@
+{
+  "variables":
+  {
+    "template":          "box",
+    "organization":      "{{env `USERNAME` }}",
+    "description":       "This is a packer generated box",
+    "version":           "0.1.0",
+    "os":                "",
+    "os_version":        "",
+    "os_install":        "",
+    "os_edition":        "",
+    "os_license":        "",
+    "disk_size":         "40960",
+    "mem_size":          "1024",
+    "cpus":              "1"
+  },
+  "builders":
+  [
+    {
+      "type":                "vmware-iso",
+      "vm_name":             "win2012r2-standard",
+      "guest_os_type":       "windows8srv-64",
+      "iso_urls": [
+        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
+      ],
+      "iso_checksum_type":   "md5",
+      "iso_checksum":        "458ff91f8abc21b75cb544744bf92e6a",
+      "output_directory":    "output",
+      "ssh_username":        "vagrant",
+      "ssh_password":        "vagrant",
+      "ssh_wait_timeout":    "20m",
+      "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
+      "tools_upload_flavor": "windows",
+      "disk_size":           "{{user `disk_size`}}",
+      "floppy_files": [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-posh.cmd",
+        "./scripts/02-config-winrm.cmd",
+        "./scripts/03-install-chocolatey.cmd",
+        "./scripts/04-install-openssh.cmd",
+        "./scripts/99-start-services.cmd"
+      ],
+      "vmx_data":
+      {
+        "memsize":              "{{user `mem_size`}}",
+        "numvcpus":             "{{user `cpus`}}",
+        "cpuid.coresPerSocket": "1",
+        "scsi0.virtualDev":     "lsisas1068"
+      }
+    },
+    {
+      "type":                 "virtualbox-iso",
+      "guest_os_type":        "Windows2012_64",
+      "iso_urls": [
+        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
+      ],
+      "iso_checksum_type": "md5",
+      "iso_checksum":      "458ff91f8abc21b75cb544744bf92e6a",
+      "headless":             false,
+      "ssh_username":         "vagrant",
+      "ssh_password":         "vagrant",
+      "ssh_wait_timeout":     "20m",
+      "shutdown_command":     "shutdown /s /t 5 /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_additions_mode": "attach",
+      "disk_size":            "{{user `disk_size`}}",
+      "floppy_files":
+      [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/_packer_config.cmd",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-posh.cmd",
+        "./scripts/02-config-winrm.cmd",
+        "./scripts/03-install-chocolatey.cmd",
+        "./scripts/04-install-openssh.cmd",
+        "./scripts/99-start-services.cmd",
+        "./data/vagrant.pub"
+      ],
+      "vboxmanage":
+      [
+        ["modifyvm", "{{.Name}}", "--memory", "{{user `mem_size`}}"],
+        ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
+        ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"]
+      ]
+    }
+  ],
+  "provisioners":
+  [
+    {
+      "type":        "file",
+      "source":      "./data/inin-extras.zip",
+      "destination": "C:/Windows/Temp/inin-extras.zip"
+    },
+    {
+      "type":        "file",
+      "source":      "./data/GeoTrust_Global_CA.pem",
+      "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
+    },
+    {
+      "type":            "shell",
+      "remote_path":     "/cygdrive/c/Windows/Temp/script.bat",
+      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
+      "scripts":
+      [
+        "./scripts/install-vmhost-additions.cmd",
+        "./scripts/install-git.cmd",
+        "./scripts/install-ininextras.cmd",
+        "./scripts/install-sysinternals.cmd",
+        "./scripts/install-vim.cmd",
+        "./scripts/install-puppet.cmd",
+        "./scripts/install-puppet-modules.cmd"
+      ]
+    },
+    {
+      "type":   "shell",
+      "inline": [ "rm -f /cygdrive/c/Windows/Temp/script.bat" ]
+    }
+  ],
+  "post-processors":
+  [
+    {
+      "type": "vagrant",
+      "keep_input_artifact": false,
+      "compression_level":   1,
+      "vagrantfile_template": "./templates/{{user `template`}}/vagrantfile.template",
+      "output": "./boxes/{{user `template`}}/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
+    }
+  ]
+}
