@@ -119,7 +119,7 @@ builders.each do |builder_name, builder|
 
       namespace :metadata do
         desc "Generate the metadata for box #{box_name}"
-        task box_name => [metadata_file, "build:#{builder_name}:#{box_name}"]
+        task box_name => [metadata_file]
 
         desc "Generate the metadata for all boxes"
         task :all => box_name
