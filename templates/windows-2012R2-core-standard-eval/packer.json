@@ -67,7 +67,7 @@
       "ssh_password":         "vagrant",
       "ssh_wait_timeout":     "20m",
       "shutdown_command":     "shutdown /s /t 5 /d p:4:1 /c \"Packer Shutdown\"",
-      "guest_additions_mode": "attach",
+      "guest_additions_mode": "upload",
       "disk_size":            "{{user `disk_size`}}",
       "floppy_files":
       [
