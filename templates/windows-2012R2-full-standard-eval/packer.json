@@ -103,15 +103,6 @@
     },
     {
       "type":            "shell",
-      "remote_path":     "/cygdrive/c/Windows/Temp/script.ps1",
-      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script.ps1",
-      "scripts":
-      [
-        "./scripts/install-vmhost-additions.ps1"
-      ]
-    },
-    {
-      "type":            "shell",
       "remote_path":     "/cygdrive/c/Windows/Temp/script.bat",
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts":
@@ -125,8 +116,17 @@
       ]
     },
     {
+      "type":            "shell",
+      "remote_path":     "/cygdrive/c/Windows/Temp/script.ps1",
+      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script.ps1",
+      "scripts":
+      [
+        "./scripts/install-vmhost-additions.ps1"
+      ]
+    },
+    {
       "type":   "shell",
-      "inline": [ "rm -f /cygdrive/c/Windows/Temp/script.ps" ]
+      "inline": [ "rm -f /cygdrive/c/Windows/Temp/script.ps1" ]
     },
     {
       "type":   "shell",
