@@ -90,7 +90,31 @@ else
   $parms += '/qb!'
   $parms += '/norestart'
 
-  Start-Process -FilePath msiexec -ArgumentList $parms -Wait
+  # The ICServer MSI tends to not finish properly even if successful
+  $process = Start-Process -FilePath msiexec -ArgumentList $parms -PassThru
+
+  # Let's wait for things to start and be well under way
+  Start-Sleep 60
+
+  # Check for MSI Exec processes
+  while (@(Get-Process | Where ProcessName -eq 'msiexec').Count -gt 0)
+  {
+    Start-Sleep 10
+  }
+  Write-Verbose "  No more MSI running"
+
+  # Check for successful installation
+  if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product)
+  {
+    Write-Verbose "$Product is installed"
+  }
+  else
+  {
+    #TODO: Should we return values or raise exceptions?
+    Write-Error "Failed to install $Product"
+    return -2
+  }
+
   # TODO: Check for errors
   $InstalledProducts += 1
 }
