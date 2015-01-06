@@ -117,6 +117,10 @@
     },
     {
       "type":   "shell",
+      "inline": [ "rm -f /cygdrive/c/Windows/Temp/script.ps1" ]
+    },
+    {
+      "type":   "shell",
       "inline": [ "rm -f /cygdrive/c/Windows/Temp/script.bat" ]
     }
   ],
