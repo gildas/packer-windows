@@ -17,18 +17,16 @@ if ($env:PACKER_BUILDER_TYPE -match 'vmware')
     $drive = (Get-Volume -DiskImage $image).DriveLetter
     Write-Host "ISO Mounted on $drive"
     Write-Host "Installing VMWare Guest Additions"
-    Start-Process ${drive}:\setup.exe -ArgumentList '/S','/v','"/qb! /l*v C:\Windows\Logs\vmware-tools.log REBOOT=R ADDLOCAL=ALL"' -Wait
+    Start-Process ${drive}:\setup.exe -ArgumentList '/S','/v','"/qn /l*v C:\Windows\Logs\vmware-tools.log REBOOT=ReallySuppress ADDLOCAL=ALL"' -Wait
     if (! $?)
     {
       Write-Error "ERROR $LastExitCode while installing VMWare Guest Additions"
       Start-Sleep 10
       exit 2
     }
-    Write-Host "Dismounting ISO"
-    Dismount-DiskImage $image.ImagePath
-    Write-Host "Restarting Virtual Machine"
-    Restart-Computer
-    Start-Sleep 30
+#    Write-Host "Restarting Virtual Machine"
+#    Restart-Computer
+#    Start-Sleep 30
   }
   else
   {
@@ -68,10 +66,10 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
       exit 2
     }
     Write-Host "Dismounting ISO"
-    Dismount-DiskImage $image.ImagePath
-    Write-Host "Restarting Virtual Machine"
-    Restart-Computer
-    Start-Sleep 30
+    Dismount-DiskImage -ImagePath $image.ImagePath
+#    Write-Host "Restarting Virtual Machine"
+#    Restart-Computer
+#    Start-Sleep 30
   }
   else
   {
