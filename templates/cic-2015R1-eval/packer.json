@@ -98,6 +98,16 @@
     },
     {
       "type":        "file",
+      "source":      "./iso/ICServer_2015_R1.msi",
+      "destination": "C:/Windows/Temp/ICServer_2015_R1.msi"
+    },
+    {
+      "type":        "file",
+      "source":      "./iso/InteractionFirmware_2015_R1.msi",
+      "destination": "C:/Windows/Temp/InteractionFirmware_2015_R1.msi"
+    },
+    {
+      "type":        "file",
       "source":      "./data/GeoTrust_Global_CA.pem",
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
@@ -119,7 +129,7 @@
     {
       "type":            "shell",
       "remote_path":     "/cygdrive/c/Windows/Temp/script.ps1",
-      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script.ps1",
+      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script.ps1 -Verbose",
       "scripts":
       [
         "./scripts/install-cic.ps1"
@@ -132,6 +142,28 @@
     {
       "type":   "shell",
       "inline": [ "rm -f /cygdrive/c/Windows/Temp/script.bat" ]
+    },
+    {
+      "type":   "shell",
+      "only":   [ "vmware-iso" ],
+      "inline": [ "rm -f /cygdrive/c/Users/vagrant/windows.iso" ]
+    },
+    {
+      "type":   "shell",
+      "only":   [ "virtualbox-iso" ],
+      "inline": [ "rm -f /cygdrive/c/Users/vagrant/VBoxGuestAdditions.iso" ]
+    },
+    {
+      "type":   "shell",
+      "inline": [ "rm -f /cygdrive/c/Windows/Temp/ICServer_2015_R1.msi" ]
+    },
+    {
+      "type":   "shell",
+      "inline": [ "rm -f /cygdrive/c/Windows/Temp/InteractionFirmware_2015_R1.msi" ]
+    },
+    {
+      "type":   "shell",
+      "inline": [ "rm -f /cygdrive/c/Windows/Temp/GeoTrust_Global_CA.pem" ]
     }
   ],
   "post-processors":
