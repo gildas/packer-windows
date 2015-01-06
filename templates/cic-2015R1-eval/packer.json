@@ -116,6 +116,23 @@
       ]
     },
     {
+      "type": "host-command",
+      "command": "./script/mount.sh {{}} ./iso/CIC-2015R1.iso"
+    },
+    {
+      "type":            "shell",
+      "remote_path":     "/cygdrive/c/Windows/Temp/script.ps1",
+      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script.ps1",
+      "scripts":
+      [
+        "./scripts/install-cic.ps1"
+      ]
+    },
+    {
+      "type": "host-command",
+      "command": "./script/unmount.sh {{}}"
+    },
+    {
       "type":   "shell",
       "inline": [ "rm -f /cygdrive/c/Windows/Temp/script.ps1" ]
     },
