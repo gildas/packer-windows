@@ -99,7 +99,6 @@
     { "type": "shell", "inline": [ "chocolatey install sysinternals" ] },
     { "type": "shell", "inline": [ "chocolatey install git" ] },
     { "type": "shell", "inline": [ "chocolatey install vim" ] },
-    { "type": "shell", "inline": [ "chocolatey install qttabbar" ] },
     { "type": "shell", "inline": [ "chocolatey install puppet" ] },
     {
       "type":            "shell",
