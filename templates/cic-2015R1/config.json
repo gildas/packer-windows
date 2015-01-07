@@ -1,5 +1,5 @@
 {
-  "template":          "cic-2015R1-eval",
+  "template":          "cic-2015R1",
   "organization":      "Interactive Intelligence",
   "description":       "This box contains CIC 2015R1",
   "version":           "0.1.0",
