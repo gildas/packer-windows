@@ -20,3 +20,6 @@ log/
 
 # vagrant folder
 .vagrant/
+
+# .GitEye
+/.project
