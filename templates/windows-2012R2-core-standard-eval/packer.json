@@ -113,7 +113,7 @@
     {
       "type":            "shell",
       "remote_path":     "/cygdrive/c/Windows/Temp/script.ps1",
-      "execute_command": "Powershell.exe -NoLogo -Executionpolicy ByPass -File C:/Windows/Temp/script.ps1",
+      "execute_command": "{{.Vars}} Powershell.exe -NoLogo -Executionpolicy ByPass -File C:/Windows/Temp/script.ps1",
       "scripts":
       [
         "./scripts/config-shell.ps1",
