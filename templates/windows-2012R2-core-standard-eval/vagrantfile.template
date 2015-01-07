@@ -38,8 +38,9 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider :virtualbox do |provider, override|
     provider.gui = true
-    provider.customize ['modifyvm', :id, '--ioapic', 'on'] # So we can assign multiple CPUs to the VM
+    provider.customize ['modifyvm', :id, '--ioapic', 'on'] #To assign >1 CPUs
+    provider.customize ['modifyvm', :id, '--vram',   30]
     provider.customize ["modifyvm", :id, "--memory", 2048]
-    provider.customize ["modifyvm", :id, "--cpus", 2]
+    provider.customize ["modifyvm", :id, "--cpus",   2]
   end
 end
