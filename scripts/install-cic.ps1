@@ -10,6 +10,7 @@ Param(
   [Parameter(Mandatory=$false)][string] $InstallSource,
   [Parameter(Mandatory=$false)][switch] $Reboot
 )
+Write-Verbose "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 $Now = Get-Date -Format 'yyyyMMddHHmmss'
 
 # Prerequisites: {{{
@@ -94,13 +95,17 @@ else
   $process = Start-Process -FilePath msiexec -ArgumentList $parms -PassThru
 
   # Let's wait for things to start and be well under way
-  Start-Sleep 60
+  Start-Sleep 30
 
   # Check for MSI Exec processes
-  while (@(Get-Process | Where ProcessName -eq 'msiexec').Count -gt 0)
+  # When there is 0 or 1 MSI process left, we should be good to continue
+  do
   {
     Start-Sleep 10
+    $process_count = @(Get-Process | Where ProcessName -eq 'msiexec').Count
+    Write-Verbose "  Still $process_count MSI processes running [$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')]"
   }
+  while ($process_count -gt 1)
   Write-Verbose "  No more MSI running"
 
   # Check for successful installation
@@ -158,3 +163,4 @@ if ($InstalledProducts -ge 1)
     Write-Warning "Do not forget to reboot the computer once"
   }
 }
+Write-Verbose "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
