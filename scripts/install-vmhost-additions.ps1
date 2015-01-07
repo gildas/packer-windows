@@ -40,7 +40,7 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
   if (Test-Path $iso_path)
   {
     Write-Host "Mounting ISO $iso_path"
-    $image = Mount-DiskImage $iso_path
+    $image = Mount-DiskImage $iso_path -PassThru
     if (! $?)
     {
       Write-Error "ERROR $LastExitCode while mounting VMWare Guest Additions"
