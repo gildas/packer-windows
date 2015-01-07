@@ -156,15 +156,14 @@
     },
     {
       "type":   "shell",
-      "inline": [ "rm -f /cygdrive/c/Windows/Temp/ICServer_2015_R1.msi" ]
-    },
-    {
-      "type":   "shell",
-      "inline": [ "rm -f /cygdrive/c/Windows/Temp/InteractionFirmware_2015_R1.msi" ]
-    },
-    {
-      "type":   "shell",
-      "inline": [ "rm -f /cygdrive/c/Windows/Temp/GeoTrust_Global_CA.pem" ]
+      "inline":
+      [
+        "rm -f /cygdrive/c/Windows/Temp/GeoTrust_Global_CA.pem",
+        "rm -f /cygdrive/c/Windows/Temp/ICServer_2015_R1.msi",
+        "rm -f /cygdrive/c/Windows/Temp/InteractionFirmware_2015_R1.msi",
+        "rm -f /cygdrive/c/Windows/Temp/script.ps1",
+        "rm -f /cygdrive/c/Windows/Temp/script.bat"
+      ]
     }
   ],
   "post-processors":
