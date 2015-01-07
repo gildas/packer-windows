@@ -33,7 +33,7 @@ if (!$InstallSource)
   ForEach ($source in $sources)
   {
     Write-Debug "  Searching in $source"
-    if (Test-Path "${source}\ICServer_2015_R1.msi")
+    if (Test-Path "${source}\InteractionFirmware_2015_R1.msi")
     {
       $InstallSource = $source
       break
@@ -56,73 +56,23 @@ if ((Get-WindowsFeature Net-Framework-Core -Verbose:$false).InstallState -ne 'In
   # TODO: Check for errors
 }
 # 2}}}
-# Prerequisites }}}
 
-$InstalledProducts=0
+# Prerequisite: Interaction Center Server {{{2
 $Product = 'Interaction Center Server 2015 R1'
 if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product)
 {
-  Write-Verbose "$Product is already installed"
-}
-elseif (! (Test-Path "${InstallSource}\ICServer_2015_R1.msi"))
-{
-  #TODO: Should we return values or raise exceptions?
-  Write-Error "Cannot install $Product, MSI not found in $InstallSource"
-  return -1
+  Write-Verbose "$Product is installed"
 }
 else
 {
-  Write-Verbose "Installing $Product"
-  #TODO: Capture the domain if it is in $User
-  $Domain = $env:COMPUTERNAME
-
-  $parms  = '/i',"${InstallSource}\ICServer_2015_R1.msi"
-  $parms += "PROMPTEDUSER=$User"
-  $parms += "PROMPTEDDOMAIN=$Domain"
-  $parms += "PROMPTEDPASSWORD=$Password"
-  $parms += "INTERACTIVEINTELLIGENCE=$InstallPath"
-  $parms += "TRACING_LOGS=$InstallPath\Logs"
-  $parms += 'STARTEDBYEXEORIUPDATE=1'
-  $parms += 'CANCELBIG4COPY=1'
-  $parms += 'OVERRIDEKBREQUIREMENT=1'
-  $parms += 'REBOOT=ReallySuppress'
-  $parms += '/l*v'
-  $parms += "C:\Windows\Logs\icserver-${Now}.log"
-  $parms += '/qb!'
-  $parms += '/norestart'
-
-  # The ICServer MSI tends to not finish properly even if successful
-  $process = Start-Process -FilePath msiexec -ArgumentList $parms -PassThru
-
-  # Let's wait for things to start and be well under way
-  Start-Sleep 30
-
-  # Check for MSI Exec processes
-  # When there is 0 or 1 MSI process left, we should be good to continue
-  do
-  {
-    Start-Sleep 10
-    $process_count = @(Get-Process | Where ProcessName -eq 'msiexec').Count
-    Write-Verbose "  Still $process_count MSI processes running [$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')]"
-  }
-  while ($process_count -gt 1)
-  Write-Verbose "  No more MSI running"
-
-  # Check for successful installation
-  if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product)
-  {
-    Write-Verbose "$Product is installed"
-  }
-  else
-  {
-    #TODO: Should we return values or raise exceptions?
-    Write-Error "Failed to install $Product"
-    return -2
-  }
-
-  # TODO: Check for errors
-  $InstalledProducts += 1
+  #TODO: Should we return values or raise exceptions?
+  Write-Error "$Product is not installed, aborting."
+  return -1
 }
+# 2}}}
+# Prerequisites }}}
+
+$InstalledProducts=0
 
 $Product = 'Interaction Firmware 2015 R1'
 if (Get-ItemProperty HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product)
@@ -137,7 +87,7 @@ elseif (! (Test-Path "${InstallSource}\InteractionFirmware_2015_R1.msi"))
 }
 else
 {
-  Write-Verbose "Installing $Product"
+  Write-Host "Installing $Product"
 
   $parms  = '/i',"${InstallSource}\InteractionFirmware_2015_R1.msi"
   $parms += 'STARTEDBYEXEORIUPDATE=1'
