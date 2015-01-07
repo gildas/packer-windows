@@ -111,6 +111,12 @@
       "source":      "./data/GeoTrust_Global_CA.pem",
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
+    { "type": "shell", "inline": [ "chocolatey install dotnet3.5" ] },
+    { "type": "shell", "inline": [ "chocolatey install sysinternals" ] },
+    { "type": "shell", "inline": [ "chocolatey install git" ] },
+    { "type": "shell", "inline": [ "chocolatey install vim" ] },
+    { "type": "shell", "inline": [ "chocolatey install qttabbar" ] },
+    { "type": "shell", "inline": [ "chocolatey install puppet" ] },
     {
       "type":            "shell",
       "remote_path":     "/cygdrive/c/Windows/Temp/script.bat",
@@ -118,11 +124,6 @@
       "scripts":
       [
         "./scripts/install-vmhost-additions.cmd",
-        "./scripts/install-git.cmd",
-        "./scripts/install-ininextras.cmd",
-        "./scripts/install-sysinternals.cmd",
-        "./scripts/install-vim.cmd",
-        "./scripts/install-puppet.cmd",
         "./scripts/install-puppet-modules.cmd"
       ]
     },
