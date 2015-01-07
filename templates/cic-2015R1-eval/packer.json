@@ -18,7 +18,7 @@
   [
     {
       "type":                "vmware-iso",
-      "vm_name":             "CIC_2015R1",
+      "vm_name":             "packer_CIC_2015R1",
       "guest_os_type":       "windows8srv-64",
       "iso_urls": [
         "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
@@ -53,7 +53,7 @@
     },
     {
       "type":                 "virtualbox-iso",
-      "vm_name":              "CIC_2015R1",
+      "vm_name":              "packer_CIC_2015R1",
       "guest_os_type":        "Windows2012_64",
       "iso_urls": [
         "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
@@ -67,7 +67,7 @@
       "ssh_password":         "vagrant",
       "ssh_wait_timeout":     "20m",
       "shutdown_command":     "shutdown /s /t 5 /d p:4:1 /c \"Packer Shutdown\"",
-      "guest_additions_mode": "attach",
+      "guest_additions_mode": "upload",
       "disk_size":            "{{user `disk_size`}}",
       "floppy_files":
       [
@@ -123,7 +123,7 @@
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts":
       [
-        "./scripts/install-vmhost-additions.cmd",
+        "./scripts/install-ininextras.cmd",
         "./scripts/install-puppet-modules.cmd"
       ]
     },
@@ -148,21 +148,25 @@
       "scripts":
       [
         "./scripts/check-icserver.ps1",
-        "./scripts/install-icfirmware.ps1"
+        "./scripts/install-icfirmware.ps1",
+        "./scripts/install-vmhost-additions.ps1"
       ]
     },
     {
       "type":   "shell",
       "only":   [ "vmware-iso" ],
+      "start_retry_timeout": "5m",
       "inline": [ "rm -f /cygdrive/c/Users/vagrant/windows.iso" ]
     },
     {
       "type":   "shell",
       "only":   [ "virtualbox-iso" ],
+      "start_retry_timeout": "5m",
       "inline": [ "rm -f /cygdrive/c/Users/vagrant/VBoxGuestAdditions.iso" ]
     },
     {
       "type":   "shell",
+      "start_retry_timeout": "5m",
       "inline":
       [
         "rm -f /cygdrive/c/Windows/Temp/GeoTrust_Global_CA.pem",

@@ -93,25 +93,20 @@
   [
     {
       "type":        "file",
-      "source":      "./data/inin-extras.zip",
-      "destination": "C:/Windows/Temp/inin-extras.zip"
-    },
-    {
-      "type":        "file",
       "source":      "./data/GeoTrust_Global_CA.pem",
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
+    { "type": "shell", "inline": [ "chocolatey install sysinternals" ] },
+    { "type": "shell", "inline": [ "chocolatey install git" ] },
+    { "type": "shell", "inline": [ "chocolatey install vim" ] },
+    { "type": "shell", "inline": [ "chocolatey install qttabbar" ] },
+    { "type": "shell", "inline": [ "chocolatey install puppet" ] },
     {
       "type":            "shell",
       "remote_path":     "/cygdrive/c/Windows/Temp/script.bat",
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts":
       [
-        "./scripts/install-git.cmd",
-        "./scripts/install-ininextras.cmd",
-        "./scripts/install-sysinternals.cmd",
-        "./scripts/install-vim.cmd",
-        "./scripts/install-puppet.cmd",
         "./scripts/install-puppet-modules.cmd"
       ]
     },
@@ -126,11 +121,25 @@
     },
     {
       "type":   "shell",
-      "inline": [ "rm -f /cygdrive/c/Windows/Temp/script.ps1" ]
+      "only":   [ "vmware-iso" ],
+      "start_retry_timeout": "5m",
+      "inline": [ "rm -f /cygdrive/c/Users/vagrant/windows.iso" ]
     },
     {
       "type":   "shell",
-      "inline": [ "rm -f /cygdrive/c/Windows/Temp/script.bat" ]
+      "only":   [ "virtualbox-iso" ],
+      "start_retry_timeout": "5m",
+      "inline": [ "rm -f /cygdrive/c/Users/vagrant/VBoxGuestAdditions.iso" ]
+    },
+    {
+      "type":   "shell",
+      "start_retry_timeout": "5m",
+      "inline":
+      [
+        "rm -f /cygdrive/c/Windows/Temp/GeoTrust_Global_CA.pem",
+        "rm -f /cygdrive/c/Windows/Temp/script.ps1",
+        "rm -f /cygdrive/c/Windows/Temp/script.bat"
+      ]
     }
   ],
   "post-processors":
