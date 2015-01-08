@@ -28,7 +28,7 @@ builders = {
     folder:       'hyperv',
     vagrant_type: 'hyperv',
     packer_type:  'hyperv-iso',
-    supported:    lambda { RUBY_PLATFORM == 'x64-mingw32' }
+    supported:    lambda { RUBY_PLATFORM == 'y64-mingw32' }
   },
   virtualbox:
   {
