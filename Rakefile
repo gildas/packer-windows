@@ -18,7 +18,21 @@ boxes_dir     = 'boxes'
 temp_dir      = 'tmp'
 
 def which(f)
-  ENV['PATH'].split(File::PATH_SEPARATOR).find {|p| File.exists? File.join(p,f)}
+  if RUBY_PLATFORM == 'x64-mingw32'
+    path = ENV['PATH'].split(File::PATH_SEPARATOR).find do |p|
+      ['.exe', '.bat', '.cmd', '.ps1'].find do |ext|
+        File.exists? File.join(p,f + ext)
+      end
+    end
+  else
+    path = ENV['PATH'].split(File::PATH_SEPARATOR).find {|p| File.exists? File.join(p,f)}
+  end
+  return File.join(path, f) unless path.nil?
+  nil
+end
+
+['packer'].each do |application|
+  raise RuntimeError, "Program #{application} is not accessible via the command line" unless which(application)
 end
 
 builders = {
