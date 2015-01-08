@@ -1,4 +1,5 @@
 require 'rake'
+require 'fileutils'
 require 'json'
 require 'erb'
 require 'ostruct'
@@ -129,7 +130,17 @@ builders.each do |builder_name, builder|
         namespace builder_name.to_sym do
           desc "Load box #{box_name} version #{version} in vagrant for #{builder_name}"
           task box_name => ["build:#{builder_name}:#{box_name}", "metadata:#{box_name}"] do
+            box_root = "#{ENV['VAGRANT_HOME']}/boxes/#{box_name}"
+            vagrant_provider = builders[builder_name][:vagrant_type]
+            if Dir.exist? "#{box_root}/#{version}"
+              FileUtils.rm_r "#{box_root}/#{version}/#{vagrant_provider}", force: true
+            else
+              FileUtils.mkdir_p "#{box_root}/#{version}"
+            end
             sh "vagrant box add --force #{box_name} #{box_file}"
+            # Now move the new box in the proper version folder
+            FileUtils.mv   "#{box_root}/0/#{vagrant_provider}", "#{box_root}/#{version}"
+            FileUtils.rm_r "#{box_root}/0", force: true
           end
 
           desc "Load all boxes in vagrant for #{builder_name}"
