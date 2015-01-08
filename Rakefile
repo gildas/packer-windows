@@ -155,6 +155,7 @@ builders.each do |builder_name, builder|
             # Now move the new box in the proper version folder
             FileUtils.mv   "#{box_root}/0/#{vagrant_provider}", "#{box_root}/#{version}"
             FileUtils.rm_r "#{box_root}/0", force: true
+            puts "==> box: Successfully updated box '#{box_name}' version to #{version} for '#{vagrant_provider}'"
           end
 
           desc "Load all boxes in vagrant for #{builder_name}"
