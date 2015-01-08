@@ -22,6 +22,14 @@ def which(f)
 end
 
 builders = {
+  hyperv:
+  {
+    name:         'hyperv',
+    folder:       'hyperv',
+    vagrant_type: 'hyperv',
+    packer_type:  'hyperv-iso',
+    supported:    lambda { RUBY_PLATFORM == 'x64-mingw32' }
+  },
   virtualbox:
   {
     name:         'virtualbox',
