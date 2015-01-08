@@ -74,10 +74,9 @@ end
 rule 'metadata.json' => ["#{templates_dir}/metadata.json.erb"] do |_rule|
   template = File.basename(_rule.name.pathmap("%d"))
   puts "Generating metadata.json for template #{template}"
-  current_dir = %x(pwd).split.first
   providers   = _rule.prerequisites.reject {|p| p == _rule.source}.collect do |p|
     provider      = File.basename(p.pathmap("%d"))
-    url           = "file://#{current_dir}/#{p}"
+    url           = "file://#{Dir.pwd}/#{p}"
     checksum_type = 'sha1'
     print "  Calculating SHA1 checksum for provider #{provider}..."
     checksum      = Digest::SHA1.file(p).hexdigest
@@ -91,7 +90,6 @@ rule 'metadata.json' => ["#{templates_dir}/metadata.json.erb"] do |_rule|
   File.open(_rule.name, 'w') { |output| output.puts renderer.result(binds.get_binding) }
 end
 
-current_dir = %x(pwd).split.first
 builders.each do |builder_name, builder|
   if builder[:supported][]
     TEMPLATE_FILES.each do |template_file|
@@ -99,7 +97,7 @@ builders.each do |builder_name, builder|
       version       = config['version'] || '0.1.0'
       box_name      = template_file.pathmap("%{templates/,}d")
       box_file      = "#{boxes_dir}/#{box_name}/#{builder[:folder]}/#{box_name}-#{version}.box"
-      box_url       = "file://#{current_dir}/#{box_file}"
+      box_url       = "file://#{Dir.pwd}/#{box_file}"
       metadata_file = "#{boxes_dir}/#{box_name}/metadata.json"
 
       file metadata_file => box_file
