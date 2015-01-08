@@ -18,8 +18,22 @@ boxes_dir     = 'boxes'
 temp_dir      = 'tmp'
 
 builders = {
-  virtualbox: { name: 'virtualbox', folder: 'virtualbox', vagrant_type: 'virtualbox',     packer_type: 'virtualbox-iso', supported: lambda { ! %x(which VBoxManage).empty? } },
-  vmware:     { name: 'vmware',     folder: 'vmware',     vagrant_type: 'vmware_desktop', packer_type: 'vmware-iso',     supported: lambda { File.exists? '/Applications/VMware Fusion.app/Contents/Library/vmrun' } },
+  virtualbox:
+  {
+    name:         'virtualbox',
+    folder:       'virtualbox',
+    vagrant_type: 'virtualbox',
+    packer_type:  'virtualbox-iso',
+    supported:    lambda { ! %x(which VBoxManage).empty? }
+  },
+  vmware:
+  {
+    name:         'vmware',
+    folder:       'vmware',
+    vagrant_type: 'vmware_desktop',
+    packer_type:  'vmware-iso',
+    supported:    lambda { File.exists? '/Applications/VMware Fusion.app/Contents/Library/vmrun' }
+  },
 }
 
 TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/packer.json")
