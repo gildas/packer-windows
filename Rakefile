@@ -17,6 +17,10 @@ templates_dir = 'templates'
 boxes_dir     = 'boxes'
 temp_dir      = 'tmp'
 
+def which(f)
+  ENV['PATH'].split(File::PATH_SEPARATOR).find {|p| File.exists? File.join(p,f)}
+end
+
 builders = {
   virtualbox:
   {
@@ -24,7 +28,7 @@ builders = {
     folder:       'virtualbox',
     vagrant_type: 'virtualbox',
     packer_type:  'virtualbox-iso',
-    supported:    lambda { ! %x(which VBoxManage).empty? }
+    supported:    lambda { which(RUBY_PLATFORM == 'x64-mingw32' ? 'VBoxManage.exe' : 'VBoxManage') }
   },
   vmware:
   {
