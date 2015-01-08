@@ -129,8 +129,8 @@
     },
     {
       "type":            "shell",
-      "remote_path":     "/cygdrive/c/Windows/Temp/script.ps1",
-      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script.ps1 -Verbose",
+      "remote_path":     "/cygdrive/c/Windows/Temp/script-install-icserver.ps1",
+      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script-install-icserver.ps1 -Verbose",
       "scripts":
       [
         "./scripts/install-icserver.ps1"
@@ -172,7 +172,7 @@
         "rm -f /cygdrive/c/Windows/Temp/GeoTrust_Global_CA.pem",
         "rm -f /cygdrive/c/Windows/Temp/ICServer_2015_R1.msi",
         "rm -f /cygdrive/c/Windows/Temp/InteractionFirmware_2015_R1.msi",
-        "rm -f /cygdrive/c/Windows/Temp/script.ps1",
+        "rm -f /cygdrive/c/Windows/Temp/script*.ps1",
         "rm -f /cygdrive/c/Windows/Temp/script.bat"
       ]
     }

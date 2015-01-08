@@ -97,7 +97,7 @@ else
   $parms += '/qb!'
   $parms += '/norestart'
 
-  &msiexec $parms
+  Start-Process -FilePath msiexec -ArgumentList $parms -Wait -Verbose
   # TODO: Check for errors
   $InstalledProducts += 1
 }
