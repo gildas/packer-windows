@@ -36,7 +36,12 @@ builders = {
     folder:       'virtualbox',
     vagrant_type: 'virtualbox',
     packer_type:  'virtualbox-iso',
-    supported:    lambda { which(RUBY_PLATFORM == 'x64-mingw32' ? 'VBoxManage.exe' : 'VBoxManage') }
+    supported:    lambda {
+      case RUBY_PLATFORM
+      when 'x64-mingw32' then ! ENV['VBOX_INSTALL_PATH'].nil?
+        else which('VBoxManage')
+      end
+    }
   },
   vmware:
   {
