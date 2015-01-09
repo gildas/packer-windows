@@ -61,7 +61,6 @@
       "ssh_password":        "vagrant",
       "ssh_wait_timeout":    "20m",
       "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
-      "tools_upload_flavor": "windows",
       "disk_size":           "{{user `disk_size`}}",
       "floppy_files": [
         "./templates/{{user `template`}}/Autounattend.xml",
@@ -147,12 +146,6 @@
         "./scripts/config-shell.ps1",
         "./scripts/install-vmhost-additions.ps1"
       ]
-    },
-    {
-      "type":   "shell",
-      "only":   [ "vmware-iso" ],
-      "start_retry_timeout": "5m",
-      "inline": [ "rm -f /cygdrive/c/Users/vagrant/windows.iso" ]
     },
     {
       "type":   "shell",

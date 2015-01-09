@@ -17,7 +17,7 @@ if ($env:PACKER_BUILDER_TYPE -match 'vmware')
     $drive = (Get-Volume -DiskImage $image).DriveLetter
     Write-Host "ISO Mounted on $drive"
     Write-Host "Installing VMWare Guest Additions"
-    Start-Process ${drive}:\setup.exe -ArgumentList '/S','/v','"/qn /l*v C:\Windows\Logs\vmware-tools.log REBOOT=ReallySuppress ADDLOCAL=ALL"' -Wait
+    Start-Process ${drive}:\setup.exe -ArgumentList '/S','/v','"/qn /norestart /l*v C:\Windows\Logs\vmware-tools.log REBOOT=ReallySuppress ADDLOCAL=ALL"' -Wait
     if (! $?)
     {
       Write-Error "ERROR $LastExitCode while installing VMWare Guest Additions"
@@ -30,8 +30,7 @@ if ($env:PACKER_BUILDER_TYPE -match 'vmware')
   }
   else
   {
-    Write-Error "ISO Not found in [$iso_path]"
-    exit 2
+    Write-Host "ISO was not loaded [$iso_path], nothing will happen"
   }
 }
 elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
@@ -73,8 +72,7 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
   }
   else
   {
-    Write-Error "ISO Not found in [$iso_path]"
-    exit 2
+    Write-Host "ISO was not loaded [$iso_path], nothing will happen"
   }
 }
 else
