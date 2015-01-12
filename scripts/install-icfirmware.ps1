@@ -19,7 +19,7 @@ if($PSVersionTable.PSVersion.Major -lt 3)
 {
     Write-Error "Powershell version 3 or more recent is required"
     #TODO: Should we return values or raise exceptions?
-    return -1
+    exit 1
 }
 # 2}}}
 
@@ -42,7 +42,7 @@ if (!$InstallSource)
   if (!$InstallSource)
   {
     Write-Error "CIC Installation source not found, please provide a source via the command line arguments"
-    return 1
+    exit 1
   }
 }
 Write-Verbose "Installing CIC from $InstallSource"
@@ -67,7 +67,7 @@ else
 {
   #TODO: Should we return values or raise exceptions?
   Write-Error "$Product is not installed, aborting."
-  return -1
+  exit 1
 }
 # 2}}}
 # Prerequisites }}}
@@ -83,7 +83,12 @@ elseif (! (Test-Path "${InstallSource}\InteractionFirmware_2015_R1.msi"))
 {
   #TODO: Should we return values or raise exceptions?
   Write-Error "Cannot install $Product, MSI not found in $InstallSource"
-  return -1
+  exit 1
+}
+elseif (! $(Get-Checksum -SHA1 -Path ${InstallSource}\InteractionFirmware_2015_R1.msi -eq '83992CF5E333827E31B05450FBD269E0414D5A6B'))
+{
+  Write-Error "Cannot install $Product, MSI found in $InstallSource is corrupted"
+  exit 1
 }
 else
 {

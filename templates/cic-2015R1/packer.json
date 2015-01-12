@@ -102,6 +102,9 @@
       "destination": "C:/Windows/Temp/ICServer_2015_R1.msi"
     },
     {
+      "type":   "shell",
+    },
+    {
       "type":        "file",
       "source":      "./iso/InteractionFirmware_2015_R1.msi",
       "destination": "C:/Windows/Temp/InteractionFirmware_2015_R1.msi"
@@ -117,6 +120,11 @@
     { "type": "shell", "inline": [ "chocolatey install vim" ] },
     { "type": "shell", "inline": [ "chocolatey install qttabbar" ] },
     { "type": "shell", "inline": [ "chocolatey install puppet" ] },
+    {
+      "type":        "file",
+      "source":      "./scripts/Get-Checksum.ps1",
+      "destination": "C:/tools/sysinternals/Get-Checksum.ps1"
+    },
     {
       "type":            "shell",
       "remote_path":     "/cygdrive/c/Windows/Temp/script.bat",
