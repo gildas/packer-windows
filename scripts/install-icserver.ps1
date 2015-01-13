@@ -70,7 +70,7 @@ elseif (! (Test-Path "${InstallSource}\ICServer_2015_R1.msi"))
   Write-Error "Cannot install $Product, MSI not found in $InstallSource"
   exit 1
 }
-elseif (! $(Get-Checksum -SHA1 -Path ${InstallSource}\ICServer_2015_R1.msi -eq '3D5F82A700E441498C12F930DB110865195B4A9B'))
+elseif (! $(C:\tools\sysinternals\Get-Checksum.ps1 -SHA1 -Path ${InstallSource}\ICServer_2015_R1.msi -eq '3D5F82A700E441498C12F930DB110865195B4A9B'))
 {
   Write-Error "Cannot install $Product, MSI found in $InstallSource is corrupted"
   exit 1

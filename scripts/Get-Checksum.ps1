@@ -19,15 +19,15 @@ If present, the checksum will be compared to the value of the parameter.
 The Cmdlet will return an error if both values do not match. This is case insensitive.
 
 .EXAMPLE
-sha1sum C:\windows\explorer.exe
+Get-Checksum -MD5 C:\windows\explorer.exe
 
 .EXAMPLE
-Get-ChildItem C:\windows\explorer.exe | sha1sum
+Get-ChildItem C:\windows\explorer.exe | Get-Checksum
 
-.EXAMPLE This will return a success or filure error code:
-sha1sum C:\windows\explorer.exe -eq '83e89fee77583097ddbb2648af43c097c62580fc'
+.EXAMPLE This will return a success or failure error code:
+Get-Checksum -SHA1 C:\windows\explorer.exe -eq '83e89fee77583097ddbb2648af43c097c62580fc'
 #>
-[CMdletBinding(DefaultParameterSet="SHA1")]
+[CmdletBinding(DefaultParameterSetName="SHA1")]
 param(
   [Parameter(ParameterSetName="SHA1", Mandatory=$true)]
   [switch] $SHA1,
@@ -40,10 +40,12 @@ param(
 )
 begin
 {
-  switch($cmdlet.ParameterShetName)
+  Write-Verbose "ParameterSet Name: $($PSCmdlet.ParameterSetName)"
+  switch($PSCmdlet.ParameterSetName)
   {
-    "SHA1" { $provider = New-Object System.Security.Cryptography.SHA1CryptoServiceProvider }
-    "MD5"  { $provider = New-Object System.Security.Cryptography.MD5CryptoServiceProvider  }
+    "SHA1"  { $provider = New-Object System.Security.Cryptography.SHA1CryptoServiceProvider }
+    "MD5"   { $provider = New-Object System.Security.Cryptography.MD5CryptoServiceProvider  }
+    default { $provider = New-Object System.Security.Cryptography.SHA1CryptoServiceProvider }
   }
 }
 process
@@ -68,13 +70,13 @@ process
         if ($checksum -ieq $eq)
         {
           Write-Verbose 'matches'
-          exit
+          return $true
         }
         else
         {
           Write-Error 'does not match'
           #Throw [System.IO.InvalidDataException]
-          exit 1
+          return $false
         }
       }
       else

@@ -85,7 +85,7 @@ elseif (! (Test-Path "${InstallSource}\InteractionFirmware_2015_R1.msi"))
   Write-Error "Cannot install $Product, MSI not found in $InstallSource"
   exit 1
 }
-elseif (! $(Get-Checksum -SHA1 -Path ${InstallSource}\InteractionFirmware_2015_R1.msi -eq '83992CF5E333827E31B05450FBD269E0414D5A6B'))
+elseif (! $(C:\tools\sysinternals\Get-Checksum.ps1 -SHA1 -Path ${InstallSource}\InteractionFirmware_2015_R1.msi -eq '83992CF5E333827E31B05450FBD269E0414D5A6B'))
 {
   Write-Error "Cannot install $Product, MSI found in $InstallSource is corrupted"
   exit 1
