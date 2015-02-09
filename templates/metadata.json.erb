@@ -1,10 +1,13 @@
 {
-  "name": "<%= template %>",
+  "name":        "<%= organization%>/<%= template %>",
   "description": "<%= description %>",
   "versions":
   [
     {
       "version": "<%= version %>",
+      "status":  "active",
+      "description_html":     "<p><%= description %></p>",
+      "description_markdown": "<%= description %>",
       "providers:
       [
 <%     providers.each_with_index do |provider, index| -%>
