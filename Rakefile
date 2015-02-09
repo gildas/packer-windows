@@ -108,9 +108,9 @@ rule 'metadata.json' => ["#{templates_dir}/metadata.json.erb"] do |_rule|
   providers   = _rule.prerequisites.reject {|p| p == _rule.source}.collect do |p|
     provider      = File.basename(p.pathmap("%d"))
     url           = "file://#{Dir.pwd}/#{p}"
-    checksum_type = 'sha1'
-    print "  Calculating SHA1 checksum for provider #{provider}..."
-    checksum      = Digest::SHA1.file(p).hexdigest
+    checksum_type = 'md5'
+    print "  Calculating MD5 checksum for provider #{provider}..."
+    checksum      = Digest::MD5.file(p).hexdigest
     puts '.'
     OpenStruct.new name: provider, url: url, checksum: checksum, checksum_type: checksum_type
   end
