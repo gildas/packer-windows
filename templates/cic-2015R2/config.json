@@ -1,0 +1,14 @@
+{
+  "template":          "cic-2015R2",
+  "organization":      "Interactive Intelligence",
+  "description":       "This box contains CIC 2015R2",
+  "version":           "0.1.0",
+  "os":                "windows",
+  "os_version":        "2012R2",
+  "os_install":        "full",
+  "os_edition":        "standard",
+  "os_license":        "eval",
+  "disk_size":         "81920",
+  "mem_size":          "2048",
+  "cpus":              "2"
+}
