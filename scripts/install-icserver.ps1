@@ -33,7 +33,7 @@ if (!$InstallSource)
   ForEach ($source in $sources)
   {
     Write-Debug "  Searching in $source"
-    if (Test-Path "${source}\ICServer_2015_R1.msi")
+    if (Test-Path "${source}\ICServer_2015_R2.msi")
     {
       $InstallSource = $source
       break
@@ -59,18 +59,18 @@ if ((Get-WindowsFeature Net-Framework-Core -Verbose:$false).InstallState -ne 'In
 # Prerequisites }}}
 
 $InstalledProducts=0
-$Product = 'Interaction Center Server 2015 R1'
+$Product = 'Interaction Center Server 2015 R2'
 if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product)
 {
   Write-Verbose "$Product is already installed"
 }
-elseif (! (Test-Path "${InstallSource}\ICServer_2015_R1.msi"))
+elseif (! (Test-Path "${InstallSource}\ICServer_2015_R2.msi"))
 {
   #TODO: Should we return values or raise exceptions?
   Write-Error "Cannot install $Product, MSI not found in $InstallSource"
   exit 1
 }
-elseif (! $(C:\tools\sysinternals\Get-Checksum.ps1 -SHA1 -Path ${InstallSource}\ICServer_2015_R1.msi -eq '3D5F82A700E441498C12F930DB110865195B4A9B'))
+elseif (! $(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${InstallSource}\ICServer_2015_R2.msi -eq '901AC9B42DD4EB454FF23B7B301A74A6'))
 {
   Write-Error "Cannot install $Product, MSI found in $InstallSource is corrupted"
   exit 1
@@ -81,7 +81,7 @@ else
   #TODO: Capture the domain if it is in $User
   $Domain = $env:COMPUTERNAME
 
-  $parms  = '/i',"${InstallSource}\ICServer_2015_R1.msi"
+  $parms  = '/i',"${InstallSource}\ICServer_2015_R2.msi"
   $parms += "PROMPTEDUSER=$User"
   $parms += "PROMPTEDDOMAIN=$Domain"
   $parms += "PROMPTEDPASSWORD=$Password"
