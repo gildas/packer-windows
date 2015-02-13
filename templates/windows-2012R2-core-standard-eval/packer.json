@@ -151,10 +151,10 @@
       "source":      "./data/GeoTrust_Global_CA.pem",
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
-    { "type": "shell", "inline": [ "chocolatey install sysinternals" ] },
-    { "type": "shell", "inline": [ "chocolatey install git" ] },
-    { "type": "shell", "inline": [ "chocolatey install vim" ] },
-    { "type": "shell", "inline": [ "chocolatey install puppet" ] },
+    { "type": "shell", "inline": [ "chocolatey install -y sysinternals" ] },
+    { "type": "shell", "inline": [ "chocolatey install -y git" ] },
+    { "type": "shell", "inline": [ "chocolatey install -y vim" ] },
+    { "type": "shell", "inline": [ "chocolatey install -y puppet" ] },
     {
       "type":            "shell",
       "remote_path":     "/cygdrive/c/Windows/Temp/script.bat",
