@@ -44,6 +44,14 @@ builders = {
     packer_type:  'hyperv-iso',
     supported:    lambda { RUBY_PLATFORM == 'y64-mingw32' }
   },
+  parallels:
+  {
+    name:         'parallels',
+    folder:       'parallels',
+    vagrant_type: 'parallels',
+    packer_type:  'parallels-iso',
+    supported:    lambda { RUBY_PLATFORM =~ /.*darwin.*/ && which('prlctl') }
+  },
   virtualbox:
   {
     name:         'virtualbox',

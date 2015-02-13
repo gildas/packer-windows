@@ -49,14 +49,14 @@
         "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
         "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
       ],
-      "iso_checksum_type":     "md5",
-      "iso_checksum":          "458ff91f8abc21b75cb544744bf92e6a",
-      "ssh_username":          "vagrant",
-      "ssh_password":          "vagrant",
-      "ssh_wait_timeout":      "20m",
-      "shutdown_command":      "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
-      "parallels_tool_flavor": "win",
-      "disk_size":             "{{user `disk_size`}}",
+      "iso_checksum_type":      "md5",
+      "iso_checksum":           "458ff91f8abc21b75cb544744bf92e6a",
+      "ssh_username":           "vagrant",
+      "ssh_password":           "vagrant",
+      "ssh_wait_timeout":       "20m",
+      "shutdown_command":       "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
+      "parallels_tools_flavor": "win",
+      "disk_size":              "{{user `disk_size`}}",
       "floppy_files": [
         "./templates/{{user `template`}}/Autounattend.xml",
         "./scripts/00-run-all-scripts.cmd",
@@ -66,7 +66,7 @@
         "./scripts/04-install-openssh.cmd",
         "./scripts/99-start-services.cmd"
       ],
-      "prctl":
+      "prlctl":
       [
         ["set", "{{.Name}}", "--memsize", "{{user `mem_size`}}"],
         ["set", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
