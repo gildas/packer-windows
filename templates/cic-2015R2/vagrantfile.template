@@ -31,7 +31,6 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provider :parallels do |provider, override|
-    provider.gui                        = true
     provider.update_guest_tools         = true
     provider.optimize_power_consumption = false # CIC is quite demanding on CPU!
     provider.memory                     = 2048
