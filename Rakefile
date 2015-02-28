@@ -129,8 +129,10 @@ rule 'metadata.json' => ["#{templates_dir}/metadata.json.erb"] do |_rule|
   File.open(_rule.name, 'w') { |output| output.puts renderer.result(binds.get_binding) }
 end
 
+builders_in_use=0
 builders.each do |builder_name, builder|
   if builder[:supported][]
+    builders_in_use += 1
     TEMPLATE_FILES.each do |template_file|
       config        = load_json(template_file.pathmap("%d/config.json"))
       version       = config['version'] || '0.1.0'
@@ -261,6 +263,10 @@ builders.each do |builder_name, builder|
       CLOBBER << metadata_file
     end
   end
+end
+
+unless builders_in_use > 0
+    STDERR.puts "Error: could not find any virtualization builder!"
 end
 
 task :default => ['build:all', 'metadata:all']
