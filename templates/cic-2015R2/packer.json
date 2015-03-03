@@ -146,6 +146,7 @@
       "source":      "./data/GeoTrust_Global_CA.pem",
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
+    { "type": "shell", "inline": [ "net accounts /maxpwage:unlimited" ] },
     { "type": "shell", "inline": [ "chocolatey install -y dotnet3.5" ] },
     { "type": "shell", "inline": [ "chocolatey install -y sysinternals" ] },
     { "type": "shell", "inline": [ "chocolatey install -y git" ] },
