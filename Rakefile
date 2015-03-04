@@ -182,7 +182,7 @@ builders.each do |builder_name, builder|
       namespace :load do
         namespace builder_name.to_sym do
           desc "Load box #{box_name} version #{version} in vagrant for #{builder_name}"
-          task box_name => ["build:#{builder_name}:#{box_name}", "metadata:#{box_name}"] do
+          task box_name => ["build:#{builder_name}:#{box_name}"] do
             box_root = "#{ENV['VAGRANT_HOME']}/boxes/#{box_name}"
             vagrant_provider = builders[builder_name][:vagrant_type]
             if Dir.exist? "#{box_root}/#{version}"
