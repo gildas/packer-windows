@@ -44,6 +44,14 @@ builders = {
     packer_type:  'hyperv-iso',
     supported:    lambda { RUBY_PLATFORM == 'y64-mingw32' }
   },
+  kvm:
+  {
+    name:         'kvm',
+    folder:       'kvm',
+    vagrant_type: 'libvirt',
+    packer_type:  'qemu',
+    supported:    lambda { RUBY_PLATFORM == 'x86_64-linux' && which('kvm') }
+  },
   parallels:
   {
     name:         'parallels',

@@ -45,6 +45,46 @@
       ]
     },
     {
+      "type":                "qemu",
+      "vm_name":             "packer_windows_2012R2_core",
+      "iso_urls": [
+        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "/var/cache/daas/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
+      ],
+      "iso_checksum_type":      "md5",
+      "iso_checksum":           "458ff91f8abc21b75cb544744bf92e6a",
+      "ssh_username":           "vagrant",
+      "ssh_password":           "vagrant",
+      "ssh_host_port_min":      2222,
+      "ssh_host_port_max":      2229,
+      "ssh_wait_timeout":       "20m",
+      "shutdown_command":       "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
+      "http_directory":         "httpdir",
+      "http_port_min":          10082,
+      "http_port_max":          10089,
+      "format":                 "qcow2",
+      "headless":               false,
+      "accelerator":            "kvm",
+      "net_device":             "virtio-net",
+      "disk_interface":         "virtio",
+      "disk_size":              "{{user `disk_size`}}",
+      "floppy_files": [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-posh.cmd",
+        "./scripts/02-config-winrm.cmd",
+        "./scripts/03-install-chocolatey.cmd",
+        "./scripts/04-install-openssh.cmd",
+        "./scripts/99-start-services.cmd"
+      ],
+      "qemuargs":
+      [
+        [ "-m", "{{user `mem_size`}}M" ]
+      ]
+    },
+    {
       "type":                "parallels-iso",
       "vm_name":             "packer_windows_2012R2_core",
       "guest_os_type":       "win-2012",
