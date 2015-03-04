@@ -11,16 +11,37 @@ VERBOSE=1
 DEST=$1
 BASE_URL=$2
 
+case $OSTYPE in
+  linux-gnu)
+    MD5=md5sum
+  ;;
+  darwin*)
+    MD5=md5
+  ;;
+esac
+
 # Pre-requisites {{{
 function install-prereq() # {{{2
 {
-  if [[ -n $(brew info bar | grep '^Not installed$') ]]; then
-    $NOOP brew install bar
-  fi
+  case $OSTYPE in
+    linux-gnu)
+      if [[ -n $(dpkg -s bar | grep '^Status: install ok installed') ]]; then
+        $NOOP sudo apt-get install bar
+      fi
+      if [[ -n $(dpkg -s jq | grep '^Status: install ok installed') ]]; then
+        $NOOP sudo apt-get install jq
+      fi
+      ;;
+    darwin*)
+      if [[ -n $(brew info bar | grep '^Not installed$') ]]; then
+        $NOOP brew install bar
+      fi
 
-  if [[ -n $(brew info jq | grep '^Not installed$') ]]; then
-    $NOOP brew install jq
-  fi
+      if [[ -n $(brew info jq | grep '^Not installed$') ]]; then
+        $NOOP brew install jq
+      fi
+      ;;
+  esac
 } # }}}2
 # }}}
 
@@ -50,36 +71,36 @@ function main() # {{{2
 
         if [[ ! -f "${box_filepath}.md5" || "${box_filepath}.md5" -ot "${box_filepath}" ]]; then
           printf "    Calculating checksum..."
-	  box_checksum=$(bar -n "${box_filepath}" | md5)
-	  echo $box_checksum > "${box_filepath}.md5"
+          box_checksum=$(bar -n "${box_filepath}" | $MD5 | awk '{print $1}')
+          echo $box_checksum > "${box_filepath}.md5"
           echo '.'
         else
           box_checksum=$(cat "${box_filepath}.md5")
         fi
         echo "    Checksum: ${box_checksum}"
 
-	metadata_version=$(echo "$metadata" | jq '.versions[] | select(.version=="0.1.0")')
-	if [[ -z "$metadata_version" ]]; then
-	  echo "    ERROR: Cannot find the box version in the metadata"
-	  continue
-	fi
+        metadata_version=$(echo "$metadata" | jq '.versions[] | select(.version=="0.1.0")')
+        if [[ -z "$metadata_version" ]]; then
+          echo "    ERROR: Cannot find the box version in the metadata"
+          continue
+        fi
 
-	metadata_provider=$(echo "$metadata_version" | jq ".providers[] | select(.name==\"$provider\")")
-	if [[ -z "$metadata_provider" ]]; then
-	  echo "    Adding provider"
+        metadata_provider=$(echo "$metadata_version" | jq ".providers[] | select(.name==\"$provider\")")
+        if [[ -z "$metadata_provider" ]]; then
+          echo "    Adding provider"
           echo "      Copying box file"
-	  mkdir -p "$DEST/$box/$provider"
+          mkdir -p "$DEST/$box/$provider"
           bar -o "$DEST/$box/$provider/$box_file" "$box_filepath"
           #cp "$box_filepath" "$DEST/$box/$provider/$box_file" 
 
-	  echo "$metadata" | jq "(.versions[] | select(.version==\"0.1.0\") | .providers) |= . + [{name: \"$provider\", url: \"$BASE_URL/$box/$provider/$box_file\", checksum_type: \"md5\", checksum: \"$box_checksum\"}]" > "$box_path/metadata.$$.json" && mv "$box_path/metadata.$$.json" "$box_path/metadata.json"
-	  cp "$box_path/metadata.json" "$DEST/$box/metadata.json"
-	  continue
-	fi
+          echo "$metadata" | jq "(.versions[] | select(.version==\"0.1.0\") | .providers) |= . + [{name: \"$provider\", url: \"$BASE_URL/$box/$provider/$box_file\", checksum_type: \"md5\", checksum: \"$box_checksum\"}]" > "$box_path/metadata.$$.json" && mv "$box_path/metadata.$$.json" "$box_path/metadata.json"
+          cp "$box_path/metadata.json" "$DEST/$box/metadata.json"
+          continue
+        fi
 
-	metadata_checksum=$(echo "$metadata_provider" | jq --raw-output '.checksum')
+        metadata_checksum=$(echo "$metadata_provider" | jq --raw-output '.checksum')
         echo "    Destination Checksum: ${metadata_checksum}"
-	if [[ $box_checksum == $metadata_checksum ]]; then
+        if [[ $box_checksum == $metadata_checksum ]]; then
           echo "    Destination box is already uploaded"
           continue
         else
@@ -88,10 +109,10 @@ function main() # {{{2
           #cp "$box_filepath" "$DEST/$box/$provider/$box_file" 
           chmod 644 "$DEST/$box/$provider/$box_file" 
 
-	  echo "$metadata" | jq "(.versions[] | select(.version==\"0.1.0\") | .providers[] | select(.name==\"$provider\") | .checksum) |= \"$box_checksum\"" > "$box_path/metadata.$$.json" && mv "$box_path/metadata.$$.json" "$box_path/metadata.json"
-	  cp "$box_path/metadata.json" "$DEST/$box/metadata.json"
+          echo "$metadata" | jq "(.versions[] | select(.version==\"0.1.0\") | .providers[] | select(.name==\"$provider\") | .checksum) |= \"$box_checksum\"" > "$box_path/metadata.$$.json" && mv "$box_path/metadata.$$.json" "$box_path/metadata.json"
+          cp "$box_path/metadata.json" "$DEST/$box/metadata.json"
           chmod 644 "$box_path/metadata.json"
-	fi
+        fi
       done
     done
   done
