@@ -13,8 +13,8 @@ Param(
 Write-Verbose "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 $Now = Get-Date -Format 'yyyyMMddHHmmss'
 
-$Product = 'Interaction Center Server 2015 R1'
-if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product)
+$Product = 'Interaction Center Server.*'
+if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match $Product)
 {
   Write-Host "$Product is installed"
 }
@@ -28,7 +28,7 @@ else
 
   while ($iter -lt $max)
   {
-    if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product)
+    if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match $Product)
     {
       Write-Host "$Product is installed"
       return

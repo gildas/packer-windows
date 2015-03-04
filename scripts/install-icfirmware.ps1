@@ -58,8 +58,8 @@ if ((Get-WindowsFeature Net-Framework-Core -Verbose:$false).InstallState -ne 'In
 # 2}}}
 
 # Prerequisite: Interaction Center Server {{{2
-$Product = 'Interaction Center Server 2015 R2'
-if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product)
+$Product = 'Interaction Center Server.*'
+if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match $Product)
 {
   Write-Verbose "$Product is installed"
 }
@@ -74,8 +74,8 @@ else
 
 $InstalledProducts=0
 
-$Product = 'Interaction Firmware 2015 R2'
-if (Get-ItemProperty HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product)
+$Product = 'Interaction Firmware.*'
+if (Get-ItemProperty HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match $Product)
 {
   Write-Verbose "$Product is already installed"
 }
