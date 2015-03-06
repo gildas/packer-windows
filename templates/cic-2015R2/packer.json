@@ -196,11 +196,6 @@
       ]
     },
     {
-      "type":     "wait",
-      "duration": "50s",
-      "message":  "Waiting for the machine to reboot..."
-    },
-    {
       "type":   "shell",
       "only":   [ "vmware-iso" ],
       "start_retry_timeout": "5m",
