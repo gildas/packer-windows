@@ -155,6 +155,7 @@
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
     { "type": "shell", "inline": [ "net accounts /maxpwage:unlimited" ] },
+    { "type": "shell", "inline": [ "chocolatey update -y" ] },
     { "type": "shell", "inline": [ "chocolatey install -y sysinternals" ] },
     { "type": "shell", "inline": [ "chocolatey install -y git" ] },
     { "type": "shell", "inline": [ "chocolatey install -y vim" ] },
