@@ -10,6 +10,7 @@
     "os_install":        "",
     "os_edition":        "",
     "os_license":        "",
+    "http_directory":    "",
     "disk_size":         "40960",
     "disk_size_gb":      "40",
     "mem_size":          "1024",
@@ -28,6 +29,9 @@
       "ssh_wait_timeout":    "20m",
       "switch_name":         "Bridged Switch",
       "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
+      "http_directory":       "{{user `http_directory`}}",
+      "http_port_min":        "8116",
+      "http_port_max":        "8116",
       "disk_size":           "{{user `disk_size`}}",
       "ram_size_mb":         "{{user `mem_size`}}",
       "floppy_files": [
@@ -57,6 +61,9 @@
       "ssh_wait_timeout":       "20m",
       "shutdown_command":       "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
       "parallels_tools_flavor": "win",
+      "http_directory":       "{{user `http_directory`}}",
+      "http_port_min":        "8116",
+      "http_port_max":        "8116",
       "disk_size":              "{{user `disk_size`}}",
       "floppy_files": [
         "./templates/{{user `template`}}/Autounattend.xml",
@@ -90,6 +97,9 @@
       "ssh_password":        "vagrant",
       "ssh_wait_timeout":    "20m",
       "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
+      "http_directory":       "{{user `http_directory`}}",
+      "http_port_min":        "8116",
+      "http_port_max":        "8116",
       "disk_size":           "{{user `disk_size`}}",
       "floppy_files": [
         "./templates/{{user `template`}}/Autounattend.xml",
@@ -126,6 +136,9 @@
       "ssh_wait_timeout":     "20m",
       "shutdown_command":     "shutdown /s /t 5 /d p:4:1 /c \"Packer Shutdown\"",
       "guest_additions_mode": "upload",
+      "http_directory":       "{{user `http_directory`}}",
+      "http_port_min":        "8116",
+      "http_port_max":        "8116",
       "disk_size":            "{{user `disk_size`}}",
       "floppy_files":
       [

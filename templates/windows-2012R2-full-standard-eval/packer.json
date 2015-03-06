@@ -10,6 +10,7 @@
     "os_install":        "",
     "os_edition":        "",
     "os_license":        "",
+    "http_directory":    "",
     "disk_size":         "40960",
     "mem_size":          "1024",
     "cpus":              "1"
@@ -33,6 +34,9 @@
       "ssh_wait_timeout":       "20m",
       "shutdown_command":       "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
       "parallels_tools_flavor": "win",
+      "http_directory":       "{{user `http_directory`}}",
+      "http_port_min":        "8116",
+      "http_port_max":        "8116",
       "disk_size":              "{{user `disk_size`}}",
       "floppy_files": [
         "./templates/{{user `template`}}/Autounattend.xml",
@@ -67,6 +71,9 @@
       "ssh_wait_timeout":    "20m",
       "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
       "tools_upload_flavor": "windows",
+      "http_directory":       "{{user `http_directory`}}",
+      "http_port_min":        "8116",
+      "http_port_max":        "8116",
       "disk_size":           "{{user `disk_size`}}",
       "floppy_files": [
         "./templates/{{user `template`}}/Autounattend.xml",
@@ -103,6 +110,9 @@
       "ssh_wait_timeout":     "20m",
       "shutdown_command":     "shutdown /s /t 5 /d p:4:1 /c \"Packer Shutdown\"",
       "guest_additions_mode": "upload",
+      "http_directory":       "{{user `http_directory`}}",
+      "http_port_min":        "8116",
+      "http_port_max":        "8116",
       "disk_size":            "{{user `disk_size`}}",
       "floppy_files":
       [
