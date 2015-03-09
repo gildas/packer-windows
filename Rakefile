@@ -100,7 +100,7 @@ rule '.box' => [->(box) { source_for_box(box) }, boxes_dir] do |_rule|
   builder = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
   mkdir_p _rule.name.pathmap("%d")
   puts "Building #{_rule.name.pathmap("%f")} using #{builder[:name]}"
-  sh "packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}/config.json #{_rule.source}"
+  sh "PACKER_LOG=1 PACKER_LOG_PATH=$HOME/Downloads/packer-build-#{builder[:name]}-#{_rule.name.pathmap("%f")}-$$.log packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}/config.json #{_rule.source}"
 end
 
 class Binder
