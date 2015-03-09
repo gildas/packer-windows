@@ -13,6 +13,10 @@ Param(
 Write-Verbose "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 $Now = Get-Date -Format 'yyyyMMddHHmmss'
 
+$Source_filename       = "ICServer_2015_R2.msi"
+$Source_checksum       = "901AC9B42DD4EB454FF23B7B301A74A6"
+$Source_download_tries = 3
+
 # Prerequisites: {{{
 # Prerequisite: Powershell 3 {{{2
 if($PSVersionTable.PSVersion.Major -lt 3)
@@ -27,23 +31,95 @@ if($PSVersionTable.PSVersion.Major -lt 3)
 if (!$InstallSource)
 {
   $sources  = @( 'C:\Windows\Temp' )
-
   $sources += (Get-Volume | Where { $_.DriveType -eq 'CD-ROM' -and $_.Size -gt 0 } | ForEach { $_.DriveLetter + ':\Installs\ServerComponents' })
 
   ForEach ($source in $sources)
   {
     Write-Debug "  Searching in $source"
-    if (Test-Path "${source}\ICServer_2015_R2.msi")
+    if (Test-Path "${source}\${Source_filename}")
     {
-      $InstallSource = $source
-      break
+      Write-Verbose "Found install in $source, validating checksum"
+      if ($(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${source}\${Source_filename} -eq $Source_checksum))
+      {
+        Write-Verbose "Found a valid install in $source"
+        $InstallSource = $source
+        break
+      }
+      Write-Debug "Found an invalid source in $source"
     }
   }
   if (!$InstallSource)
   {
-    Write-Error "CIC Installation source not found, please provide a source via the command line arguments"
+    Write-Error "IC Server Installation source not found, please provide a source via the command line arguments"
     exit 1
   }
+}
+elseif ($InstallSource -match 'http://.*')
+{
+  $source = 'C:\Windows\Temp'
+  if ($InstallSource -match 'http://\*:([0-9]+)')
+  {
+    $port    = $matches[1]
+    $address = ((Get-NetIPConfiguration).IPv4DefaultGateway).NextHop
+    $InstallSource = "http://${address}:${port}"
+  }
+  if ((Test-Path "${source}\${Source_filename}") -and ($(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${source}\${Source_filename} -eq $Source_checksum)))
+  {
+    Write-Verbose "Installation has been downloaded already and is valid"
+  }
+  else
+  {
+    for ($i=0; $i -lt $Source_download_tries; $i++)
+    {
+      Write-Verbose "Downloading from $InstallSource, try: #${i}/${Source_download_tries}"
+      Try
+      {
+        (New-Object System.Net.WebClient).DownloadFile("${InstallSource}/${Source_filename}", "${source}\${Source_filename}")
+        if (Test-Path "${source}\${Source_filename}")
+        {
+          Write-Verbose "Found install in $source, validating checksum"
+          if ($(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${source}\${Source_filename} -eq $Source_checksum))
+          {
+            Write-Verbose "Downloaded a valid install in $source"
+            $InstallSource = $source
+            break
+          }
+          Write-Warning "Downloaded source is corrupted, trying again"
+        }
+      }
+      Catch
+      {
+        Write-Warning "Cannot download source from $source, trying again"
+      }
+    }
+    if ($i -lt $Source_download_tries)
+    {
+      $InstallSource = 'C:\Windows\Temp'
+    }
+    else
+    {
+      Write-Error "Installation was not downloaded properly"
+      exit 1
+    }
+  }
+}
+elseif (Test-Path "${InstallSource}\${Source_filename}")
+{
+  Write-Verbose "Found install in ${InstallSource}, validating checksum"
+  if ($(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${InstallSource}\${Source_filename} -eq $Source_checksum))
+  {
+    Write-Verbose "Found a valid install in ${InstallSource}"
+  }
+  else
+  {
+    Write-Error "Found an invalid source in ${InstallSource}"
+    exit 1
+  }
+}
+else
+{
+  Write-Error "Source not found in $source"
+  exit 1
 }
 Write-Verbose "Installing CIC from $InstallSource"
 # 2}}}
@@ -64,24 +140,13 @@ if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*
 {
   Write-Verbose "$Product is already installed"
 }
-elseif (! (Test-Path "${InstallSource}\ICServer_2015_R2.msi"))
-{
-  #TODO: Should we return values or raise exceptions?
-  Write-Error "Cannot install $Product, MSI not found in $InstallSource"
-  exit 1
-}
-elseif (! $(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${InstallSource}\ICServer_2015_R2.msi -eq '901AC9B42DD4EB454FF23B7B301A74A6'))
-{
-  Write-Error "Cannot install $Product, MSI found in $InstallSource is corrupted"
-  exit 1
-}
 else
 {
   Write-Host "Installing $Product"
   #TODO: Capture the domain if it is in $User
   $Domain = $env:COMPUTERNAME
 
-  $parms  = '/i',"${InstallSource}\ICServer_2015_R2.msi"
+  $parms  = '/i',"${InstallSource}\${Source_filename}"
   $parms += "PROMPTEDUSER=$User"
   $parms += "PROMPTEDDOMAIN=$Domain"
   $parms += "PROMPTEDPASSWORD=$Password"

@@ -182,7 +182,7 @@
     {
       "type":            "shell",
       "remote_path":     "/cygdrive/c/Windows/Temp/script-install-icserver.ps1",
-      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script-install-icserver.ps1 --PackerHttpPort 8116 --Verbose",
+      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script-install-icserver.ps1 -InstallSource http://*:8116 -Verbose",
       "scripts":
       [
         "./scripts/install-icserver.ps1"
@@ -199,8 +199,24 @@
       "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script.ps1 -Verbose",
       "scripts":
       [
-        "./scripts/check-icserver.ps1",
-        "./scripts/install-icfirmware.ps1",
+        "./scripts/check-icserver.ps1"
+      ]
+    },
+    {
+      "type":            "shell",
+      "remote_path":     "/cygdrive/c/Windows/Temp/script.ps1",
+      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script.ps1 -InstallSource http://*:8116 -Verbose",
+      "scripts":
+      [
+        "./scripts/install-icfirmware.ps1"
+      ]
+    },
+    {
+      "type":            "shell",
+      "remote_path":     "/cygdrive/c/Windows/Temp/script.ps1",
+      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script.ps1 -Verbose",
+      "scripts":
+      [
         "./scripts/install-vmhost-additions.ps1"
       ]
     },
