@@ -66,6 +66,7 @@ elseif ($InstallSource -match 'http://.*')
   if (Test-Path "${source}\${Source_filename}" -and $(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${source}\${Source_filename} -eq $Source_checksum))
   {
     Write-Verbose "Installation has been downloaded already and is valid"
+    $InstallSource = 'C:\Windows\Temp'
   }
   else
   {
