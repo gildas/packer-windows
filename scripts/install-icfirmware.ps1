@@ -70,7 +70,7 @@ elseif ($InstallSource -match 'http://.*')
   }
   else
   {
-    for ($i=0; $i < $Source_download_tries; $i++)
+    for ($i=0; $i -lt $Source_download_tries; $i++)
     {
       Write-Verbose "Downloading from $InstallSource, try: #${i}/${Source_download_tries}"
       Try
@@ -78,7 +78,7 @@ elseif ($InstallSource -match 'http://.*')
         (New-Object System.Net.WebClient).DownloadFile("${InstallSource}/${Source_filename}", "${source}\${Source_filename}")
         if (Test-Path "${source}\${Source_filename}")
         {
-          Write-Verbose "Found install in $source, validating checksum"
+          Write-Verbose "Downloaded install in $source, validating checksum"
           if ($(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${source}\${Source_filename} -eq $Source_checksum))
           {
             Write-Verbose "Downloaded a valid install in $source"
@@ -93,7 +93,7 @@ elseif ($InstallSource -match 'http://.*')
         Write-Warning "Cannot download source from $source, trying again"
       }
     }
-    if ($i < $Source_download_tries)
+    if ($i -lt $Source_download_tries)
     {
       $InstallSource = 'C:\Windows\Temp'
     }
