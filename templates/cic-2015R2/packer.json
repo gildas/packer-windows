@@ -191,8 +191,8 @@
     },
     {
       "type":     "wait",
-      "duration": "10m",
-      "message":  "Giving ICServer install some air to breathe for 10 minutes..."
+      "duration": "15m",
+      "message":  "Giving ICServer install some air to breathe for 15 minutes..."
     },
     {
       "type":            "shell",
