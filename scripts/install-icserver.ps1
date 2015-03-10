@@ -10,7 +10,7 @@ Param(
   [Parameter(Mandatory=$false)][string] $InstallSource,
   [Parameter(Mandatory=$false)][switch] $Reboot
 )
-Write-Verbose "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 $Now = Get-Date -Format 'yyyyMMddHHmmss'
 
 $Source_filename       = "ICServer_2015_R2.msi"
@@ -38,10 +38,10 @@ if (!$InstallSource)
     Write-Debug "  Searching in $source"
     if (Test-Path "${source}\${Source_filename}")
     {
-      Write-Verbose "Found install in $source, validating checksum"
+      Write-Output "Found install in $source, validating checksum"
       if ($(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${source}\${Source_filename} -eq $Source_checksum))
       {
-        Write-Verbose "Found a valid install in $source"
+        Write-Output "Found a valid install in $source"
         $InstallSource = $source
         break
       }
@@ -59,7 +59,7 @@ elseif ($InstallSource -match 'http://.*')
   $source = 'C:\Windows\Temp'
   if ((Test-Path "${source}\${Source_filename}") -and ($(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${source}\${Source_filename} -eq $Source_checksum)))
   {
-    Write-Verbose "Installation has been downloaded already and is valid"
+    Write-Output "Installation has been downloaded already and is valid"
     $InstallSource = 'C:\Windows\Temp'
   }
   else
@@ -72,16 +72,16 @@ elseif ($InstallSource -match 'http://.*')
     }
     for ($i=0; $i -lt $Source_download_tries; $i++)
     {
-      Write-Verbose "Downloading from $InstallSource, try: #${i}/${Source_download_tries}"
+      Write-Output "Downloading from $InstallSource, try: #${i}/${Source_download_tries}"
       Try
       {
         (New-Object System.Net.WebClient).DownloadFile("${InstallSource}/${Source_filename}", "${source}\${Source_filename}")
         if (Test-Path "${source}\${Source_filename}")
         {
-          Write-Verbose "Downloaded install in $source, validating checksum"
+          Write-Output "Downloaded install in $source, validating checksum"
           if ($(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${source}\${Source_filename} -eq $Source_checksum))
           {
-            Write-Verbose "Downloaded a valid install in $source"
+            Write-Output "Downloaded a valid install in $source"
             $InstallSource = $source
             break
           }
@@ -106,10 +106,10 @@ elseif ($InstallSource -match 'http://.*')
 }
 elseif (Test-Path "${InstallSource}\${Source_filename}")
 {
-  Write-Verbose "Found install in ${InstallSource}, validating checksum"
+  Write-Output "Found install in ${InstallSource}, validating checksum"
   if ($(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${InstallSource}\${Source_filename} -eq $Source_checksum))
   {
-    Write-Verbose "Found a valid install in ${InstallSource}"
+    Write-Output "Found a valid install in ${InstallSource}"
   }
   else
   {
@@ -122,13 +122,13 @@ else
   Write-Error "Source not found in $source"
   exit 1
 }
-Write-Verbose "Installing CIC from $InstallSource"
+Write-Output "Installing CIC from $InstallSource"
 # 2}}}
 
 # Prerequisite: .Net 3.5 {{{2
 if ((Get-WindowsFeature Net-Framework-Core -Verbose:$false).InstallState -ne 'Installed')
 {
-  Write-Verbose "Installing .Net 3.5"
+  Write-Output "Installing .Net 3.5"
   Install-WindowsFeature -Name Net-Framework-Core
   # TODO: Check for errors
 }
@@ -139,11 +139,11 @@ $InstalledProducts=0
 $Product = 'Interaction Center Server 2015 R2'
 if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product)
 {
-  Write-Verbose "$Product is already installed"
+  Write-Output "$Product is already installed"
 }
 else
 {
-  Write-Host "Installing $Product"
+  Write-Output "Installing $Product"
   #TODO: Capture the domain if it is in $User
   $Domain = $env:COMPUTERNAME
 
@@ -166,6 +166,6 @@ else
   # And there is limit to the time a script can run over winrm/ssh
   # We will use other scripts to check if the install was successful
   Start-Process -FilePath msiexec -ArgumentList $parms
-  Write-Verbose "$Product is installing"
+  Write-Output "$Product is installing"
 }
-Write-Verbose "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"

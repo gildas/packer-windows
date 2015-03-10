@@ -10,13 +10,13 @@ Param(
   [Parameter(Mandatory=$false)][string] $InstallSource,
   [Parameter(Mandatory=$false)][switch] $Reboot
 )
-Write-Verbose "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 $Now = Get-Date -Format 'yyyyMMddHHmmss'
 
 $Product = 'Interaction Center Server'
 if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
 {
-  Write-Host "$Product is installed"
+  Write-Output "$Product is installed"
 }
 else
 {
@@ -30,10 +30,10 @@ else
   {
     if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
     {
-      Write-Host "$Product is installed"
+      Write-Output "$Product is installed"
       return
     }
-    Write-Host "  #${iter}/${max} Installation is still running [$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')]"
+    Write-Output "  #${iter}/${max} Installation is still running [$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')]"
     Start-Sleep $sleep
     $iter += 1
   }
@@ -41,4 +41,4 @@ else
   Write-Error "Failed to install $Product"
   return -2
 }
-Write-Verbose "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
