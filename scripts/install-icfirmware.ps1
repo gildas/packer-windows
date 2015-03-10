@@ -57,19 +57,19 @@ if (!$InstallSource)
 elseif ($InstallSource -match 'http://.*')
 {
   $source = 'C:\Windows\Temp'
-  if ($InstallSource -match 'http://\*:([0-9]+)')
-  {
-    $port    = $matches[1]
-    $address = ((Get-NetIPConfiguration).IPv4DefaultGateway).NextHop
-    $InstallSource = "http://${address}:${port}"
-  }
-  if (Test-Path "${source}\${Source_filename}" -and $(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${source}\${Source_filename} -eq $Source_checksum))
+  if ((Test-Path "${source}\${Source_filename}") -and ($(C:\tools\sysinternals\Get-Checksum.ps1 -MD5 -Path ${source}\${Source_filename} -eq $Source_checksum)))
   {
     Write-Verbose "Installation has been downloaded already and is valid"
     $InstallSource = 'C:\Windows\Temp'
   }
   else
   {
+    if ($InstallSource -match 'http://\*:([0-9]+)')
+    {
+      $port    = $matches[1]
+      $address = ((Get-NetIPConfiguration).IPv4DefaultGateway).NextHop
+      $InstallSource = "http://${address}:${port}"
+    }
     for ($i=0; $i -lt $Source_download_tries; $i++)
     {
       Write-Verbose "Downloading from $InstallSource, try: #${i}/${Source_download_tries}"
