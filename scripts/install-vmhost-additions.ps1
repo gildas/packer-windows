@@ -18,9 +18,11 @@ if ($env:PACKER_BUILDER_TYPE -match 'vmware')
     Write-Host "ISO Mounted on $drive"
     Write-Host "Installing VMWare Guest Additions"
     cmd /c "${drive}:\setup64.exe /S /v`"/qn REBOOT=ReallySuppress ADDLOCAL=ALL`" /l C:\Windows\Logs\vmware-tools.log"
-    Write-Host "Restarting Virtual Machine"
-    Restart-Computer -Force
-    Start-Sleep 30
+    Write-Host "Dismounting ISO"
+    Dismount-DiskImage -ImagePath $image.ImagePath
+    #Write-Host "Restarting Virtual Machine"
+    #Restart-Computer -Force
+    #Start-Sleep 30
   }
   else
   {
