@@ -71,6 +71,7 @@
       "ssh_wait_timeout":    "20m",
       "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
       "tools_upload_flavor": "windows",
+      "headless":            true,
       "http_directory":       "{{user `http_directory`}}",
       "http_port_min":        "8116",
       "http_port_max":        "8116",
