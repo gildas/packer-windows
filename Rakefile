@@ -47,7 +47,7 @@ builders = {
   kvm:
   {
     name:         'kvm',
-    folder:       'kvm',
+    folder:       'libvirt',
     vagrant_type: 'libvirt',
     packer_type:  'qemu',
     supported:    lambda { RUBY_PLATFORM == 'x86_64-linux' && which('kvm') }
