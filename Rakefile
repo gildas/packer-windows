@@ -241,7 +241,9 @@ builders.each do |builder_name, builder|
         namespace builder_name.to_sym do
           desc "Destroy the Virtual Machine from the box #{box_name} from #{builder_name}"
           task box_name do
-            sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant destroy -f"
+            if File.exists?("spec/.vagrant/machines/default/#{builder[:vagrant_type]}/id")
+              sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant destroy -f"
+            end
           end
 
           desc "Destroy all Virtual Machines from all boxes from #{builder_name}"
@@ -256,7 +258,7 @@ builders.each do |builder_name, builder|
         namespace builder_name.to_sym do
           desc "Remove box #{box_name} from #{builder_name}"
           task box_name => "destroy:#{builder_name}:#{box_name}" do
-            sh "vagrant box remove -f #{box_name}"
+            sh "vagrant box remove -f --provider #{builder[:vagrant_type]} #{box_name}"
           end
 
           desc "Remove all boxes from #{builder_name}"
