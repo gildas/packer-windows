@@ -83,7 +83,8 @@ builders = {
   },
 }
 
-TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/packer.json")
+TEMPLATE_FILES  = Rake::FileList.new("#{templates_dir}/**/packer.json")
+TEMPLATE_FILES += Rake::FileList.new("#{templates_dir}/**/{config.json,Autounattend.xml}")
 
 directory boxes_dir
 directory temp_dir
@@ -93,18 +94,26 @@ def load_json(filename)
   return File.open(filename) { |file| JSON.parse(file.read) }
 end
 
-def source_for_box(box_file)
+def sources_for_box(box_file)
   # box_file should be like: boxes/#{box_name}/#{provider}/#{box_name}-#{box_version}.box
   box_name = File.basename(File.dirname(box_file.pathmap("%d")))
-  box_source = TEMPLATE_FILES.detect do |template_source|
+  box_sources = TEMPLATE_FILES.select do |template_source|
     template_name = File.basename(File.dirname(template_source))
     box_name == template_name
   end
-  raise Errno::ENOENT, "no source for #{box_file}" if box_source.nil?
-  box_source
+  raise Errno::ENOENT, "no source for #{box_file}" if box_sources.empty?
+  box_scripts = []
+  box_sources.each do |source|
+    File.readlines(source).each do |line|
+      if line =~ /.*(\.\/scripts\/.*)"/
+        box_scripts << $1
+      end
+    end
+  end
+  box_sources + box_scripts
 end
 
-rule '.box' => [->(box) { source_for_box(box) }, boxes_dir] do |_rule|
+rule '.box' => [->(box) { sources_for_box(box) }, boxes_dir] do |_rule|
   builder = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
   mkdir_p _rule.name.pathmap("%d")
   puts "Building #{_rule.name.pathmap("%f")} using #{builder[:name]}"
