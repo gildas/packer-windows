@@ -83,8 +83,7 @@ builders = {
   },
 }
 
-TEMPLATE_FILES  = Rake::FileList.new("#{templates_dir}/**/packer.json")
-TEMPLATE_FILES += Rake::FileList.new("#{templates_dir}/**/{config.json,Autounattend.xml}")
+TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json,config.json,Autounattend.xml}")
 
 directory boxes_dir
 directory temp_dir
