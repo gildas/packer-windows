@@ -83,7 +83,8 @@ builders = {
   },
 }
 
-TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json,config.json,Autounattend.xml}")
+# We need to make sure packer.json is the first file seen per template, so _rule.source resolves to it later on
+TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json}") + Rake::FileList.new("#{templates_dir}/**/{config.json,Autounattend.xml}")
 
 directory boxes_dir
 directory temp_dir
