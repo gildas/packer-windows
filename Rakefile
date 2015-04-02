@@ -221,20 +221,31 @@ builders.each do |builder_name, builder|
       namespace :load do
         namespace builder_name.to_sym do
           desc "Load box #{box_name} version #{version} in vagrant for #{builder_name}"
-          task box_name => ["build:#{builder_name}:#{box_name}"] do
-            box_root = "#{ENV['VAGRANT_HOME'] || (ENV['HOME'] + '/.vagrant.d')}/boxes/#{box_name}"
-            vagrant_provider = builders[builder_name][:vagrant_type]
+          box_root = "#{ENV['VAGRANT_HOME'] || (ENV['HOME'] + '/.vagrant.d')}/boxes/#{box_name}"
+          vagrant_provider = builders[builder_name][:vagrant_type]
+          loaded_box_marker = "#{box_root}/#{version}/#{vagrant_provider}/metadata.json"
+
+          file loaded_box_marker => box_file do |_task|
+            puts _task.investigation
+
             if Dir.exist? "#{box_root}/#{version}"
+              puts "removing #{box_root}/#{version}/#{vagrant_provider}" if verbose == true
               FileUtils.rm_r "#{box_root}/#{version}/#{vagrant_provider}", force: true
             else
+              puts "removing #{box_root}/#{version}" if verbose == true
               FileUtils.mkdir_p "#{box_root}/#{version}"
             end
+            puts "adding #{box_file} as #{box_name}" if verbose == true
             sh "vagrant box add --force #{box_name} #{box_file}"
             # Now move the new box in the proper version folder
+            puts "moving #{box_root}/0/#{vagrant_provider} to #{box_root}/#{version}" if verbose == true
             FileUtils.mv   "#{box_root}/0/#{vagrant_provider}", "#{box_root}/#{version}"
+            puts "removing #{box_root}/0" if verbose == true
             FileUtils.rm_r "#{box_root}/0", force: true
             puts "==> box: Successfully updated box '#{box_name}' version to #{version} for '#{vagrant_provider}'"
           end
+
+          task box_name => loaded_box_marker
 
           desc "Load all boxes in vagrant for #{builder_name}"
           task :all => box_name
