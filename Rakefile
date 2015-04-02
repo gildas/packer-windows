@@ -31,6 +31,27 @@ def which(f)
   nil
 end
 
+class Task
+  def investigation
+    return unless Rake.application.options.trace == true
+    result = "------------------------------\n"
+    result << "Investigating #{name}\n"
+    result << "class: #{self.class}\n"
+    result <<  "task needed: #{needed?}\n"
+    result <<  "timestamp: #{timestamp}\n"
+    result << "pre-requisites: \n"
+    prereqs = @prerequisites.collect {|name| Task[name]}
+    prereqs.sort! {|a,b| a.timestamp <=> b.timestamp}
+    prereqs.each do |p|
+      result << "--#{p.name} (#{p.timestamp})\n"
+    end
+    latest_prereq = @prerequisites.collect{|n| Task[n].timestamp}.max
+    result <<  "latest-prerequisite time: #{latest_prereq}\n"
+    result << "................................\n\n"
+    return result
+  end
+end
+
 ['packer'].each do |application|
   raise RuntimeError, "Program #{application} is not accessible via the command line" unless which(application)
 end
