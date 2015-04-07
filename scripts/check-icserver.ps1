@@ -10,7 +10,8 @@ Param(
   [Parameter(Mandatory=$false)][string] $InstallSource,
   [Parameter(Mandatory=$false)][switch] $Reboot
 )
-Function Test-MsiExecMutex # {{{
+
+function Test-MsiExecMutex # {{{
 {
 <# {{{2
     .SYNOPSIS
@@ -50,14 +51,14 @@ Function Test-MsiExecMutex # {{{
         ${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         $PSParameters = New-Object -TypeName PSObject -Property $PSBoundParameters
         
-        Write-Log -Message "Function Start" -Component ${CmdletName} -Severity 1
-        If (-not [string]::IsNullOrEmpty($PSParameters))
+        Write-Verbose "Function Start"
+        if (-not [string]::IsNullOrEmpty($PSParameters))
         {
-            Write-Log -Message "Function invoked with bound parameters [$PSParameters]" -Component ${CmdletName} -Severity 1
+            Write-Verbose "Function invoked with bound parameters [$PSParameters]"
         }
-        Else
+        else
         {
-            Write-Log -Message "Function invoked without any bound parameters" -Component ${CmdletName} -Severity 1
+            Write-Verbose "Function invoked without any bound parameters"
         }
         
         $IsMsiExecFreeSource = @"
@@ -126,27 +127,27 @@ Function Test-MsiExecMutex # {{{
             {
                 [string]$WaitLogMsg = "$($MsiExecWaitTime.TotalSeconds) seconds"
             }
-            Write-Log -Message "Check to see if the MSI installer service is available. Wait up to [$WaitLogMsg] for the installer service to become available." -Component ${CmdletName} -Severity 1
+            Write-Verbose "Check to see if the MSI installer service is available. Wait up to [$WaitLogMsg] for the installer service to become available."
             [boolean]$IsMsiExecInstallFree = [MsiExec]::IsMsiExecFree($MsiExecWaitTime)
             
             If ($IsMsiExecInstallFree)
             {
-                Write-Log -Message "The MSI installer service is available to start a new installation." -Component ${CmdletName} -Severity 1
+                Write-Verbose "The MSI installer service is available to start a new installation."
             }
             Else
             {
-                Write-Log -Message "The MSI installer service is not available because another installation is already in progress." -Component ${CmdletName} -Severity 1
+                Write-Verbose "The MSI installer service is not available because another installation is already in progress."
             }
             Return $IsMsiExecInstallFree
         }
         Catch
         {
-            Write-Log -Message "There was an error while attempting to check if the MSI installer service is available `n$(Write-ErrorStack)" -Component ${CmdletName} -Severity 3
+            Write-Verbose "There was an error while attempting to check if the MSI installer service is available"
         }
     }
     End
     {
-        Write-Log -Message "Function End" -Component ${CmdletName} -Severity 1
+        Write-Verbose "Function End"
     }
 } # }}}
 
@@ -155,12 +156,11 @@ $Now = Get-Date -Format 'yyyyMMddHHmmss'
 
 $Product = 'Interaction Center Server'
 
-$MSI_available=Test-MSIExecuteMutex -MsiExecWaitTime $(New-TimeSpan -Minutes 5)
+$MSI_available=Test-MSIExecMutex -MsiExecWaitTime $(New-TimeSpan -Minutes 5)
 if (-not $MSI_available)
 {
   Write-Output "IC Server installation is not finished yet. This is bad news..."
-  Write-Log -Message -"IC Server installation is not fihished yet." -Component $Product -Severity 3
-  Exit-Script -ExitCode 1618
+  return 1618
 }
 
 if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
@@ -171,6 +171,6 @@ else
 {
   #TODO: Should we return values or raise exceptions?
   Write-Output "Failed to install $Product"
-  Exit-Script -ExitCode -2
+  return -2
 }
 Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
