@@ -50,7 +50,7 @@ function Test-MsiExecMutex # {{{
     {
         ${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         $PSParameters = New-Object -TypeName PSObject -Property $PSBoundParameters
-        
+
         Write-Verbose "Function Start"
         if (-not [string]::IsNullOrEmpty($PSParameters))
         {
@@ -60,7 +60,7 @@ function Test-MsiExecMutex # {{{
         {
             Write-Verbose "Function invoked without any bound parameters"
         }
-        
+
         $IsMsiExecFreeSource = @"
         using System;
         using System.Threading;
@@ -75,14 +75,14 @@ function Test-MsiExecMutex # {{{
                 /// Returns true for a successful wait, when the installer service has become free.
                 /// Returns false when waiting for the installer service has exceeded the timeout.
                 /// </returns>
-                
+
                 // The _MSIExecute mutex is used by the MSI installer service to serialize installations
                 // and prevent multiple MSI based installations happening at the same time.
                 // For more info: http://msdn.microsoft.com/en-us/library/aa372909(VS.85).aspx
                 const string installerServiceMutexName = "Global\\_MSIExecute";
                 Mutex MSIExecuteMutex = null;
                 var isMsiExecFree = false;
-                
+
                 try
                 {
                     MSIExecuteMutex = Mutex.OpenExisting(installerServiceMutexName,
@@ -109,7 +109,7 @@ function Test-MsiExecMutex # {{{
             }
         }
 "@
-        
+
         If (-not ([System.Management.Automation.PSTypeName]'MsiExec').Type)
         {
             Add-Type -TypeDefinition $IsMsiExecFreeSource -Language CSharp
@@ -129,7 +129,7 @@ function Test-MsiExecMutex # {{{
             }
             Write-Verbose "Check to see if the MSI installer service is available. Wait up to [$WaitLogMsg] for the installer service to become available."
             [boolean]$IsMsiExecInstallFree = [MsiExec]::IsMsiExecFree($MsiExecWaitTime)
-            
+
             If ($IsMsiExecInstallFree)
             {
                 Write-Verbose "The MSI installer service is available to start a new installation."
