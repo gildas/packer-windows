@@ -212,6 +212,7 @@
     { "type": "shell", "inline": [ "chocolatey update -y" ] },
     { "type": "shell", "inline": [ "chocolatey install -y sysinternals" ] },
     { "type": "shell", "inline": [ "chocolatey install -y git" ] },
+    { "type": "shell", "inline": [ "chocolatey install -y imdisk" ] },
     { "type": "shell", "inline": [ "chocolatey install -y vim" ] },
     { "type": "shell", "inline": [ "chocolatey install -y puppet" ] },
     {
