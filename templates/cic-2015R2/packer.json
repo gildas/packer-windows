@@ -163,7 +163,6 @@
         "./scripts/00-run-all-scripts.cmd",
         "./scripts/01-config-posh.cmd",
         "./scripts/02-config-winrm.cmd",
-        "./scripts/04-install-openssh.cmd",
         "./scripts/99-start-services.cmd",
         "./data/vagrant.pub"
       ],
@@ -197,82 +196,39 @@
       "source":      "./data/GeoTrust_Global_CA.pem",
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
-    { "type": "shell", "inline": [ "net accounts /maxpwage:unlimited" ] },
-    { "type": "powershell", "script": "./scripts/install-chocolatey.cmd" },
-    { "type": "shell", "inline": [ "chocolatey install -y dotnet3.5" ] },
-    { "type": "shell", "inline": [ "chocolatey install -y sysinternals" ] },
-    { "type": "shell", "inline": [ "chocolatey install -y git" ] },
-    { "type": "shell", "inline": [ "chocolatey install -y imdisk" ] },
-    { "type": "shell", "inline": [ "chocolatey install -y vim" ] },
-    { "type": "shell", "inline": [ "chocolatey install -y classic-shell" ] },
-    { "type": "shell", "inline": [ "chocolatey install -y puppet" ] },
+    { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
+    { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
+
+    { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
+    { "type": "powershell", "inline": [ "chocolatey install -y dotnet3.5" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y sysinternals" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y git" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y imdisk" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y classic-shell" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
     {
       "type":        "file",
       "source":      "./scripts/Get-Checksum.ps1",
       "destination": "C:/tools/sysinternals/Get-Checksum.ps1"
     },
-    {
-      "type":            "shell",
-      "remote_path":     "/cygdrive/c/Windows/Temp/script.bat",
-      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
-      "scripts":
-      [
-        "./scripts/install-ininextras.cmd",
-        "./scripts/install-puppet-modules.cmd"
-      ]
-    },
-    {
-      "type":            "shell",
-      "remote_path":     "/cygdrive/c/Windows/Temp/script-install-icserver.ps1",
-      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script-install-icserver.ps1 -InstallSource http://*:8116",
-      "scripts":
-      [
-        "./scripts/install-icserver.ps1"
-      ]
-    },
+
+    { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
+
+    { "type": "windows-shell", "script": "./scripts/install-ininextras.cmd" },
+    { "type": "powershell", "script": "./scripts/install-icserver.ps1" },
     {
       "type":     "wait",
       "duration": "15m",
       "message":  "Giving ICServer install some air to breathe for 15 minutes..."
     },
-    {
-      "type":            "shell",
-      "remote_path":     "/cygdrive/c/Windows/Temp/script.ps1",
-      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script.ps1",
-      "scripts":
-      [
-        "./scripts/check-icserver.ps1"
-      ]
-    },
-    {
-      "type":            "shell",
-      "remote_path":     "/cygdrive/c/Windows/Temp/script.ps1",
-      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script.ps1 -InstallSource http://*:8116",
-      "scripts":
-      [
-        "./scripts/install-icfirmware.ps1"
-      ]
-    },
-    {
-      "type":            "shell",
-      "remote_path":     "/cygdrive/c/Windows/Temp/script.ps1",
-      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script.ps1",
-      "scripts":
-      [
-        "./scripts/install-vmhost-additions.ps1"
-      ]
-    },
+    { "type": "powershell", "script": "./scripts/check-icserver.ps1" },
+    { "type": "powershell", "script": "./scripts/install-icfirmware.ps1" },
     {
       "type":   "shell",
       "only":   [ "vmware-iso" ],
       "start_retry_timeout": "5m",
       "inline": [ "rm -f /cygdrive/c/Users/vagrant/windows.iso" ]
-    },
-    {
-      "type":   "shell",
-      "only":   [ "virtualbox-iso" ],
-      "start_retry_timeout": "5m",
-      "inline": [ "rm -f /cygdrive/c/Users/vagrant/VBoxGuestAdditions.iso" ]
     },
     {
       "type":   "shell",
