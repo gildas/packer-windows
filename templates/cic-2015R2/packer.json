@@ -163,7 +163,6 @@
         "./scripts/00-run-all-scripts.cmd",
         "./scripts/01-config-posh.cmd",
         "./scripts/02-config-winrm.cmd",
-        "./scripts/03-install-chocolatey.cmd",
         "./scripts/04-install-openssh.cmd",
         "./scripts/99-start-services.cmd",
         "./data/vagrant.pub"
@@ -199,7 +198,7 @@
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
     { "type": "shell", "inline": [ "net accounts /maxpwage:unlimited" ] },
-    { "type": "shell", "inline": [ "chocolatey update -y" ] },
+    { "type": "powershell", "script": "./scripts/install-chocolatey.cmd" },
     { "type": "shell", "inline": [ "chocolatey install -y dotnet3.5" ] },
     { "type": "shell", "inline": [ "chocolatey install -y sysinternals" ] },
     { "type": "shell", "inline": [ "chocolatey install -y git" ] },
