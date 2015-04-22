@@ -173,6 +173,42 @@
         ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
         ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"]
       ]
+    },
+    {
+      "type":                 "virtualbox-windows-iso",
+      "vm_name":              "packer_windows_2012R2_full",
+      "guest_os_type":        "Windows2012_64",
+      "iso_urls": [
+        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "/var/cache/daas/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
+      ],
+      "iso_checksum_type":    "md5",
+      "iso_checksum":         "458ff91f8abc21b75cb544744bf92e6a",
+      "headless":             false,
+      "winrm_username":       "vagrant",
+      "winrm_password":       "vagrant",
+      "winrm_wait_timeout":   "20m",
+      "shutdown_command":     "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_additions_mode": "attach",
+      "disk_size":            "{{user `disk_size`}}",
+      "floppy_files":
+      [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/_packer_config.cmd",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-posh.cmd",
+        "./scripts/02-config-winrm.cmd",
+        "./scripts/99-start-services.cmd",
+        "./data/vagrant.pub"
+      ],
+      "vboxmanage":
+      [
+        ["modifyvm", "{{.Name}}", "--memory", "{{user `mem_size`}}"],
+        ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
+        ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"]
+      ]
     }
   ],
   "provisioners":
@@ -182,53 +218,23 @@
       "source":      "./data/GeoTrust_Global_CA.pem",
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
-    { "type": "shell", "inline": [ "net accounts /maxpwage:unlimited" ] },
-    { "type": "shell", "inline": [ "chocolatey update -y" ] },
-    { "type": "shell", "inline": [ "chocolatey install -y sysinternals" ] },
-    { "type": "shell", "inline": [ "chocolatey install -y git" ] },
-    { "type": "shell", "inline": [ "chocolatey install -y imdisk" ] },
-    { "type": "shell", "inline": [ "chocolatey install -y vim" ] },
-    { "type": "shell", "inline": [ "chocolatey install -y classic-shell" ] },
-    { "type": "shell", "inline": [ "chocolatey install -y puppet" ] },
-    {
-      "type":            "shell",
-      "remote_path":     "/cygdrive/c/Windows/Temp/script.bat",
-      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
-      "scripts":
-      [
-        "./scripts/install-puppet-modules.cmd"
-      ]
-    },
-    {
-      "type":            "shell",
-      "remote_path":     "/cygdrive/c/Windows/Temp/script.ps1",
-      "execute_command": "{{.Vars}} powershell -NoLogo -ExecutionPolicy ByPass -File C:/Windows/Temp/script.ps1",
-      "scripts":
-      [
-        "./scripts/install-vmhost-additions.ps1"
-      ]
-    },
+    { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
+    { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
+
+    { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
+    { "type": "powershell", "inline": [ "chocolatey install -y sysinternals" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y git" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y imdisk" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y classic-shell" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
+
+    { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
     {
       "type":   "shell",
       "only":   [ "vmware-iso" ],
       "start_retry_timeout": "5m",
       "inline": [ "rm -f /cygdrive/c/Users/vagrant/windows.iso" ]
-    },
-    {
-      "type":   "shell",
-      "only":   [ "virtualbox-iso" ],
-      "start_retry_timeout": "5m",
-      "inline": [ "rm -f /cygdrive/c/Users/vagrant/VBoxGuestAdditions.iso" ]
-    },
-    {
-      "type":   "shell",
-      "start_retry_timeout": "5m",
-      "inline":
-      [
-        "rm -f /cygdrive/c/Windows/Temp/GeoTrust_Global_CA.pem",
-        "rm -f /cygdrive/c/Windows/Temp/script.ps1",
-        "rm -f /cygdrive/c/Windows/Temp/script.bat"
-      ]
     }
   ],
   "post-processors":
