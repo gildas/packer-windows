@@ -86,7 +86,7 @@ builders = {
     name:         'virtualbox',
     folder:       'virtualbox',
     vagrant_type: 'virtualbox',
-    packer_type:  'virtualbox-iso',
+    packer_type:  'virtualbox-windows-iso',
     supported:    lambda {
       case RUBY_PLATFORM
       when 'x64-mingw32' then ! ENV['VBOX_INSTALL_PATH'].nil?
@@ -139,7 +139,9 @@ rule '.box' => [->(box) { sources_for_box(box) }, boxes_dir] do |_rule|
   mkdir_p _rule.name.pathmap("%d")
   puts "Building #{_rule.name.pathmap("%f")} using #{builder[:name]}"
   FileUtils.rm_rf "output-#{builder[:packer_type]}"
-  sh "PACKER_LOG=1 PACKER_LOG_PATH=$HOME/Downloads/packer-build-#{builder[:name]}-#{_rule.name.pathmap("%f")}.log packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}/config.json #{_rule.source}"
+  packer_log="$HOME/Downloads/packer-build-#{builder[:name]}-#{_rule.name.pathmap("%f")}.log"
+  sh "echo '================================================================================' >> \"#{packer_log}\""
+  sh "PACKER_LOG=1 PACKER_LOG_PATH=\"#{packer_log}\" packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}/config.json #{_rule.source}"
 end
 
 class Binder
