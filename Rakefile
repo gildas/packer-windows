@@ -139,7 +139,7 @@ rule '.box' => [->(box) { sources_for_box(box) }, boxes_dir] do |_rule|
   mkdir_p _rule.name.pathmap("%d")
   puts "Building #{_rule.name.pathmap("%f")} using #{builder[:name]}"
   FileUtils.rm_rf "output-#{builder[:packer_type]}"
-  sh "PACKER_LOG=1 PACKER_LOG_PATH=$HOME/Downloads/packer-build-#{builder[:name]}-#{_rule.name.pathmap("%f")}-$$.log packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}/config.json #{_rule.source}"
+  sh "PACKER_LOG=1 PACKER_LOG_PATH=$HOME/Downloads/packer-build-#{builder[:name]}-#{_rule.name.pathmap("%f")}.log packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}/config.json #{_rule.source}"
 end
 
 class Binder
