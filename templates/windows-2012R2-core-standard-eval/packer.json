@@ -245,7 +245,6 @@
       "start_retry_timeout": "5m",
       "inline":
       [
-        "rm -f /cygdrive/c/Windows/Temp/GeoTrust_Global_CA.pem",
         "rm -f /cygdrive/c/Windows/Temp/script.ps1",
         "rm -f /cygdrive/c/Windows/Temp/script.bat"
       ]

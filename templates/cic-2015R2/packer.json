@@ -280,7 +280,6 @@
       "start_retry_timeout": "5m",
       "inline":
       [
-        "rm -f /cygdrive/c/Windows/Temp/GeoTrust_Global_CA.pem",
         "rm -f /cygdrive/c/Windows/Temp/ICServer_2015_R1.msi",
         "rm -f /cygdrive/c/Windows/Temp/InteractionFirmware_2015_R1.msi",
         "rm -f /cygdrive/c/Windows/Temp/script*.ps1",
