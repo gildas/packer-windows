@@ -151,7 +151,7 @@
       "ssh_password":         "vagrant",
       "ssh_wait_timeout":     "20m",
       "shutdown_command":     "shutdown /s /t 5 /d p:4:1 /c \"Packer Shutdown\"",
-      "guest_additions_mode": "upload",
+      "guest_additions_mode": "attach",
       "http_directory":       "{{user `http_directory`}}",
       "http_port_min":        "8116",
       "http_port_max":        "8116",
