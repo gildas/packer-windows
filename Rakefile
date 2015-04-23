@@ -109,6 +109,7 @@ TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json}") + Rake:
 
 directory boxes_dir
 directory temp_dir
+task :folders => [ boxes_dir, temp_dir ]
 
 def load_json(filename)
   return {} unless File.exist? filename
@@ -202,7 +203,7 @@ builders.each do |builder_name, builder|
       namespace :build do
         namespace builder_name.to_sym do
           desc "Build box #{box_name} version #{version} with #{builder_name}"
-          task box_name => box_file
+          task box_name => [ :folders, box_file ]
 
           desc "Build all boxes for #{builder_name}"
           task :all => box_name
