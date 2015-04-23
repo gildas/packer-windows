@@ -225,6 +225,7 @@
         "./scripts/01-config-os.cmd",
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
+        "./scripts/04-install-imdisk.cmd",
         "./scripts/99-start-services.cmd",
         "./data/vagrant.pub"
       ],
@@ -250,7 +251,6 @@
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
     { "type": "powershell", "inline": [ "chocolatey install -y sysinternals" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y git" ] },
-    { "type": "powershell", "inline": [ "chocolatey install -y imdisk" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
 
