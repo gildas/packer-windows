@@ -31,7 +31,16 @@ if ($env:PACKER_BUILDER_TYPE -match 'vmware')
 }
 elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
 {
-  $drive='E'
+  $volume = Get-Volume | where FileSystemLabel -match 'VBOXADDITIONS.*'
+
+  if (! $volume)
+  {
+    Write-Error "Could not find the VirtualBox Guest Additions CD-ROM"
+    Start-Sleep 10
+    exit 3
+  }
+
+  $drive=$volume.DriveLetter
   # cd ${drive}:\cert ; VBoxCertUtil add-trusted-publisher oracle-vbox.cer --root oracle-vbox.cer
   certutil -addstore -f "TrustedPublisher" ${drive}:\cert\oracle-vbox.cer
   if (! $?)
@@ -58,6 +67,26 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
     Write-Error "Installation failed: Error= $($process.ExitCode), Logs=C:\Windows\Logs\vmware-tools.log"
     Start-Sleep 2; exit $process.ExitCode
   }
+  $discMaster = New-Object -ComObject IMAPI2.MsftDiscMaster2
+  foreach ($dm in $discMaster)
+  {
+    $discRecorder = New-Object -ComObject IMAPI2.MsftDiscRecorder2
+    $discRecorder.InitializeDiscRecorder($dm)
+
+    Write-Host "Analyzing Media $($discRecorder.VolumePathNames)"
+    foreach ($pathname in $discRecorder.VolumePathNames)
+    {
+      Write-Host "Analyzing pathname $pathname"
+      if ($pathname -eq "${drive}:\")
+      {
+        Write-Host "Ejecting Media ${pathname}"
+        $discRecorder.EjectMedia()
+        break
+      }
+      Write-Host "next..."
+    }
+  }
+  $discRecorder.EjectMedia()
   Start-Sleep 2
 }
 elseif ($env:PACKER_BUILDER_TYPE -match 'parallels')
