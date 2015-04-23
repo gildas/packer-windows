@@ -37,8 +37,9 @@
       "floppy_files": [
         "./templates/windows-2012R2-core-standard-eval/Autounattend.xml",
         "./scripts/00-run-all-scripts.cmd",
-        "./scripts/01-config-posh.cmd",
-        "./scripts/02-config-winrm.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
         "./scripts/03-install-chocolatey.cmd",
         "./scripts/04-install-openssh.cmd",
         "./scripts/99-start-services.cmd"
@@ -74,9 +75,9 @@
         "./templates/{{user `template`}}/Autounattend.xml",
         "./data/drivers/virtio-win-0.1-100/win7/amd64/*",
         "./scripts/00-run-all-scripts.cmd",
-        "./scripts/01-config-posh.cmd",
-        "./scripts/02-config-winrm.cmd",
-        "./scripts/03-install-chocolatey.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
         "./scripts/04-install-openssh.cmd",
         "./scripts/99-start-services.cmd"
       ],
@@ -109,9 +110,9 @@
       "floppy_files": [
         "./templates/{{user `template`}}/Autounattend.xml",
         "./scripts/00-run-all-scripts.cmd",
-        "./scripts/01-config-posh.cmd",
-        "./scripts/02-config-winrm.cmd",
-        "./scripts/03-install-chocolatey.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
         "./scripts/04-install-openssh.cmd",
         "./scripts/99-start-services.cmd"
       ],
@@ -145,9 +146,9 @@
       "floppy_files": [
         "./templates/{{user `template`}}/Autounattend.xml",
         "./scripts/00-run-all-scripts.cmd",
-        "./scripts/01-config-posh.cmd",
-        "./scripts/02-config-winrm.cmd",
-        "./scripts/03-install-chocolatey.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
         "./scripts/04-install-openssh.cmd",
         "./scripts/99-start-services.cmd"
       ],
@@ -183,8 +184,9 @@
         "./templates/{{user `template`}}/Autounattend.xml",
         "./scripts/_packer_config.cmd",
         "./scripts/00-run-all-scripts.cmd",
-        "./scripts/01-config-posh.cmd",
-        "./scripts/02-config-winrm.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
         "./scripts/04-install-openssh.cmd",
         "./scripts/99-start-services.cmd",
         "./data/vagrant.pub"
@@ -220,8 +222,9 @@
         "./templates/{{user `template`}}/Autounattend.xml",
         "./scripts/_packer_config.cmd",
         "./scripts/00-run-all-scripts.cmd",
-        "./scripts/01-config-posh.cmd",
-        "./scripts/02-config-winrm.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
         "./scripts/99-start-services.cmd",
         "./data/vagrant.pub"
       ],
