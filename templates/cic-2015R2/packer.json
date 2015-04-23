@@ -221,16 +221,6 @@
     },
     {
       "type":        "file",
-      "source":      "/var/cache/daas/ICServer_2015_R2.msi",
-      "destination": "C:/Windows/Temp/ICServer_2015_R2.msi"
-    },
-    {
-      "type":        "file",
-      "source":      "/var/cache/daas/InteractionFirmware_2015_R2.msi",
-      "destination": "C:/Windows/Temp/InteractionFirmware_2015_R2.msi"
-    },
-    {
-      "type":        "file",
       "source":      "./data/GeoTrust_Global_CA.pem",
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
