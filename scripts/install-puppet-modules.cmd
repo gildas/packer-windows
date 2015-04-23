@@ -8,5 +8,3 @@ cmd /c "C:\Program Files\Puppet Labs\Puppet\bin\puppet.bat" module install puppe
 cmd /c "C:\Program Files\Puppet Labs\Puppet\bin\puppet.bat" module install puppetlabs-inifile
 cmd /c "C:\Program Files\Puppet Labs\Puppet\bin\puppet.bat" module install puppetlabs-powershell
 cmd /c "C:\Program Files\Puppet Labs\Puppet\bin\puppet.bat" module install chocolatey-chocolatey
-cmd /c "C:\Program Files\Puppet Labs\Puppet\bin\puppet.bat" module install gildas-sqlserver
-cmd /c "C:\Program Files\Puppet Labs\Puppet\bin\puppet.bat" module install PierrickL-cicserver
