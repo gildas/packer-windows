@@ -209,7 +209,12 @@
       [
         ["modifyvm", "{{.Name}}", "--memory", "{{user `mem_size`}}"],
         ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
-        ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"]
+        ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"],
+        ["sharedfolder", "add", "{{.Name}}", "--name", "/daas-cache", "--hostpath", "/var/cache/daas"]
+      ],
+      "vboxmanage_post":
+      [
+        ["sharedfolder", "remove", "{{.Name}}", "--name", "/daas-cache"]
       ]
     }
   ],
@@ -244,10 +249,6 @@
       "destination": "C:/tools/sysinternals/Get-Checksum.ps1"
     },
 
-    { "type": "host-command",
-      "only":   [ "virtualbox-windows-iso" ],
-      "command": "vboxmanage sharedfoler add {{.BuildName}} --name '/daas-cache' --hostpath '/var/cache/daas'"
-    },
     { "type": "powershell", "inline": [ "imdisk -a -m Z: -f C:/daas-cache/CIC_2015_R2.iso " ] },
 
     { "type": "windows-shell", "script": "./scripts/install-ininextras.cmd" },
@@ -264,10 +265,6 @@
       "only":   [ "vmware-iso" ],
       "start_retry_timeout": "5m",
       "inline": [ "rm -f /cygdrive/c/Users/vagrant/windows.iso" ]
-    },
-    { "type": "host-command",
-      "only":   [ "virtualbox-windows-iso" ],
-      "command": "vboxmanage sharedfoler remove {{.BuildName}} --name '/daas-cache'"
     },
     {
       "type":   "shell",
