@@ -161,44 +161,6 @@
       }
     },
     {
-      "type":                 "virtualbox-iso",
-      "vm_name":              "packer_windows_2012R2_core",
-      "guest_os_type":        "Windows2012_64",
-      "iso_urls": [
-        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "/var/cache/daas/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
-      ],
-      "iso_checksum_type":    "md5",
-      "iso_checksum":         "458ff91f8abc21b75cb544744bf92e6a",
-      "headless":             false,
-      "ssh_username":         "vagrant",
-      "ssh_password":         "vagrant",
-      "ssh_wait_timeout":     "20m",
-      "shutdown_command":     "shutdown /s /t 5 /d p:4:1 /c \"Packer Shutdown\"",
-      "guest_additions_mode": "attach",
-      "disk_size":            "{{user `disk_size`}}",
-      "floppy_files":
-      [
-        "./templates/{{user `template`}}/Autounattend.xml",
-        "./scripts/_packer_config.cmd",
-        "./scripts/00-run-all-scripts.cmd",
-        "./scripts/01-config-os.cmd",
-        "./scripts/02-config-posh.cmd",
-        "./scripts/03-config-winrm.cmd",
-        "./scripts/04-install-openssh.cmd",
-        "./scripts/99-start-services.cmd",
-        "./data/vagrant.pub"
-      ],
-      "vboxmanage":
-      [
-        ["modifyvm", "{{.Name}}", "--memory", "{{user `mem_size`}}"],
-        ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
-        ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"]
-      ]
-    },
-    {
       "type":                 "virtualbox-windows-iso",
       "vm_name":              "packer_windows_2012R2_core",
       "guest_os_type":        "Windows2012_64",
