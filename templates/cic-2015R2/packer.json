@@ -167,14 +167,16 @@
       ],
       "vboxmanage":
       [
+        ["modifyvm", "{{.Name}}", "--ioapic", "on"],
         ["modifyvm", "{{.Name}}", "--memory", "{{user `mem_size`}}"],
         ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
+        ["modifyvm", "{{.Name}}", "--vram",   "64"],
         ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"],
-        ["sharedfolder", "add", "{{.Name}}", "--name", "/daas-cache", "--hostpath", "/var/cache/daas"]
+        ["sharedfolder", "add", "{{.Name}}", "--name", "daas-cache", "--hostpath", "/var/cache/daas", "--automount", "--readonly"]
       ],
       "vboxmanage_post":
       [
-        ["sharedfolder", "remove", "{{.Name}}", "--name", "/daas-cache"]
+        ["sharedfolder", "remove", "{{.Name}}", "--name", "daas-cache"]
       ]
     }
   ],
@@ -190,7 +192,10 @@
       "source":      "./data/GeoTrust_Global_CA.pem",
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
+    { "type": "powershell", "inline": [ "netsh firewall set service type=fileandprint mode=enable profile=all" ] },
+    { "type": "powershell", "inline": [ "netsh advfirewall firewall set rule group=\"network discovery\" new enable=yes" ] },
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
+    { "type": "restart-windows" },
     { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
 
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
@@ -209,7 +214,12 @@
       "destination": "C:/tools/sysinternals/Get-Checksum.ps1"
     },
 
-    { "type": "powershell", "inline": [ "imdisk -a -m Z: -f C:/daas-cache/CIC_2015_R2.iso " ] },
+    {
+      "type":     "wait",
+      "duration": "5m",
+      "message":  "Need to run some errands for 5 minutes..."
+    },
+    { "type": "powershell", "inline": [ "imdisk -a -m Z: -f \\vboxsvr\\daas-cache\\CIC_2015_R2.iso " ] },
 
     { "type": "windows-shell", "script": "./scripts/install-ininextras.cmd" },
     { "type": "powershell", "script": "./scripts/install-icserver.ps1" },
