@@ -124,7 +124,7 @@
       ]
     },
     {
-      "type":                "vmware-iso",
+      "type":                "vmware-windows-iso",
       "vm_name":             "packer_windows_2012R2_core",
       "guest_os_type":       "windows8srv-64",
       "iso_urls": [
@@ -139,9 +139,6 @@
       "ssh_password":        "vagrant",
       "ssh_wait_timeout":    "20m",
       "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
-      "http_directory":       "{{user `http_directory`}}",
-      "http_port_min":        "8116",
-      "http_port_max":        "8116",
       "disk_size":           "{{user `disk_size`}}",
       "floppy_files": [
         "./templates/{{user `template`}}/Autounattend.xml",
@@ -149,7 +146,7 @@
         "./scripts/01-config-os.cmd",
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
-        "./scripts/04-install-openssh.cmd",
+        "./scripts/04-install-imdisk.cmd",
         "./scripts/99-start-services.cmd"
       ],
       "vmx_data":

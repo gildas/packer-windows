@@ -99,7 +99,7 @@ builders = {
     name:         'vmware',
     folder:       'vmware',
     vagrant_type: 'vmware_desktop',
-    packer_type:  'vmware-iso',
+    packer_type:  'vmware-windows-iso',
     supported:    lambda { which('vmrun') || File.exists?('/Applications/VMware Fusion.app/Contents/Library/vmrun') }
   },
 }
