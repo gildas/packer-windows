@@ -7,7 +7,7 @@ Param(
   [Parameter(Mandatory=$false)][string] $User          = 'vagrant',
   [Parameter(Mandatory=$false)][string] $Password      = 'vagrant',
   [Parameter(Mandatory=$false)][string] $InstallPath   = 'C:\I3\IC',
-  [Parameter(Mandatory=$true)][string]  $SourceDriveLetter,
+  [Parameter(Mandatory=$true)][string]  $SourceDriveLetter = 'Z',
   [Parameter(Mandatory=$false)][switch] $Reboot
 )
 Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
@@ -31,7 +31,7 @@ if($PSVersionTable.PSVersion.Major -lt 3)
 $InstallSource = ${SourceDriveLetter} + ':\Installs\ServerComponents'
 if (! (Test-Path (Join-Path $InstallSource $Source_filename)i))
 {
-  Write-Error "IC Server Installation source not found in ${SourceDriveLetter}:"
+  Write-Error "IC Firmware Installation source not found in ${SourceDriveLetter}:"
   exit 1
 }
 
@@ -63,7 +63,6 @@ else
 # Prerequisites }}}
 
 $InstalledProducts=0
-
 $Product = 'Interaction Firmware'
 if (Get-ItemProperty HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
 {
