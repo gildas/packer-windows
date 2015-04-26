@@ -189,14 +189,17 @@
     },
     {
       "type":        "file",
+      "source":      "./scripts/Get-Checksum.ps1",
+      "destination": "C:/tools/sysinternals/Get-Checksum.ps1"
+    },
+    {
+      "type":        "file",
       "source":      "./data/GeoTrust_Global_CA.pem",
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
-    { "type": "powershell", "inline": [ "netsh firewall set service type=fileandprint mode=enable profile=all" ] },
-    { "type": "powershell", "inline": [ "netsh advfirewall firewall set rule group=\"network discovery\" new enable=yes" ] },
+    { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
     { "type": "restart-windows" },
-    { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
 
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
     { "type": "powershell", "inline": [ "chocolatey install -y dotnet3.5" ] },
@@ -205,47 +208,23 @@
     { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y classic-shell" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
-
     { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
 
-    {
-      "type":        "file",
-      "source":      "./scripts/Get-Checksum.ps1",
-      "destination": "C:/tools/sysinternals/Get-Checksum.ps1"
-    },
-
-    {
-      "type":     "wait",
-      "duration": "5m",
-      "message":  "Need to run some errands for 5 minutes..."
-    },
-    { "type": "powershell", "inline": [ "imdisk -a -m Z: -f \\vboxsvr\\daas-cache\\CIC_2015_R2.iso " ] },
-
+    { "type": "powershell", "inline": [ "imdisk -a -m Z: -f \\\\vboxsvr\\daas-cache\\CIC_2015_R2.iso " ] },
     { "type": "windows-shell", "script": "./scripts/install-ininextras.cmd" },
-    { "type": "powershell", "script": "./scripts/install-icserver.ps1" },
+    { "type": "powershell",  "script": "./scripts/install-icserver.ps1" },
     {
       "type":     "wait",
       "duration": "15m",
-      "message":  "Giving ICServer install some air to breathe for 15 minutes..."
+      "message":  "Let's catch our breath for 15 minutes..."
     },
-    { "type": "powershell", "script": "./scripts/check-icserver.ps1" },
-    { "type": "powershell", "script": "./scripts/install-icfirmware.ps1" },
+    { "type": "powershell",  "script": "./scripts/install-icfirmware.ps1" },
+    { "type": "powershell", "inline": [ "imdisk -d -m Z:" ] },
     {
       "type":   "shell",
       "only":   [ "vmware-iso" ],
       "start_retry_timeout": "5m",
       "inline": [ "rm -f /cygdrive/c/Users/vagrant/windows.iso" ]
-    },
-    {
-      "type":   "shell",
-      "start_retry_timeout": "5m",
-      "inline":
-      [
-        "rm -f /cygdrive/c/Windows/Temp/ICServer_2015_R1.msi",
-        "rm -f /cygdrive/c/Windows/Temp/InteractionFirmware_2015_R1.msi",
-        "rm -f /cygdrive/c/Windows/Temp/script*.ps1",
-        "rm -f /cygdrive/c/Windows/Temp/script.bat"
-      ]
     }
   ],
   "post-processors":
