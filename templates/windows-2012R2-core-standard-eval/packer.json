@@ -208,6 +208,7 @@
     },
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
     { "type": "powershell", "script": "./scripts/config-shell.ps1" },
+    { "type": "restart-windows" },
     { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
 
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
@@ -216,7 +217,11 @@
     { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
 
-    { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" }
+    { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
+    {
+      "type": "powershell", "inline": [ "Write-Host 'Removing VMWare tools ISO' ; Remove-Item -Path C:/Users/vagrant/windows.iso -Force" ],
+      "only": [ "vmware-windows-iso" ]
+    }
   ],
   "post-processors":
   [
