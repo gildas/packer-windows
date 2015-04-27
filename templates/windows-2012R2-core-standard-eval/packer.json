@@ -206,8 +206,8 @@
       "source":      "./data/GeoTrust_Global_CA.pem",
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
-    { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
     { "type": "powershell", "script": "./scripts/config-shell.ps1" },
+    { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
     { "type": "restart-windows" },
     { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
 
