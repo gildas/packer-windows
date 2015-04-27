@@ -96,7 +96,7 @@
       ]
     },
     {
-      "type":                "vmware-iso",
+      "type":                "vmware-windows-iso",
       "vm_name":             "packer_CIC_2015R2",
       "guest_os_type":       "windows8srv-64",
       "iso_urls": [
@@ -107,15 +107,11 @@
       ],
       "iso_checksum_type":   "md5",
       "iso_checksum":        "458ff91f8abc21b75cb544744bf92e6a",
-      "ssh_username":        "vagrant",
-      "ssh_password":        "vagrant",
-      "ssh_wait_timeout":    "20m",
-      "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
-      "tools_upload_flavor": "windows",
       "headless":            true,
-      "http_directory":       "{{user `http_directory`}}",
-      "http_port_min":        "8116",
-      "http_port_max":        "8116",
+      "winrm_username":      "vagrant",
+      "winrm_password":      "vagrant",
+      "winrm_wait_timeout":  "20m",
+      "shutdown_command":    "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
       "disk_size":           "{{user `disk_size`}}",
       "floppy_files": [
         "./templates/{{user `template`}}/Autounattend.xml",
@@ -123,7 +119,7 @@
         "./scripts/01-config-os.cmd",
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
-        "./scripts/04-install-openssh.cmd",
+        "./scripts/04-install-imdisk.cmd",
         "./scripts/99-start-services.cmd"
       ],
       "vmx_data":
@@ -218,13 +214,11 @@
       "duration": "15m",
       "message":  "Let's catch our breath for 15 minutes..."
     },
-    { "type": "powershell",  "script": "./scripts/install-icfirmware.ps1" },
+    { "type": "powershell", "script": "./scripts/install-icfirmware.ps1" },
     { "type": "powershell", "inline": [ "imdisk -d -m Z:" ] },
     {
-      "type":   "shell",
-      "only":   [ "vmware-iso" ],
-      "start_retry_timeout": "5m",
-      "inline": [ "rm -f /cygdrive/c/Users/vagrant/windows.iso" ]
+      "type": "powershell", "inline": [ "Remove-Item -Path C:/Users/vagrant/windows.iso -Force" ],
+      "only": [ "vmware-windows-iso" ]
     }
   ],
   "post-processors":
