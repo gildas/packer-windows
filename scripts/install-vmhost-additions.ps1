@@ -17,12 +17,31 @@ if ($env:PACKER_BUILDER_TYPE -match 'vmware')
     $drive = (Get-Volume -DiskImage $image).DriveLetter
     Write-Host "ISO Mounted on $drive"
     Write-Host "Installing VMWare Guest Additions"
-    cmd /c "${drive}:\setup64.exe /S /v`"/qn REBOOT=ReallySuppress ADDLOCAL=ALL`" /l C:\Windows\Logs\vmware-tools.log"
-    Write-Host "Dismounting ISO"
-    Dismount-DiskImage -ImagePath $image.ImagePath
-    #Write-Host "Restarting Virtual Machine"
-    #Restart-Computer -Force
-    #Start-Sleep 30
+    $process = Start-Process -Wait -PassThru -FilePath ${drive}:\setup64.exe -ArgumentList '/S /v"/qn REBOOT=ReallySuppress ADDLOCAL=ALL" /l C:\Windows\Logs\vmware-tools.log'
+    #cmd /c "${drive}:\setup64.exe /S /v`"/qn REBOOT=ReallySuppress ADDLOCAL=ALL`" /l C:\Windows\Logs\vmware-tools.log"
+    if ($process.ExitCode -eq 0)
+    {
+      Write-Host "Installation was successful"
+      Write-Host "Dismounting ISO"
+      if (! (Dismount-DiskImage -ImagePath $image.ImagePath))
+      {
+        Write-Error "Cannot unmount $($image.ImagePath), error: $LastExitCode"
+        exit $LastExitCode
+      }
+    }
+    elseif ($process.ExitCode -eq 3010)
+    {
+      Write-Warning "Installation was successful, Rebooting is needed"
+#    Write-Host "Restarting Virtual Machine"
+#    Restart-Computer
+#    Start-Sleep 30
+    }
+    else
+    {
+      Write-Error "Installation failed: Error= $($process.ExitCode), Logs=C:\Windows\Logs\vmware-tools.log"
+      Start-Sleep 2; exit $process.ExitCode
+    }
+    Start-Sleep 2
   }
   else
   {
@@ -50,7 +69,7 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
     exit 2
   }
   Write-Host "Installing Virtualbox Guest Additions"
-  $process = Start-Process -Wait -PassThru -FilePath ${drive}:\VBoxWindowsAdditions.exe -ArgumentList '/S /l C:\Windows\Logs\vmware-tools.log /v"/qn REBOOT=R"'
+  $process = Start-Process -Wait -PassThru -FilePath ${drive}:\VBoxWindowsAdditions.exe -ArgumentList '/S /l C:\Windows\Logs\virtualbox-tools.log /v"/qn REBOOT=R"'
   if ($process.ExitCode -eq 0)
   {
     Write-Host "Installation was successful"
