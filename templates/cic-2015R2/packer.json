@@ -207,7 +207,12 @@
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
     { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
 
-    { "type": "powershell", "inline": [ "imdisk -a -m Z: -f \\\\vboxsvr\\daas-cache\\CIC_2015_R2.iso " ] },
+    { "type": "powershell", "inline": [ "imdisk -a -m Z: -f \\\\vboxsvr\\daas-cache\\CIC_2015_R2.iso " ]
+      "only": [ "virtualbox-windows-iso" ]
+    },
+    { "type": "powershell", "inline": [ "imdisk -a -m Z: -f \\\\.host\\daas-cache\\CIC_2015_R2.iso " ]
+      "only": [ "vmware-windows-iso" ]
+    },
     { "type": "windows-shell", "script": "./scripts/install-ininextras.cmd" },
     { "type": "powershell",  "script": "./scripts/install-icserver.ps1" },
     {
