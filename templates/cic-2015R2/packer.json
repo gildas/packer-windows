@@ -218,7 +218,7 @@
     { "type": "powershell", "script": "./scripts/install-icfirmware.ps1" },
     { "type": "powershell", "inline": [ "imdisk -d -m Z:" ] },
     {
-      "type": "powershell", "inline": [ "Remove-Item -Path C:/Users/vagrant/windows.iso -Force" ],
+      "type": "powershell", "inline": [ "Write-Host 'Removing VMWare tools ISO' ; Remove-Item -Path C:/Users/vagrant/windows.iso -Force" ],
       "only": [ "vmware-windows-iso" ]
     }
   ],

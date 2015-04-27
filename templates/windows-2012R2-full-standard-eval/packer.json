@@ -191,7 +191,7 @@
 
     { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
     {
-      "type": "powershell",    "inline": [ "Remove-Item -Path C:/Users/vagrant/windows.iso -Force" ],
+      "type": "powershell", "inline": [ "Write-Host 'Removing VMWare tools ISO' ; Remove-Item -Path C:/Users/vagrant/windows.iso -Force" ],
       "only": [ "vmware-windows-iso" ]
     }
   ],
