@@ -190,6 +190,7 @@
       ],
       "vboxmanage":
       [
+        ["modifyvm", "{{.Name}}", "--ioapic", "on"],
         ["modifyvm", "{{.Name}}", "--memory", "{{user `mem_size`}}"],
         ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
         ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"]
