@@ -31,6 +31,10 @@ def which(f)
   nil
 end
 
+def verbose(message)
+  puts message if $VERBOSE
+end
+
 class Task
   def investigation
     return unless Rake.application.options.trace == true
@@ -229,21 +233,21 @@ builders.each do |builder_name, builder|
           loaded_box_marker = "#{box_root}/#{version}/#{vagrant_provider}/metadata.json"
 
           file loaded_box_marker => box_file do |_task|
-            puts _task.investigation
+            verbose _task.investigation
 
             if Dir.exist? "#{box_root}/#{version}"
-              puts "removing #{box_root}/#{version}/#{vagrant_provider}" if verbose == true
+              verbose "removing #{box_root}/#{version}/#{vagrant_provider}"
               FileUtils.rm_r "#{box_root}/#{version}/#{vagrant_provider}", force: true
             else
-              puts "removing #{box_root}/#{version}" if verbose == true
+              verbose "removing #{box_root}/#{version}"
               FileUtils.mkdir_p "#{box_root}/#{version}"
             end
-            puts "adding #{box_file} as #{box_name}" if verbose == true
+            verbose "adding #{box_file} as #{box_name}"
             sh "vagrant box add --force #{box_name} #{box_file}"
             # Now move the new box in the proper version folder
-            puts "moving #{box_root}/0/#{vagrant_provider} to #{box_root}/#{version}" if verbose == true
+            verbose "moving #{box_root}/0/#{vagrant_provider} to #{box_root}/#{version}"
             FileUtils.mv   "#{box_root}/0/#{vagrant_provider}", "#{box_root}/#{version}"
-            puts "removing #{box_root}/0" if verbose == true
+            verbose "removing #{box_root}/0"
             FileUtils.rm_r "#{box_root}/0", force: true
             puts "==> box: Successfully updated box '#{box_name}' version to #{version} for '#{vagrant_provider}'"
           end
