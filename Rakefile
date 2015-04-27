@@ -131,7 +131,7 @@ def sources_for_box(box_file)
   box_scripts = []
   box_sources.each do |source|
     File.readlines(source).each do |line|
-      if line =~ /.*(\.\/scripts\/.*)"/
+      if line =~ /.*(\.\/scripts\/.*)"/ && box_scripts.include?($1)
         box_scripts << $1
       end
     end
