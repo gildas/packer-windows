@@ -105,44 +105,43 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
       Write-Host "next..."
     }
   }
-  $discRecorder.EjectMedia()
   Start-Sleep 2
 }
 elseif ($env:PACKER_BUILDER_TYPE -match 'parallels')
 {
-  $iso_path="C:\Users\vagrant\prl-tools-win.iso"
-  if (Test-Path $iso_path)
+  $volume = Get-Volume | where FileSystemLabel -eq 'Parallels Tools'
+
+  if (! $volume)
   {
-    Write-Host "Mounting ISO $iso_path"
-    $image = Mount-DiskImage $iso_path -PassThru
-    if (! $?)
-    {
-      Write-Error "ERROR $LastExitCode while mounting VMWare Guest Additions"
-      Start-Sleep 10
-      exit 2
-    }
-    $drive = (Get-Volume -DiskImage $image).DriveLetter
-    Write-Host "ISO Mounted on $drive"
-    # cd ${drive}:\cert ; VBoxCertUtil add-trusted-publisher oracle-vbox.cer --root oracle-vbox.cer
-    Write-Host "Installing Parallels Guest Additions"
-    Start-Process ${drive}:\PTAgent.exe -ArgumentList '/install_silent' -Wait
-    if (! $?)
-    {
-      Write-Error "ERROR $LastExitCode while installing Parallels Guest Additions"
-      Start-Sleep 10
-      exit 2
-    }
-    Start-Sleep 20
-    Write-Host "Dismounting ISO"
-    Dismount-DiskImage -ImagePath $image.ImagePath
+    Write-Error "Could not find the VirtualBox Guest Additions CD-ROM"
+    Start-Sleep 10
+    exit 3
+  }
+
+  $drive=$volume.DriveLetter
+  Write-Host "ISO Mounted on $drive"
+  Write-Host "Installing Parallels Guest Additions"
+  $process = Start-Process -Wait -PassThru -FilePath ${drive}:\PTAgent.exe -ArgumentList '/install_silent'
+  if ($process.ExitCode -eq 0)
+  {
+    Write-Host "Installation was successful"
+  }
+  elseif ($process.ExitCode -eq 3010)
+  {
+    Write-Warning "Installation was successful, Rebooting is needed"
 #    Write-Host "Restarting Virtual Machine"
 #    Restart-Computer
 #    Start-Sleep 30
   }
   else
   {
-    Write-Host "ISO was not loaded [$iso_path], nothing will happen"
+    Write-Error "Installation failed: Error= $($process.ExitCode), Logs=C:\Windows\Logs\vmware-tools.log"
+    Start-Sleep 2; exit $process.ExitCode
   }
+  Start-Sleep 2
+#    Write-Host "Restarting Virtual Machine"
+#    Restart-Computer
+#    Start-Sleep 30
 }
 else
 {

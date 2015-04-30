@@ -82,7 +82,7 @@ builders = {
     name:         'parallels',
     folder:       'parallels',
     vagrant_type: 'parallels',
-    packer_type:  'parallels-iso',
+    packer_type:  'parallels-windows-iso',
     supported:    lambda { RUBY_PLATFORM =~ /.*darwin.*/ && which('prlctl') }
   },
   virtualbox:

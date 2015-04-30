@@ -59,7 +59,7 @@
       ]
     },
     {
-      "type":                "parallels-iso",
+      "type":                "parallels-windows-iso",
       "vm_name":             "packer_windows_2012R2_full",
       "guest_os_type":       "win-2012",
       "iso_urls": [
@@ -70,14 +70,13 @@
       ],
       "iso_checksum_type":      "md5",
       "iso_checksum":           "458ff91f8abc21b75cb544744bf92e6a",
-      "ssh_username":           "vagrant",
-      "ssh_password":           "vagrant",
-      "ssh_wait_timeout":       "20m",
-      "shutdown_command":       "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
+      "headless":               false,
+      "winrm_username":         "vagrant",
+      "winrm_password":         "vagrant",
+      "winrm_wait_timeout":     "20m",
+      "shutdown_command":       "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
       "parallels_tools_flavor": "win",
-      "http_directory":       "{{user `http_directory`}}",
-      "http_port_min":        "8116",
-      "http_port_max":        "8116",
+      "parallels_tools_mode":   "attach",
       "disk_size":              "{{user `disk_size`}}",
       "floppy_files": [
         "./templates/{{user `template`}}/Autounattend.xml",
@@ -85,14 +84,18 @@
         "./scripts/01-config-os.cmd",
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
-        "./scripts/04-install-openssh.cmd",
+        "./scripts/04-install-imdisk.cmd",
         "./scripts/99-start-services.cmd"
       ],
       "prlctl":
       [
-        ["set", "{{.Name}}", "--memsize", "{{user `mem_size`}}"],
-        ["set", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
-        ["set", "{{.Name}}", "--efi-boot",   "off"]
+        ["set", "{{.Name}}", "--memsize",                "{{user `mem_size`}}"],
+        ["set", "{{.Name}}", "--cpus",                   "{{user `cpus`}}"],
+        ["set", "{{.Name}}", "--efi-boot",               "off"],
+        ["set", "{{.Name}}", "--shared-profile",         "off"],
+        ["set", "{{.Name}}", "--shared-cloud",           "off"],
+        ["set", "{{.Name}}", "--sh-app-guest-to-host",   "off"],
+        ["set", "{{.Name}}", "--sh-app-host-to-guest",   "off"]
       ]
     },
     {
