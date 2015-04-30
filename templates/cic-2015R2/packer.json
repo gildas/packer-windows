@@ -97,10 +97,6 @@
         ["set", "{{.Name}}", "--sh-app-guest-to-host",   "off"],
         ["set", "{{.Name}}", "--sh-app-host-to-guest",   "off"],
         ["set", "{{.Name}}", "--shf-host-add",           "daas-cache", "--path", "/var/cache/daas", "--mode", "ro", "--enable"]
-      ],
-      "prlctl_post":
-      [
-        ["set", "{{.Name}}", "--shf-host-del",           "daas-cache"]
       ]
     },
     {
