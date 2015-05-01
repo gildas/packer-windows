@@ -4,10 +4,11 @@
 #> # }}}
 [CmdletBinding()] 
 Param(
-  [Parameter(Mandatory=$false)][string] $User          = 'vagrant',
-  [Parameter(Mandatory=$false)][string] $Password      = 'vagrant',
-  [Parameter(Mandatory=$false)][string] $InstallPath   = 'C:\I3\IC',
+  [Parameter(Mandatory=$false)][string] $User               = 'vagrant',
+  [Parameter(Mandatory=$false)][string] $Password           = 'vagrant',
+  [Parameter(Mandatory=$false)][string] $InstallPath        = 'C:\I3\IC',
   [Parameter(Mandatory=$false)][string]  $SourceDriveLetter = 'Z',
+  [Parameter(Mandatory=$false)][switch] $Wait
   [Parameter(Mandatory=$false)][switch] $Reboot
 )
 Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
@@ -76,26 +77,43 @@ else
   $parms += '/norestart'
 
   # The ICServer MSI tends to not finish properly even if successful
-  # And there is limit to the time a script can run over winrm/ssh
-  # We will use other scripts to check if the install was successful
-  $process = Start-Process -Wait -PassThru -FilePath msiexec -ArgumentList /i,"${InstallSource}\${Source_filename}",PROMPTEDUSER="$User",PROMPTEDDOMAIN="$Domain",PROMPTEDPASSWORD="$Password",INTERACTIVEINTELLIGENCE="$InstallPath",TRACING_LOGS="$InstallPath\Logs",STARTEDBYEXEORIUPDATE=1,CANCELBIG4COPY=1,OVERRIDEKBREQUIREMENT=1,REBOOT=ReallySuppress,/l*v,"C:\Windows\Logs\icserver-${Now}.log",/qn,/norestart
+  $stop_watch = [Diagnostics.StopWatch]::StartNew()
+  $process    = Start-Process -PassThru -FilePath msiexec -ArgumentList /i,"${InstallSource}\${Source_filename}",PROMPTEDUSER="$User",PROMPTEDDOMAIN="$Domain",PROMPTEDPASSWORD="$Password",INTERACTIVEINTELLIGENCE="$InstallPath",TRACING_LOGS="$InstallPath\Logs",STARTEDBYEXEORIUPDATE=1,CANCELBIG4COPY=1,OVERRIDEKBREQUIREMENT=1,REBOOT=ReallySuppress,/l*v,"C:\Windows\Logs\icserver-${Now}.log",/qn,/norestart
 
-  if ($process.ExitCode -eq 0)
+  if ($Wait)
   {
-    Write-Host "Installation of '$Product' was successful"
+    Write-Output "Waiting 1 minute before checking..."
+    Start-Sleep 60
+    $iter       = 0
+    $iter_panel = -1
+    $running    = @(Get-Process | Where ProcessName -eq 'msiexec').Count
+    while ($running -gt 0)
+    {
+      if ($running -gt 1)
+      {
+        Write-Host "#${iter}: There are still $running running MSI installers"
+      }
+      else
+      {
+        Write-Host "#${iter}: There is still 1 running MSI installer"
+      }
+      if (($iter_panel -eq -1) -and (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product))
+      {
+        Write-Host "$Product is now referenced in the Control Panel"
+        $iter_panel = $iter
+      }
+      Start-Sleep 60
+      $running = @(Get-Process | Where ProcessName -eq 'msiexec').Count
+      $iter++
+    }
+    $stop_watch.Stop()
+    $elapsed = ''
+    if ($stop_watch.Elapsed.Days    -gt 0) { $elapsed = " $($stop_watch.Elapsed.Days) days" }
+    if ($stop_watch.Elapsed.Hours   -gt 0) { $elapsed = " $($stop_watch.Elapsed.Hours) hours" }
+    if ($stop_watch.Elapsed.Minutes -gt 0) { $elapsed = " $($stop_watch.Elapsed.Minutes) minutes" }
+    if ($stop_watch.Elapsed.Seconds -gt 0) { $elapsed = " $($stop_watch.Elapsed.Seconds) seconds" }
+    Write-Output "$Product installed successfully in$elapsed"
   }
-  elseif ($process.ExitCode -eq 3010)
-  {
-    Write-Warning "Installation of '$Product' was successful, Rebooting is needed"
-#    Write-Host "Restarting Virtual Machine"
-#    Restart-Computer
-#    Start-Sleep 30
-  }
-  else
-  {
-    Write-Error "Installation failed: Error= $($process.ExitCode), Logs=C:\Windows\Logs\icserver-${Now}.log"
-    Start-Sleep 2; exit $process.ExitCode
-  }
-  Start-Sleep 2
+  Start-Sleep 5
 }
 Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
