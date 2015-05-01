@@ -92,17 +92,14 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
     $discRecorder = New-Object -ComObject IMAPI2.MsftDiscRecorder2
     $discRecorder.InitializeDiscRecorder($dm)
 
-    Write-Host "Analyzing Media $($discRecorder.VolumePathNames)"
     foreach ($pathname in $discRecorder.VolumePathNames)
     {
-      Write-Host "Analyzing pathname $pathname"
       if ($pathname -eq "${drive}:\")
       {
         Write-Host "Ejecting Media ${pathname}"
         $discRecorder.EjectMedia()
         break
       }
-      Write-Host "next..."
     }
   }
   Start-Sleep 2
@@ -135,13 +132,10 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'parallels')
   }
   else
   {
-    Write-Error "Installation failed: Error= $($process.ExitCode), Logs=C:\Windows\Logs\vmware-tools.log"
+    Write-Error "Installation failed: Error= $($process.ExitCode)"
     Start-Sleep 2; exit $process.ExitCode
   }
   Start-Sleep 2
-#    Write-Host "Restarting Virtual Machine"
-#    Restart-Computer
-#    Start-Sleep 30
 }
 else
 {
