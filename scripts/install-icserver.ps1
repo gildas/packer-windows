@@ -72,7 +72,7 @@ else
   $parms += 'REBOOT=ReallySuppress'
   $parms += '/l*v'
   $parms += "C:\Windows\Logs\icserver-${Now}.log"
-  $parms += '/qb!'
+  $parms += '/qn'
   $parms += '/norestart'
 
   # The ICServer MSI tends to not finish properly even if successful
