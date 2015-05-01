@@ -78,7 +78,24 @@ else
   # The ICServer MSI tends to not finish properly even if successful
   # And there is limit to the time a script can run over winrm/ssh
   # We will use other scripts to check if the install was successful
-  Start-Process -FilePath msiexec -ArgumentList $parms
-  Write-Output "$Product is installing"
+  $process = Start-Process -Wait -PassThru -FilePath msiexec -ArgumentList /i,"${InstallSource}\${Source_filename}",PROMPTEDUSER="$User",PROMPTEDDOMAIN="$Domain",PROMPTEDPASSWORD="$Password",INTERACTIVEINTELLIGENCE="$InstallPath",TRACING_LOGS="$InstallPath\Logs",STARTEDBYEXEORIUPDATE=1,CANCELBIG4COPY=1,OVERRIDEKBREQUIREMENT=1,REBOOT=ReallySuppress,/l*v,"C:\Windows\Logs\icserver-${Now}.log",/qn,/norestart
+
+  if ($process.ExitCode -eq 0)
+  {
+    Write-Host "Installation of '$Product' was successful"
+  }
+  elseif ($process.ExitCode -eq 3010)
+  {
+    Write-Warning "Installation of '$Product' was successful, Rebooting is needed"
+#    Write-Host "Restarting Virtual Machine"
+#    Restart-Computer
+#    Start-Sleep 30
+  }
+  else
+  {
+    Write-Error "Installation failed: Error= $($process.ExitCode), Logs=C:\Windows\Logs\icserver-${Now}.log"
+    Start-Sleep 2; exit $process.ExitCode
+  }
+  Start-Sleep 2
 }
 Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
