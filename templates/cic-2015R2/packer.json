@@ -228,8 +228,8 @@
     { "type": "powershell",  "script": "./scripts/install-icserver.ps1" },
     {
       "type":     "wait",
-      "duration": "15m",
-      "message":  "Let's catch our breath for 15 minutes..."
+      "duration": "5m",
+      "message":  "Let's catch our breath for 5 minutes..."
     },
     { "type": "powershell", "script": "./scripts/install-icfirmware.ps1" },
     { "type": "powershell", "inline": [ "imdisk -d -m Z:" ] },
