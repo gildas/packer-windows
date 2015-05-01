@@ -29,7 +29,7 @@ if($PSVersionTable.PSVersion.Major -lt 3)
 
 # Prerequisite: Find the source! {{{2
 $InstallSource = ${SourceDriveLetter} + ':\Installs\ServerComponents'
-if (! (Test-Path (Join-Path $InstallSource $Source_filename)i))
+if (! (Test-Path (Join-Path $InstallSource $Source_filename)))
 {
   Write-Error "IC Firmware Installation source not found in ${SourceDriveLetter}:"
   exit 1
