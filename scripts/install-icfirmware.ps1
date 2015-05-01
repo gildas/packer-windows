@@ -7,7 +7,7 @@ Param(
   [Parameter(Mandatory=$false)][string] $User          = 'vagrant',
   [Parameter(Mandatory=$false)][string] $Password      = 'vagrant',
   [Parameter(Mandatory=$false)][string] $InstallPath   = 'C:\I3\IC',
-  [Parameter(Mandatory=$true)][string]  $SourceDriveLetter = 'Z',
+  [Parameter(Mandatory=$false)][string] $SourceDriveLetter = 'Z',
   [Parameter(Mandatory=$false)][switch] $Reboot
 )
 Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
