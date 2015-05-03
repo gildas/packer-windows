@@ -78,7 +78,8 @@ else
 
   # The ICServer MSI tends to not finish properly even if successful
   $stop_watch = [Diagnostics.StopWatch]::StartNew()
-  $process    = Start-Process -PassThru -FilePath msiexec -ArgumentList /i,"${InstallSource}\${Source_filename}",PROMPTEDUSER="$User",PROMPTEDDOMAIN="$Domain",PROMPTEDPASSWORD="$Password",INTERACTIVEINTELLIGENCE="$InstallPath",TRACING_LOGS="$InstallPath\Logs",STARTEDBYEXEORIUPDATE=1,CANCELBIG4COPY=1,OVERRIDEKBREQUIREMENT=1,REBOOT=ReallySuppress,/l*v,"C:\Windows\Logs\icserver-${Now}.log",/qn,/norestart
+  #$process    = Start-Process -PassThru -FilePath msiexec -ArgumentList /i,"${InstallSource}\${Source_filename}",PROMPTEDUSER="$User",PROMPTEDDOMAIN="$Domain",PROMPTEDPASSWORD="$Password",INTERACTIVEINTELLIGENCE="$InstallPath",TRACING_LOGS="$InstallPath\Logs",STARTEDBYEXEORIUPDATE=1,CANCELBIG4COPY=1,OVERRIDEKBREQUIREMENT=1,REBOOT=ReallySuppress,/l*v,"C:\Windows\Logs\icserver-${Now}.log",/qn,/norestart
+  $process    = Start-Process -PassThru -FilePath msiexec -ArgumentList $parms
 
   if ($Wait)
   {

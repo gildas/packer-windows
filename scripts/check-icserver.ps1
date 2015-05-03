@@ -160,7 +160,7 @@ $MSI_available=Test-MSIExecMutex -MsiExecWaitTime $(New-TimeSpan -Minutes 5)
 if (-not $MSI_available)
 {
   Write-Output "IC Server installation is not finished yet. This is bad news..."
-  return 1618
+  exit 1618
 }
 
 if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
@@ -170,7 +170,8 @@ if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*
 else
 {
   #TODO: Should we return values or raise exceptions?
-  Write-Output "Failed to install $Product"
-  return -2
+  Write-Output "Failed to install $Product (Error: $LastExitCode)"
+  Start-Sleep 600
+  exit $LastExitCode
 }
 Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
