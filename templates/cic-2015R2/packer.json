@@ -208,6 +208,7 @@
 
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
     { "type": "powershell", "inline": [ "chocolatey install -y sysinternals" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y md5" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y git" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y classic-shell" ] },
