@@ -194,11 +194,6 @@
     },
     {
       "type":        "file",
-      "source":      "./scripts/Get-Checksum.ps1",
-      "destination": "C:/tools/sysinternals/Get-Checksum.ps1"
-    },
-    {
-      "type":        "file",
       "source":      "./data/GeoTrust_Global_CA.pem",
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
