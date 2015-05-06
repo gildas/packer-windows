@@ -225,7 +225,7 @@
       "only": [ "vmware-windows-iso" ]
     },
     { "type": "windows-shell", "script": "./scripts/install-ininextras.cmd" },
-    { "type": "powershell",  "script": "./scripts/install-icserver.ps1" },
+    { "type": "powershell",  "script": "./scripts/install-icserver.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
     {
       "type":     "wait",
       "duration": "15m",
