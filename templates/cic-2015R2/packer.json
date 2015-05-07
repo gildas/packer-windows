@@ -225,13 +225,13 @@
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
     { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
 
-    { "type": "powershell", "inline": [ "imdisk -a -m Z: -f \\\\psf\\daas-cache\\CIC_2015_R2.iso" ],
+    { "type": "powershell", "inline": [ "imdisk -a -m I: -f \\\\psf\\daas-cache\\CIC_2015_R2.iso" ],
       "only": [ "parallels-windows-iso" ]
     },
-    { "type": "powershell", "inline": [ "imdisk -a -m Z: -f \\\\vboxsvr\\daas-cache\\CIC_2015_R2.iso" ],
+    { "type": "powershell", "inline": [ "imdisk -a -m I: -f \\\\vboxsvr\\daas-cache\\CIC_2015_R2.iso" ],
       "only": [ "virtualbox-windows-iso" ]
     },
-    { "type": "powershell", "inline": [ "imdisk -a -m Z: -f \\\\vmware-host\\Shared Folders\\daas-cache\\CIC_2015_R2.iso" ],
+    { "type": "powershell", "inline": [ "imdisk -a -m I: -f \"\\\\vmware-host\\Shared Folders\\daas-cache\\CIC_2015_R2.iso\"" ],
       "only": [ "vmware-windows-iso" ]
     },
     { "type": "windows-shell", "script": "./scripts/install-ininextras.cmd" },
@@ -243,7 +243,7 @@
     },
     { "type": "powershell", "script": "./scripts/check-icserver.ps1" },
     { "type": "powershell", "script": "./scripts/install-icfirmware.ps1" },
-    { "type": "powershell", "inline": [ "imdisk -d -m Z:" ] },
+    { "type": "powershell", "inline": [ "imdisk -d -m I:" ] },
     {
       "type": "powershell", "inline": [ "Write-Host 'Removing VMWare tools ISO' ; Remove-Item -Path C:/Users/vagrant/windows.iso -Force" ],
       "only": [ "vmware-windows-iso" ]
