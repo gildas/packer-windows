@@ -115,7 +115,7 @@
       "iso_checksum_type":   "md5",
       "iso_checksum":        "458ff91f8abc21b75cb544744bf92e6a",
       "boot_wait":           "30s",
-      "headless":            true,
+      "headless":            false,
       "winrm_username":      "vagrant",
       "winrm_password":      "vagrant",
       "winrm_wait_timeout":  "20m",
