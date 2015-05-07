@@ -143,7 +143,7 @@
         "sharedFolder0.present":     "TRUE",
         "sharedFolder0.enabled":     "TRUE",
         "sharedFolder0.readAccess":  "TRUE",
-        "sharedFolder0.writeAccess": "TRUE",
+        "sharedFolder0.writeAccess": "FALSE",
         "sharedFolder0.hostPath":    "/var/cache/daas",
         "sharedFolder0.guestName":   "daas-cache",
         "sharedFolder0.expiration":  "never",
