@@ -88,7 +88,8 @@
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
         "./scripts/04-install-imdisk.cmd",
-        "./scripts/99-start-services.cmd"
+        "./scripts/99-start-services.cmd",
+        "./data/vagrant.pub"
       ],
       "prlctl":
       [
@@ -125,12 +126,14 @@
       "floppy_files":
       [
         "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/_packer_config.cmd",
         "./scripts/00-run-all-scripts.cmd",
         "./scripts/01-config-os.cmd",
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
         "./scripts/04-install-imdisk.cmd",
-        "./scripts/99-start-services.cmd"
+        "./scripts/99-start-services.cmd",
+        "./data/vagrant.pub"
       ],
       "vmx_data":
       {
