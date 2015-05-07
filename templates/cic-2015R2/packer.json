@@ -88,8 +88,7 @@
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
         "./scripts/04-install-imdisk.cmd",
-        "./scripts/99-start-services.cmd",
-        "./data/vagrant.pub"
+        "./scripts/99-start-services.cmd"
       ],
       "prlctl":
       [
@@ -132,15 +131,27 @@
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
         "./scripts/04-install-imdisk.cmd",
-        "./scripts/99-start-services.cmd",
-        "./data/vagrant.pub"
+        "./scripts/99-start-services.cmd"
       ],
       "vmx_data":
       {
-        "memsize":              "{{user `mem_size`}}",
-        "numvcpus":             "{{user `cpus`}}",
-        "cpuid.coresPerSocket": "1",
-        "scsi0.virtualDev":     "lsisas1068"
+        "memsize":                   "{{user `mem_size`}}",
+        "numvcpus":                  "{{user `cpus`}}",
+        "cpuid.coresPerSocket":      "1",
+        "scsi0.virtualDev":          "lsisas1068",
+        "sharedFolder.maxNum":       "1",
+        "sharedFolder0.present":     "TRUE",
+        "sharedFolder0.enabled":     "TRUE",
+        "sharedFolder0.readAccess":  "TRUE",
+        "sharedFolder0.writeAccess": "TRUE",
+        "sharedFolder0.hostPath":    "/var/cache/daas",
+        "sharedFolder0.guestName":   "daas-cache",
+        "sharedFolder0.expiration":  "never",
+        "sharedFolder0.shareTags":   ""
+      },
+      "vmx_data_post":
+      {
+        "sharedFolder.maxNum":       "0"
       }
     },
     {
@@ -172,8 +183,7 @@
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
         "./scripts/04-install-imdisk.cmd",
-        "./scripts/99-start-services.cmd",
-        "./data/vagrant.pub"
+        "./scripts/99-start-services.cmd"
       ],
       "vboxmanage":
       [
