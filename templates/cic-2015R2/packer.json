@@ -212,6 +212,12 @@
       "source":      "./data/GeoTrust_Global_CA.pem",
       "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
     },
+    {
+      "type":        "file",
+      "source":      "./data/bginfo",
+      "destination": "C:/ProgramData/BGInfo"
+    },
+    { "type": "powershell", "inline": [ "Copy-Item C:/ProgramData/BGInfo/Set-Background.lnk \"C:/ProgramData/Microsoft/Windows/Start Menu/Programs/StartUp\"" ] },
     { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
     { "type": "restart-windows" },
@@ -221,6 +227,7 @@
     { "type": "powershell", "inline": [ "chocolatey install -y md5" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y git" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y bginfo" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y classic-shell" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
     { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
