@@ -15,6 +15,7 @@ end
 
 templates_dir = 'templates'
 boxes_dir     = 'boxes'
+log_dir       = 'log'
 temp_dir      = 'tmp'
 
 def which(f)
@@ -113,7 +114,8 @@ TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json}") + Rake:
 
 directory boxes_dir
 directory temp_dir
-task :folders => [ boxes_dir, temp_dir ]
+directory log_dir
+task :folders => [ boxes_dir, temp_dir, log_dir ]
 
 def load_json(filename)
   return {} unless File.exist? filename
@@ -139,14 +141,15 @@ def sources_for_box(box_file)
   box_sources + box_scripts
 end
 
-rule '.box' => [->(box) { sources_for_box(box) }, boxes_dir] do |_rule|
+rule '.box' => [->(box) { sources_for_box(box) }, boxes_dir, log_dir] do |_rule|
   builder = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
   mkdir_p _rule.name.pathmap("%d")
   puts "Building #{_rule.name.pathmap("%f")} using #{builder[:name]}"
   FileUtils.rm_rf "output-#{builder[:packer_type]}"
-  packer_log="$HOME/Downloads/packer-build-#{builder[:name]}-#{_rule.name.pathmap("%f")}.log"
-  sh "echo '================================================================================' >> \"#{packer_log}\""
+  packer_log="#{log_dir}/packer-build-#{builder[:name]}-#{_rule.name.pathmap("%f")}.log"
+  File.open(packer_log, "a") { |f| f.puts "==== BEGIN %s %s" % ['=' * 60, Time.now.to_s] }
   sh "PACKER_LOG=1 PACKER_LOG_PATH=\"#{packer_log}\" packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}/config.json #{_rule.source}"
+  File.open(packer_log, "a") { |f| f.puts "==== END   %s %s" % ['=' * 60, Time.now.to_s] }
 end
 
 class Binder
