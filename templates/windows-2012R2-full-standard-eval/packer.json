@@ -138,11 +138,20 @@
         "sata0:1.present":           "TRUE",
         "sata0:1.deviceType":        "cdrom-image",
         "sata0:1.startConnected":    "TRUE",
-        "sata0:1.fileName":          "/Applications/VMware Fusion.app/Contents/Library/isoimages/windows.iso"
+        "sata0:1.fileName":          "/Applications/VMware Fusion.app/Contents/Library/isoimages/windows.iso",
+        "sharedFolder.maxNum":       "1",
+        "sharedFolder0.present":     "TRUE",
+        "sharedFolder0.enabled":     "TRUE",
+        "sharedFolder0.expiration":  "never",
+        "sharedFolder0.readAccess":  "TRUE",
+        "sharedFolder0.writeAccess": "TRUE",
+        "sharedFolder0.hostPath":    "{{pwd}}/log",
+        "sharedFolder0.guestName":   "log"
       },
       "vmx_data_post":
       {
-        "sata0:1.present":           "FALSE"
+        "sata0:1.present":           "FALSE",
+        "sharedFolder0.present":     "FALSE"
       }
     },
     {
@@ -217,7 +226,8 @@
     { "type": "powershell", "inline": [ "chocolatey install -y classic-shell" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
 
-    { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" }
+    { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
+    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" }
   ],
   "post-processors":
   [
