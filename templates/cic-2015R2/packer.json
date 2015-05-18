@@ -207,22 +207,10 @@
   ],
   "provisioners":
   [
-    {
-      "type":        "file",
-      "source":      "./data/inin-extras.zip",
-      "destination": "C:/Windows/Temp/inin-extras.zip"
-    },
-    {
-      "type":        "file",
-      "source":      "./data/GeoTrust_Global_CA.pem",
-      "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem"
-    },
-    {
-      "type":        "file",
-      "source":      "./data/bginfo",
-      "destination": "C:/ProgramData/BGInfo"
-    },
-    { "type": "file",       "source": "./data/vagrant.jpg", "destination": "C:/Users/vagrant/Pictures/vagrant.jpg" },
+    { "type": "file",       "source": "./data/inin-extras.zip",        "destination": "C:/Windows/Temp/inin-extras.zip" },
+    { "type": "file",       "source": "./data/GeoTrust_Global_CA.pem", "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem" },
+    { "type": "file",       "source": "./data/bginfo",                 "destination": "C:/ProgramData/BGInfo" },
+    { "type": "file",       "source": "./data/vagrant.jpg",            "destination": "C:/Users/vagrant/Pictures/vagrant.jpg" },
     { "type": "powershell", "inline": [ "Copy-Item C:/ProgramData/BGInfo/Set-Background.lnk \"C:/ProgramData/Microsoft/Windows/Start Menu/Programs/StartUp\"" ] },
     { "type": "powershell", "script": "./scripts/Set-AccountPicture.ps1" },
     { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
