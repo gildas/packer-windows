@@ -120,7 +120,6 @@
       "winrm_password":      "vagrant",
       "winrm_wait_timeout":  "20m",
       "shutdown_command":    "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
-      "tools_upload_flavor": "windows",
       "disk_size":           "{{user `disk_size`}}",
       "floppy_files":
       [
@@ -139,6 +138,11 @@
         "numvcpus":                  "{{user `cpus`}}",
         "cpuid.coresPerSocket":      "1",
         "scsi0.virtualDev":          "lsisas1068",
+        "sata0.present":             "TRUE",
+        "sata0:1.present":           "TRUE",
+        "sata0:1.deviceType":        "cdrom-image",
+        "sata0:1.startConnected":    "TRUE",
+        "sata0:1.fileName":          "/Applications/VMware Fusion.app/Contents/Library/isoimages/windows.iso",
         "sharedFolder.maxNum":       "1",
         "sharedFolder0.present":     "TRUE",
         "sharedFolder0.enabled":     "TRUE",
@@ -151,6 +155,7 @@
       },
       "vmx_data_post":
       {
+        "sata0:1.present":           "FALSE",
         "sharedFolder.maxNum":       "0"
       }
     },
@@ -251,11 +256,7 @@
     },
     { "type": "powershell", "script": "./scripts/check-icserver.ps1" },
     { "type": "powershell", "script": "./scripts/install-icfirmware.ps1" },
-    { "type": "powershell", "inline": [ "imdisk -d -m I:" ] },
-    {
-      "type": "powershell", "inline": [ "Write-Host 'Removing VMWare tools ISO' ; Remove-Item -Path C:/Users/vagrant/windows.iso -Force" ],
-      "only": [ "vmware-windows-iso" ]
-    }
+    { "type": "powershell", "inline": [ "imdisk -d -m I:" ] }
   ],
   "post-processors":
   [

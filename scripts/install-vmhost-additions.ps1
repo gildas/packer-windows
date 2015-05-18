@@ -3,50 +3,85 @@
 
 if ($env:PACKER_BUILDER_TYPE -match 'vmware')
 {
-  $iso_path="C:\Users\vagrant\windows.iso"
-  if (Test-Path $iso_path)
+  $image  = $null
+  $volume = Get-Volume | where FileSystemLabel -match 'VMWare Tools'
+  if ($volume)
   {
-    Write-Host "Mounting ISO $iso_path"
-    $image = Mount-DiskImage $iso_path -PassThru
-    if (! $?)
-    {
-      Write-Error "ERROR $LastExitCode while mounting VMWare Guest Additions"
-      Start-Sleep 10
-      exit 2
-    }
-    $drive = (Get-Volume -DiskImage $image).DriveLetter
-    Write-Host "ISO Mounted on $drive"
-    Write-Host "Installing VMWare Guest Additions"
-    $process = Start-Process -Wait -PassThru -FilePath ${drive}:\setup64.exe -ArgumentList '/S /v"/qn REBOOT=ReallySuppress ADDLOCAL=ALL" /l C:\Windows\Logs\vmware-tools.log'
-    #cmd /c "${drive}:\setup64.exe /S /v`"/qn REBOOT=ReallySuppress ADDLOCAL=ALL`" /l C:\Windows\Logs\vmware-tools.log"
-    if ($process.ExitCode -eq 0)
-    {
-      Write-Host "Installation was successful"
-      Write-Host "Dismounting ISO"
-      if (! (Dismount-DiskImage -ImagePath $image.ImagePath))
-      {
-        Write-Error "Cannot unmount $($image.ImagePath), error: $LastExitCode"
-        exit $LastExitCode
-      }
-    }
-    elseif ($process.ExitCode -eq 3010)
-    {
-      Write-Warning "Installation was successful, Rebooting is needed"
-#    Write-Host "Restarting Virtual Machine"
-#    Restart-Computer
-#    Start-Sleep 30
-    }
-    else
-    {
-      Write-Error "Installation failed: Error= $($process.ExitCode), Logs=C:\Windows\Logs\vmware-tools.log"
-      Start-Sleep 2; exit $process.ExitCode
-    }
-    Start-Sleep 2
+    $drive=$volume.DriveLetter
+    Write-Output "Found VMWare Tools mounted on ${drive}:"
   }
   else
   {
-    Write-Host "ISO was not loaded [$iso_path], nothing will happen"
+    $iso_path = Join-Path $env:HOME "windows.iso"
+    if (Test-Path $iso_path)
+    {
+      Write-Host "Mounting ISO $iso_path"
+      $image = Mount-DiskImage $iso_path -PassThru
+      if (! $?)
+      {
+        Write-Error "ERROR $LastExitCode while mounting VMWare Guest Additions"
+        Start-Sleep 10
+        exit 2
+      }
+      $drive = (Get-Volume -DiskImage $image).DriveLetter
+      Write-Host "ISO Mounted on $drive"
+    }
+    else
+    {
+      Write-Error "Could not find the VMWare Tools CD-ROM"
+      Start-Sleep 10
+      exit 3
+    }
   }
+
+  Write-Host "Installing VMWare Guest Additions"
+  $process = Start-Process -Wait -PassThru -FilePath ${drive}:\setup64.exe -ArgumentList '/S /v"/qn REBOOT=ReallySuppress ADDLOCAL=ALL" /l C:\Windows\Logs\vmware-tools.log'
+  #cmd /c "${drive}:\setup64.exe /S /v`"/qn REBOOT=ReallySuppress ADDLOCAL=ALL`" /l C:\Windows\Logs\vmware-tools.log"
+  if ($process.ExitCode -eq 0)
+  {
+    Write-Host "Installation was successful"
+  }
+  elseif ($process.ExitCode -eq 3010)
+  {
+    Write-Warning "Installation was successful, Rebooting is needed"
+#    Write-Host "Restarting Virtual Machine"
+#    Restart-Computer
+#    Start-Sleep 30
+  }
+  else
+  {
+    Write-Error "Installation failed: Error= $($process.ExitCode), Logs=C:\Windows\Logs\vmware-tools.log"
+    Start-Sleep 2; exit $process.ExitCode
+  }
+  if ($volume)
+  {
+    $discMaster = New-Object -ComObject IMAPI2.MsftDiscMaster2
+    foreach ($dm in $discMaster)
+    {
+      $discRecorder = New-Object -ComObject IMAPI2.MsftDiscRecorder2
+      $discRecorder.InitializeDiscRecorder($dm)
+
+      foreach ($pathname in $discRecorder.VolumePathNames)
+      {
+        if ($pathname -eq "${drive}:\")
+        {
+          Write-Host "Ejecting Media ${pathname}"
+          $discRecorder.EjectMedia()
+          break
+        }
+      }
+    }
+  }
+  elseif ($image -ne $null)
+  {
+    Write-Host "Dismounting ISO"
+    if (! (Dismount-DiskImage -ImagePath $image.ImagePath))
+    {
+      Write-Error "Cannot unmount $($image.ImagePath), error: $LastExitCode"
+      exit $LastExitCode
+    }
+  }
+  Start-Sleep 2
 }
 elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
 {
@@ -110,7 +145,7 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'parallels')
 
   if (! $volume)
   {
-    Write-Error "Could not find the VirtualBox Guest Additions CD-ROM"
+    Write-Error "Could not find the Parallels Desktop Tools CD-ROM"
     Start-Sleep 10
     exit 3
   }
