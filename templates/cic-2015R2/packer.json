@@ -235,7 +235,7 @@
     { "type": "powershell", "inline": [ "imdisk -a -m I: -f \\\\psf\\daas-cache\\CIC_2015_R2.iso" ],
       "only": [ "parallels-windows-iso" ]
     },
-    { "type": "powershell", "inline": [ "imdisk -a -m I: -f \\\\vboxsvr\\daas-cache\\CIC_2015_R2.iso" ],
+    { "type": "powershell", "inline": [ "imdisk -a -m I: -f \\\\vboxsrv\\daas-cache\\CIC_2015_R2.iso" ],
       "only": [ "virtualbox-windows-iso" ]
     },
     { "type": "powershell", "inline": [ "imdisk -a -m I: -f \"\\\\vmware-host\\Shared Folders\\daas-cache\\CIC_2015_R2.iso\"" ],
