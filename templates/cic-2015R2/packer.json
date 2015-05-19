@@ -207,10 +207,12 @@
         ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
         ["modifyvm", "{{.Name}}", "--vram",   "64"],
         ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"],
+        ["sharedfolder", "add", "{{.Name}}", "--name", "log", "--hostpath", "{{pwd}}/log", "--automount"],
         ["sharedfolder", "add", "{{.Name}}", "--name", "daas-cache", "--hostpath", "/var/cache/daas", "--automount", "--readonly"]
       ],
       "vboxmanage_post":
       [
+        ["sharedfolder", "remove", "{{.Name}}", "--name", "log"],
         ["sharedfolder", "remove", "{{.Name}}", "--name", "daas-cache"]
       ]
     }
@@ -256,7 +258,8 @@
     },
     { "type": "powershell", "script": "./scripts/check-icserver.ps1" },
     { "type": "powershell", "script": "./scripts/install-icfirmware.ps1" },
-    { "type": "powershell", "inline": [ "imdisk -d -m I:" ] }
+    { "type": "powershell", "inline": [ "imdisk -d -m I:" ] },
+    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" }
   ],
   "post-processors":
   [
