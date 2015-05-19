@@ -167,11 +167,23 @@
         "sata0:1.present":           "TRUE",
         "sata0:1.deviceType":        "cdrom-image",
         "sata0:1.startConnected":    "TRUE",
-        "sata0:1.fileName":          "/Applications/VMware Fusion.app/Contents/Library/isoimages/windows.iso"
+        "sata0:1.fileName":          "/Applications/VMware Fusion.app/Contents/Library/isoimages/windows.iso",
+        "sharedFolder.maxNum":       "1",
+        "sharedFolder0.present":     "TRUE",
+        "sharedFolder0.enabled":     "TRUE",
+        "sharedFolder0.expiration":  "never",
+        "sharedFolder0.readAccess":  "TRUE",
+        "sharedFolder0.writeAccess": "TRUE",
+        "sharedFolder0.hostPath":    "{{pwd}}/log",
+        "sharedFolder0.guestName":   "log"
       },
       "vmx_data_post":
       {
-        "sata0:1.present":           "FALSE"
+        "sata0:1.present":           "FALSE",
+        "sata0:1.startConnected":    "FALSE",
+        "sata0:1.deviceType":        "cdrom-raw",
+        "sata0:1.fileName":          "auto detect",
+        "sharedFolder.maxNum":       "0"
       }
     },
     {
@@ -210,7 +222,12 @@
         ["modifyvm", "{{.Name}}", "--ioapic", "on"],
         ["modifyvm", "{{.Name}}", "--memory", "{{user `mem_size`}}"],
         ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
-        ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"]
+        ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"],
+        ["sharedfolder", "add", "{{.Name}}", "--name", "log", "--hostpath", "{{pwd}}/log", "--automount"]
+      ],
+      "vboxmanage_post":
+      [
+        ["sharedfolder", "remove", "{{.Name}}", "--name", "log"]
       ]
     }
   ],
@@ -228,8 +245,8 @@
     { "type": "powershell", "inline": [ "chocolatey install -y git" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
-
-    { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" }
+    { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
+    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" }
   ],
   "post-processors":
   [
