@@ -70,10 +70,10 @@ builders = {
     packer_type:  'hyperv-iso',
     supported:    lambda { RUBY_PLATFORM == 'y64-mingw32' }
   },
-  kvm:
+  qemu:
   {
-    name:         'kvm',
-    folder:       'libvirt',
+    name:         'qemu',
+    folder:       'qemu',
     vagrant_type: 'libvirt',
     packer_type:  'qemu',
     supported:    lambda { RUBY_PLATFORM == 'x86_64-linux' && which('kvm') }
@@ -143,6 +143,7 @@ end
 
 rule '.box' => [->(box) { sources_for_box(box) }, boxes_dir, log_dir] do |_rule|
   builder = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
+  raise ArgumentError, File.basename(_rule.name.pathmap("%d")) if builder.nil?
   mkdir_p _rule.name.pathmap("%d")
   puts "Building #{_rule.name.pathmap("%f")} using #{builder[:name]}"
   FileUtils.rm_rf "output-#{builder[:packer_type]}"
