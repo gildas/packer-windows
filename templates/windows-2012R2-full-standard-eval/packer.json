@@ -222,7 +222,6 @@
     { "type": "powershell", "inline": [ "chocolatey install -y bginfo" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y classic-shell" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
-
     { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
     { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" }
   ],
