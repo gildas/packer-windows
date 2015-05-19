@@ -136,8 +136,8 @@
         "scsi0.virtualDev":          "lsisas1068",
         "sata0.present":             "TRUE",
         "sata0:1.present":           "TRUE",
-        "sata0:1.deviceType":        "cdrom-image",
         "sata0:1.startConnected":    "TRUE",
+        "sata0:1.deviceType":        "cdrom-image",
         "sata0:1.fileName":          "/Applications/VMware Fusion.app/Contents/Library/isoimages/windows.iso",
         "sharedFolder.maxNum":       "1",
         "sharedFolder0.present":     "TRUE",
@@ -151,7 +151,10 @@
       "vmx_data_post":
       {
         "sata0:1.present":           "FALSE",
-        "sharedFolder0.present":     "FALSE"
+        "sata0:1.startConnected":    "FALSE",
+        "sata0:1.deviceType":        "cdrom-raw",
+        "sata0:1.fileName":          "auto detect",
+        "sharedFolder.maxNum":       "0"
       }
     },
     {
