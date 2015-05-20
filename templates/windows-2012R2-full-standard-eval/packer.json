@@ -95,6 +95,7 @@
       [
         ["set", "{{.Name}}", "--memsize",                "{{user `mem_size`}}"],
         ["set", "{{.Name}}", "--cpus",                   "{{user `cpus`}}"],
+        ["set", "{{.Name}}", "--smart-mount",            "off"],
         ["set", "{{.Name}}", "--efi-boot",               "off"],
         ["set", "{{.Name}}", "--shared-profile",         "off"],
         ["set", "{{.Name}}", "--shared-cloud",           "off"],
