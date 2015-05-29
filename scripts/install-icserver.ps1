@@ -18,9 +18,7 @@ Param(
 Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 $Now = Get-Date -Format 'yyyyMMddHHmmss'
 
-$Source_filename       = "ICServer_2015_R2.msi"
-$Source_checksum       = "901AC9B42DD4EB454FF23B7B301A74A6"
-$Source_download_tries = 3
+$Source_filename = "ICServer_2015_R3.msi"
 
 # Prerequisites: {{{
 # Prerequisite: Powershell 3 {{{2
@@ -53,8 +51,8 @@ if ((Get-WindowsFeature Net-Framework-Core -Verbose:$false).InstallState -ne 'In
 # 2}}}
 # Prerequisites }}}
 
-$Product = 'Interaction Center Server 2015 R2'
-if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $Product)
+$Product = 'Interaction Center Server'
+if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
 {
   Write-Output "$Product is already installed"
 }

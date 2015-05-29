@@ -1,7 +1,7 @@
 {
-  "template":          "cic-2015R2",
+  "template":          "cic-2015R3",
   "organization":      "Interactive Intelligence",
-  "description":       "This box contains CIC 2015R2",
+  "description":       "This box contains CIC 2015R3",
   "version":           "0.1.0",
   "os":                "windows",
   "os_version":        "2012R2",
