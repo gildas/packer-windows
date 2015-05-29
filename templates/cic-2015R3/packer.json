@@ -265,15 +265,15 @@
     { "type": "powershell", "script": "./scripts/install-icfirmware.ps1" },
     { "type": "powershell", "inline": [ "imdisk -d -m I:" ] },
     { "type": "powershell", "inline": [ "imdisk -a -m I: -f \\\\psf\\daas-cache\\CIC_2015_R3_Patch2.iso" ],
-      "only": [ "parallels-windows-iso" ]
+      "only": [ "parallels-windows-iso" ], "pause_before": "20s"
     },
     { "type": "powershell", "inline": [ "imdisk -a -m I: -f \\\\vboxsrv\\daas-cache\\CIC_2015_R3_Patch2.iso" ],
-      "only": [ "virtualbox-windows-iso" ]
+      "only": [ "virtualbox-windows-iso" ], "pause_before": "20s"
     },
     { "type": "powershell", "inline": [ "imdisk -a -m I: -f \"\\\\vmware-host\\Shared Folders\\daas-cache\\CIC_2015_R3_Patch2.iso\"" ],
-      "only": [ "vmware-windows-iso" ]
+      "only": [ "vmware-windows-iso" ], "pause_before": "20s"
     },
-    { "type": "powershell", "script": "./scripts/install-icpatch.ps1" },
+    { "type": "powershell", "script": "./scripts/install-icpatch.ps1", "pause_before": "20s" },
     { "type": "powershell", "inline": [ "imdisk -d -m I:" ] },
     { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" }
   ],
