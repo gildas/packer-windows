@@ -244,6 +244,7 @@
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
     { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
 
+    { "type": "powershell", "inline": [ "psexec -accepteula -s schtasks /change /tn \"\\Microsoft\\Windows\\TaskScheduler\\Maintenance Configurator\" /Disable" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "inline": [ "imdisk -a -m I: -f \\\\psf\\daas-cache\\CIC_2015_R3.iso" ],
       "only": [ "parallels-windows-iso" ]
     },
@@ -273,7 +274,8 @@
     { "type": "powershell", "inline": [ "imdisk -a -m I: -f \"\\\\vmware-host\\Shared Folders\\daas-cache\\CIC_2015_R3_Patch2.iso\"" ],
       "only": [ "vmware-windows-iso" ], "pause_before": "20s"
     },
-    { "type": "powershell", "script": "./scripts/install-icpatch.ps1", "pause_before": "20s" },
+    { "type": "powershell", "script": "./scripts/install-icserver-patch.ps1", "pause_before": "20s" },
+    { "type": "powershell", "script": "./scripts/install-icfirmware-patch.ps1", "pause_before": "20s" },
     { "type": "powershell", "inline": [ "imdisk -d -m I:" ] },
     { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" }
   ],
