@@ -4,9 +4,6 @@
 #> # }}}
 [CmdletBinding()] 
 Param(
-  [Parameter(Mandatory=$false)][string] $User          = 'vagrant',
-  [Parameter(Mandatory=$false)][string] $Password      = 'vagrant',
-  [Parameter(Mandatory=$false)][string] $InstallPath   = 'C:\I3\IC',
   [Parameter(Mandatory=$false)][string] $SourceDriveLetter = 'I',
   [Parameter(Mandatory=$false)][switch] $Reboot
 )
@@ -22,7 +19,8 @@ $Target_version  = "15.3.2.28"
 if($PSVersionTable.PSVersion.Major -lt 3)
 {
     Write-Error "Powershell version 3 or more recent is required"
-    #TODO: Should we return values or raise exceptions?
+    Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Start-Sleep 2
     exit 1
 }
 # 2}}}
@@ -31,11 +29,13 @@ if($PSVersionTable.PSVersion.Major -lt 3)
 $InstallSource = ${SourceDriveLetter} + ':\Installs\ServerComponents'
 if (! (Test-Path (Join-Path $InstallSource $Source_filename)))
 {
-  Write-Error "IC Server source not found in ${SourceDriveLetter}:"
-  exit 1
+  Write-Error "$Product patch source not found in ${SourceDriveLetter}:"
+  Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+  Start-Sleep 2
+  exit 2
 }
 
-Write-Output "Installing CIC from $InstallSource"
+Write-Output "Patching from $InstallSource"
 # 2}}}
 
 # Prerequisite: Interaction Center Server {{{2
@@ -46,9 +46,10 @@ if ($ProductInfo -ne $null)
 }
 else
 {
-  #TODO: Should we return values or raise exceptions?
   Write-Error "$Product is not installed, aborting."
-  exit 1
+  Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+  Start-Sleep 2
+  exit 3
 }
 # 2}}}
 # Prerequisites }}}
@@ -69,9 +70,31 @@ else
   $parms += '/qn'
   $parms += '/norestart'
 
-  Start-Process -FilePath msiexec -ArgumentList $parms -Wait -Verbose
-  # TODO: Check for errors
-  $InstalledProducts += 1
+  $process = Start-Process -FilePath msiexec -ArgumentList $parms -Wait -PassThru
+  if ($process.ExitCode -eq 0)
+  {
+    Write-Output "Success!"
+  }
+  elseif ($process.ExitCode -eq 3010)
+  {
+    if ($Reboot)
+    {
+      Write-Output "Restarting..."
+      Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+      Restart-Computer
+      Start-Sleep 30
+    }
+    else
+    {
+      Write-Warning "Success, but rebooting is needed"
+    }
+  }
+  else
+  {
+    Write-Error "Failure: Error= $($process.ExitCode), Logs=C:\Windows\Logs\vmware-tools.log"
+    $exit_code = $process.ExitCode
+  }
 }
-
 Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+Start-Sleep 2
+exit $exit_code

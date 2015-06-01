@@ -17,12 +17,13 @@ $Now = Get-Date -Format 'yyyyMMddHHmmss'
 if($PSVersionTable.PSVersion.Major -lt 3)
 {
     Write-Error "Powershell version 3 or more recent is required"
-    #TODO: Should we return values or raise exceptions?
+    Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Start-Sleep 2
     exit 1
 }
 # 2}}}
+# Prerequisites }}}
 
-# Prerequisite: .Net 3.5 {{{2
 if ((Get-WindowsFeature Net-Framework-Core -Verbose:$false).InstallState -ne 'Installed')
 {
   Write-Output "Installing .Net 3.5"
@@ -30,12 +31,10 @@ if ((Get-WindowsFeature Net-Framework-Core -Verbose:$false).InstallState -ne 'In
   if (! $?)
   {
     Write-Error "ERROR $LastExitCode while installing .Net 3.5"
+    Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
     Start-Sleep 10
     exit $LastExitCode
   }
 }
-# 2}}}
-# Prerequisites }}}
-
-Start-Sleep 5
 Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+Start-Sleep 5

@@ -4,15 +4,13 @@
 #> # }}}
 [CmdletBinding()] 
 Param(
-  [Parameter(Mandatory=$false)][string] $User          = 'vagrant',
-  [Parameter(Mandatory=$false)][string] $Password      = 'vagrant',
-  [Parameter(Mandatory=$false)][string] $InstallPath   = 'C:\I3\IC',
   [Parameter(Mandatory=$false)][string] $SourceDriveLetter = 'I',
   [Parameter(Mandatory=$false)][switch] $Reboot
 )
 Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 $Now = Get-Date -Format 'yyyyMMddHHmmss'
 
+$Product = 'Interaction Firmware'
 $Source_filename = "InteractionFirmware_2015_R3.msi"
 
 # Prerequisites: {{{
@@ -20,7 +18,8 @@ $Source_filename = "InteractionFirmware_2015_R3.msi"
 if($PSVersionTable.PSVersion.Major -lt 3)
 {
     Write-Error "Powershell version 3 or more recent is required"
-    #TODO: Should we return values or raise exceptions?
+    Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Start-Sleep 2
     exit 1
 }
 # 2}}}
@@ -29,39 +28,30 @@ if($PSVersionTable.PSVersion.Major -lt 3)
 $InstallSource = ${SourceDriveLetter} + ':\Installs\ServerComponents'
 if (! (Test-Path (Join-Path $InstallSource $Source_filename)))
 {
-  Write-Error "IC Firmware Installation source not found in ${SourceDriveLetter}:"
-  exit 1
+  Write-Error "$Product Installation source not found in ${SourceDriveLetter}:"
+  Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+  Start-Sleep 2
+  exit 2
 }
 
-Write-Output "Installing CIC from $InstallSource"
-# 2}}}
-
-# Prerequisite: .Net 3.5 {{{2
-if ((Get-WindowsFeature Net-Framework-Core -Verbose:$false).InstallState -ne 'Installed')
-{
-  Write-Output "Installing .Net 3.5"
-  Install-WindowsFeature -Name Net-Framework-Core
-  # TODO: Check for errors
-}
+Write-Output "Installing from $InstallSource"
 # 2}}}
 
 # Prerequisite: Interaction Center Server {{{2
-$Product = 'Interaction Center Server'
-if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
+if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "Interaction Center Server.*")
 {
-  Write-Output "$Product is installed"
+  Write-Output "Interaction Center Server is installed, we can proceed"
 }
 else
 {
-  #TODO: Should we return values or raise exceptions?
-  Write-Error "$Product is not installed, aborting."
-  exit 1
+  Write-Error "Interaction Center Server is not installed, aborting."
+  Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+  Start-Sleep 2
+  exit 3
 }
 # 2}}}
 # Prerequisites }}}
 
-$InstalledProducts=0
-$Product = 'Interaction Firmware'
 if (Get-ItemProperty HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
 {
   Write-Output "$Product is already installed"
@@ -75,23 +65,34 @@ else
   $parms += 'REBOOT=ReallySuppress'
   $parms += '/l*v'
   $parms += "C:\Windows\Logs\icfirmware-${Now}.log"
-  $parms += '/qb!'
+  $parms += '/qn'
   $parms += '/norestart'
 
-  Start-Process -FilePath msiexec -ArgumentList $parms -Wait -Verbose
-  # TODO: Check for errors
-  $InstalledProducts += 1
-}
-
-if ($InstalledProducts -ge 1)
-{
-  if ($Reboot)
+  $process = Start-Process -FilePath msiexec -ArgumentList $parms -Wait -PassThru
+  if ($process.ExitCode -eq 0)
   {
-    Restart-Computer
+    Write-Output "Success!"
+  }
+  elseif ($process.ExitCode -eq 3010)
+  {
+    if ($Reboot)
+    {
+      Write-Output "Restarting..."
+      Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+      Restart-Computer
+      Start-Sleep 30
+    }
+    else
+    {
+      Write-Warning "Success, but rebooting is needed"
+    }
   }
   else
   {
-    Write-Warning "Do not forget to reboot the computer once"
+    Write-Error "Failure: Error= $($process.ExitCode), Logs=C:\Windows\Logs\vmware-tools.log"
+    $exit_code = $process.ExitCode
   }
 }
 Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+Start-Sleep 2
+exit $exit_code

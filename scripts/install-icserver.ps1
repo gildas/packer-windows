@@ -18,6 +18,7 @@ Param(
 Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 $Now = Get-Date -Format 'yyyyMMddHHmmss'
 
+$Product = 'Interaction Center Server'
 $Source_filename = "ICServer_2015_R3.msi"
 
 # Prerequisites: {{{
@@ -25,7 +26,8 @@ $Source_filename = "ICServer_2015_R3.msi"
 if($PSVersionTable.PSVersion.Major -lt 3)
 {
     Write-Error "Powershell version 3 or more recent is required"
-    #TODO: Should we return values or raise exceptions?
+    Start-Sleep 2
+    Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
     exit 1
 }
 # 2}}}
@@ -35,10 +37,12 @@ $InstallSource = ${SourceDriveLetter} + ':\Installs\ServerComponents'
 if (! (Test-Path (Join-Path $InstallSource $Source_filename)))
 {
   Write-Error "IC Server Installation source not found in ${SourceDriveLetter}:"
-  exit 1
+  Start-Sleep 2
+  Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+  exit 2
 }
 
-Write-Output "Installing CIC from $InstallSource"
+Write-Output "Installing from $InstallSource"
 # 2}}}
 
 # Prerequisite: .Net 3.5 {{{2
@@ -46,12 +50,17 @@ if ((Get-WindowsFeature Net-Framework-Core -Verbose:$false).InstallState -ne 'In
 {
   Write-Output "Installing .Net 3.5"
   Install-WindowsFeature -Name Net-Framework-Core
-  # TODO: Check for errors
+  if (! $?)
+  {
+    Write-Error "ERROR $LastExitCode while installing .Net 3.5"
+    Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Start-Sleep 10
+    exit $LastExitCode
+  }
 }
 # 2}}}
 # Prerequisites }}}
 
-$Product = 'Interaction Center Server'
 if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
 {
   Write-Output "$Product is already installed"
@@ -94,5 +103,5 @@ else
     $process = Start-Process -PassThru -FilePath msiexec -ArgumentList $parms
   }
 }
-Start-Sleep 5
 Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+Start-Sleep 5
