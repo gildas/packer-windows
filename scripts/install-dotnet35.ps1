@@ -27,7 +27,12 @@ if ((Get-WindowsFeature Net-Framework-Core -Verbose:$false).InstallState -ne 'In
 {
   Write-Output "Installing .Net 3.5"
   Install-WindowsFeature -Name Net-Framework-Core
-  # TODO: Check for errors
+  if (! $?)
+  {
+    Write-Error "ERROR $LastExitCode while installing .Net 3.5"
+    Start-Sleep 10
+    exit $LastExitCode
+  }
 }
 # 2}}}
 # Prerequisites }}}
