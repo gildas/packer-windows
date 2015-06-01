@@ -13,10 +13,12 @@ rescue LoadError
   puts "Warning: Test Framework not loaded."
 end
 
-templates_dir = 'templates'
-boxes_dir     = 'boxes'
-log_dir       = 'log'
-temp_dir      = 'tmp'
+templates_dir  = 'templates'
+boxes_dir      = 'boxes'
+scripts_dir    = 'scripts'
+log_dir        = 'log'
+temp_dir       = 'tmp'
+TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json}")
 
 def which(f)
   if RUBY_PLATFORM == 'x64-mingw32'
@@ -26,7 +28,7 @@ def which(f)
       end
     end
   else
-    path = ENV['PATH'].split(File::PATH_SEPARATOR).find {|p| File.exists? File.join(p,f)}
+    path = ENV['PATH'].split(File::PATH_SEPARATOR).find { |p| File.exist?(File.join(p,f)) }
   end
   return File.join(path, f) unless path.nil?
   nil
@@ -61,7 +63,7 @@ end
   raise RuntimeError, "Program #{application} is not accessible via the command line" unless which(application)
 end
 
-builders = {
+$builders = builders = {
   hyperv:
   {
     name:         'hyperv',
@@ -105,12 +107,10 @@ builders = {
     folder:       'vmware',
     vagrant_type: 'vmware_desktop',
     packer_type:  'vmware-windows-iso',
-    supported:    lambda { which('vmrun') || File.exists?('/Applications/VMware Fusion.app/Contents/Library/vmrun') }
+    supported:    lambda { which('vmrun') || File.exist?('/Applications/VMware Fusion.app/Contents/Library/vmrun') }
   },
 }
 
-# We need to make sure packer.json is the first file seen per template, so _rule.source resolves to it later on
-TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json}") + Rake::FileList.new("#{templates_dir}/**/{config.json,Autounattend.xml}")
 
 directory boxes_dir
 directory temp_dir
@@ -122,26 +122,45 @@ def load_json(filename)
   return File.open(filename) { |file| JSON.parse(file.read) }
 end
 
-def sources_for_box(box_file)
+def sources_for_box(box_file, sources_root, scripts_root)
   # box_file should be like: boxes/#{box_name}/#{provider}/#{box_name}-#{box_version}.box
+  verbose "box file: #{box_file}"
   box_name = File.basename(File.dirname(box_file.pathmap("%d")))
-  box_sources = TEMPLATE_FILES.select do |template_source|
-    template_name = File.basename(File.dirname(template_source))
-    box_name == template_name
-  end
+  box_name = box_file.pathmap("%2d").pathmap("%f")
+  verbose "  Finding sources for box: #{box_name}"
+  box_sources = Rake::FileList.new("#{sources_root}/#{box_name}/*")
+  verbose "  ==> Box sources: #{box_sources.join(', ')}"
   raise Errno::ENOENT, "no source for #{box_file}" if box_sources.empty?
+  current_builder = $builders.find { |builder| builder[1][:folder] == box_file.pathmap("%3d").pathmap("%f") }
+  raise ArgumentError, box_name if current_builder.nil?
+  current_builder = current_builder[1]
+  verbose "  Collecting scripts for #{current_builder[:name]}"
   box_scripts = []
   box_sources.each do |source|
-    File.readlines(source).each do |line|
-      if line =~ /.*(\.\/scripts\/.*)"/ && box_scripts.include?($1)
-        box_scripts << $1
+    next unless source =~ /.*packer\.json$/
+    verbose "Checking config file: #{source}"
+    config = load_json(source)
+    config['builders'].each do |packer_builder|
+      next unless packer_builder['type'] == current_builder[:packer_type]
+      box_scripts += packer_builder['floppy_files'].find_all {|path| ['.cmd', '.ps1'].include? path.pathmap("%x") }
+    end
+    config['provisioners'].each do |provisioner|
+      # TODO: support 'only', and 'except' from the JSON data
+      case provisioner['type']
+        when 'file'          then box_scripts << provisioner['source']
+        when 'powershell', 'windows-shell', 'shell'
+          box_scripts << provisioner['script'] if provisioner['script']
+          box_scripts += provisioner['scripts'] if provisioner['scripts']
       end
     end
   end
+  verbose "  Box scripts: #{box_scripts.join(', ')}"
+  # TODO: What about the data folder?
+
   box_sources + box_scripts
 end
 
-rule '.box' => [->(box) { sources_for_box(box) }, boxes_dir, log_dir] do |_rule|
+rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule|
   builder = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
   raise ArgumentError, File.basename(_rule.name.pathmap("%d")) if builder.nil?
   mkdir_p _rule.name.pathmap("%d")
@@ -160,25 +179,6 @@ class Binder
   def get_binding ; binding() end
 end
 
-rule 'metadata.json' => ["#{templates_dir}/metadata.json.erb"] do |_rule|
-  template = File.basename(_rule.name.pathmap("%d"))
-  puts "Generating metadata.json for template #{template}"
-  providers   = _rule.prerequisites.reject {|p| p == _rule.source}.collect do |p|
-    provider      = File.basename(p.pathmap("%d"))
-    url           = "file://#{Dir.pwd}/#{p}"
-    checksum_type = 'md5'
-    print "  Calculating MD5 checksum for provider #{provider}..."
-    checksum      = Digest::MD5.file(p).hexdigest
-    puts '.'
-    OpenStruct.new name: provider, url: url, checksum: checksum, checksum_type: checksum_type
-  end
-  config = load_json("#{templates_dir}/#{template}/config.json")
-  binds  = Binder.new(config.merge(providers: providers))
-
-  renderer = File.open(_rule.source) { |file| ERB.new(file.read, 0, '-') }
-  File.open(_rule.name, 'w') { |output| output.puts renderer.result(binds.get_binding) }
-end
-
 builders_in_use=0
 builders.each do |builder_name, builder|
   if builder[:supported][]
@@ -190,8 +190,6 @@ builders.each do |builder_name, builder|
       box_file      = "#{boxes_dir}/#{box_name}/#{builder[:folder]}/#{box_name}-#{version}.box"
       box_url       = "file://#{Dir.pwd}/#{box_file}"
       metadata_file = "#{boxes_dir}/#{box_name}/metadata.json"
-
-      file metadata_file => box_file
 
       namespace :validate do
         namespace builder_name.to_sym do
@@ -256,6 +254,7 @@ builders.each do |builder_name, builder|
             puts "==> box: Successfully updated box '#{box_name}' version to #{version} for '#{vagrant_provider}'"
           end
 
+          desc "Load box #{box_name} in vagrant for #{builder_name}"
           task box_name => loaded_box_marker
 
           desc "Load all boxes in vagrant for #{builder_name}"
