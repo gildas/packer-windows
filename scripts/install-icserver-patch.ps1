@@ -15,6 +15,7 @@ $Now = Get-Date -Format 'yyyyMMddHHmmss'
 
 $Product = 'Interaction Center Server'
 $Source_filename = "ICServer_2015_R3_Patch2.msp"
+$Target_version  = "15.3.2.28"
 
 # Prerequisites: {{{
 # Prerequisite: Powershell 3 {{{2
@@ -38,7 +39,8 @@ Write-Output "Installing CIC from $InstallSource"
 # 2}}}
 
 # Prerequisite: Interaction Center Server {{{2
-if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
+$ProductInfo=Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*"
+if ($ProductInfo -ne $null)
 {
   Write-Output "$Product is installed"
 }
@@ -51,7 +53,7 @@ else
 # 2}}}
 # Prerequisites }}}
 
-if (Get-ItemProperty HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayVersion -eq "15.3.2.28")
+if ($ProductInfo.DisplayVersion -eq $Target_version)
 {
   Write-Output "$Product is already installed"
 }
