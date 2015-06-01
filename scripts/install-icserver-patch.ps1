@@ -57,7 +57,7 @@ if (Get-ItemProperty HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion
 }
 else
 {
-  Write-Output "Installing $Product"
+  Write-Output "Patching $Product"
 
   $parms  = '/update',"${InstallSource}\${Source_filename}"
   $parms += 'STARTEDBYEXEORIUPDATE=1'
