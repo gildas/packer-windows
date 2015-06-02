@@ -125,7 +125,6 @@ end
 def sources_for_box(box_file, sources_root, scripts_root)
   # box_file should be like: boxes/#{box_name}/#{provider}/#{box_name}-#{box_version}.box
   verbose "box file: #{box_file}"
-  box_name = File.basename(File.dirname(box_file.pathmap("%d")))
   box_name = box_file.pathmap("%2d").pathmap("%f")
   verbose "  Finding sources for box: #{box_name}"
   box_sources = Rake::FileList.new("#{sources_root}/#{box_name}/*")
@@ -161,12 +160,13 @@ def sources_for_box(box_file, sources_root, scripts_root)
 end
 
 rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule|
-  builder = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
+  box_name = _rule.source.pathmap("%2d").pathmap("%f")
+  builder  = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
   raise ArgumentError, File.basename(_rule.name.pathmap("%d")) if builder.nil?
   mkdir_p _rule.name.pathmap("%d")
   puts "Building #{_rule.name.pathmap("%f")} using #{builder[:name]}"
   verbose "  Rule source: #{_rule.source}"
-  FileUtils.rm_rf "output-#{builder[:packer_type]}"
+  FileUtils.rm_rf "output-#{builder[:packer_type]}-#{box_name}"
   packer_log="#{log_dir}/packer-build-#{builder[:name]}-#{_rule.name.pathmap("%f")}.log"
   File.open(packer_log, "a") { |f| f.puts "==== BEGIN %s %s" % ['=' * 60, Time.now.to_s] }
   sh "PACKER_LOG=1 PACKER_LOG_PATH=\"#{packer_log}\" packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}/config.json #{_rule.source.pathmap("%d")}/packer.json"
