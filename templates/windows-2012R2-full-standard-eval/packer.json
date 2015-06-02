@@ -226,7 +226,7 @@
     {
       "type": "vagrant",
       "keep_input_artifact": false,
-      "compression_level":   1,
+      "compression_level":   0,
       "vagrantfile_template": "./templates/windows-2012R2-full-standard-eval/vagrantfile.template",
       "output": "./boxes/{{user `template`}}/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
     }
