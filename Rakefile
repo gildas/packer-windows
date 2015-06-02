@@ -160,16 +160,18 @@ def sources_for_box(box_file, sources_root, scripts_root)
 end
 
 rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule|
-  box_name = _rule.source.pathmap("%2d").pathmap("%f")
-  builder  = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
+  box_filename  = _rule.name.pathmap("%f")
+  box_name      = _rule.source.pathmap("%2d").pathmap("%f")
+  template_path = _rule.source.pathmap("%d")
+  builder       = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
   raise ArgumentError, File.basename(_rule.name.pathmap("%d")) if builder.nil?
   mkdir_p _rule.name.pathmap("%d")
-  puts "Building #{_rule.name.pathmap("%f")} using #{builder[:name]}"
+  puts "Building #{box_filename} using #{builder[:name]}"
   verbose "  Rule source: #{_rule.source}"
   FileUtils.rm_rf "output-#{builder[:packer_type]}-#{box_name}"
-  packer_log="#{log_dir}/packer-build-#{builder[:name]}-#{_rule.name.pathmap("%f")}.log"
+  packer_log="#{log_dir}/packer-build-#{builder[:name]}-#{box_filename}.log"
   File.open(packer_log, "a") { |f| f.puts "==== BEGIN %s %s" % ['=' * 60, Time.now.to_s] }
-  sh "PACKER_LOG=1 PACKER_LOG_PATH=\"#{packer_log}\" packer build -only=#{builder[:packer_type]} -var-file=#{_rule.source.pathmap("%d")}/config.json #{_rule.source.pathmap("%d")}/packer.json"
+  sh "PACKER_LOG=1 PACKER_LOG_PATH=\"#{packer_log}\" packer build -only=#{builder[:packer_type]} -var-file=#{template_path}/config.json #{template_path}/packer.json"
   File.open(packer_log, "a") { |f| f.puts "==== END   %s %s" % ['=' * 60, Time.now.to_s] }
 end
 
