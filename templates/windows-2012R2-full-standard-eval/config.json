@@ -8,7 +8,7 @@
   "os_install":        "full",
   "os_edition":        "standard",
   "os_license":        "eval",
-  "http_directory":    "/var/cache/daas",
+  "cache_dir":         "/var/cache/daas",
   "disk_size":         "81920",
   "mem_size":          "2048",
   "cpus":              "2"

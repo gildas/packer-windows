@@ -5,6 +5,7 @@
     "organization":      "{{env `USERNAME` }}",
     "description":       "This is a packer generated box",
     "version":           "0.1.0",
+    "cache_dir":         "./iso",
     "os":                "",
     "os_version":        "",
     "os_install":        "",
@@ -19,16 +20,14 @@
   [
     {
       "type":                "qemu",
-      "vm_name":             "packer_CIC_2015R3",
+      "vm_name":             "packer_{{user `template`}}",
       "iso_urls": [
-        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "/var/cache/daas/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
         "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
       ],
       "iso_checksum_type":      "md5",
       "iso_checksum":           "458ff91f8abc21b75cb544744bf92e6a",
-      "output_directory":       "output-qemu-cic-2015R3",
+      "output_directory":       "output-qemu-{{user `template`}}",
       "boot_wait":              "30s",
       "ssh_username":           "vagrant",
       "ssh_password":           "vagrant",
@@ -36,9 +35,6 @@
       "ssh_host_port_max":      2229,
       "ssh_wait_timeout":       "20m",
       "shutdown_command":       "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
-      "http_directory":         "{{user `http_directory`}}",
-      "http_port_min":          8116,
-      "http_port_max":          8116,
       "format":                 "qcow2",
       "headless":               false,
       "accelerator":            "kvm",
@@ -62,17 +58,15 @@
     },
     {
       "type":                "parallels-windows-iso",
-      "vm_name":             "packer_CIC_2015R3",
+      "vm_name":             "packer_{{user `template`}}",
       "guest_os_type":       "win-2012",
       "iso_urls": [
-        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "/var/cache/daas/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
         "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
       ],
       "iso_checksum_type":      "md5",
       "iso_checksum":           "458ff91f8abc21b75cb544744bf92e6a",
-      "output_directory":       "output-parallels-cic-2015R3",
+      "output_directory":       "output-parallels-{{user `template`}}",
       "boot_wait":              "30s",
       "headless":               false,
       "winrm_username":         "vagrant",
@@ -107,17 +101,15 @@
     },
     {
       "type":                "vmware-windows-iso",
-      "vm_name":             "packer_CIC_2015R3",
+      "vm_name":             "packer_{{user `template`}}",
       "guest_os_type":       "windows8srv-64",
       "iso_urls": [
-        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "/var/cache/daas/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
         "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
       ],
       "iso_checksum_type":   "md5",
       "iso_checksum":        "458ff91f8abc21b75cb544744bf92e6a",
-      "output_directory":    "output-vmware-cic-2015R3",
+      "output_directory":     "output-vmware-{{user `template`}}",
       "boot_wait":           "30s",
       "headless":            false,
       "winrm_username":      "vagrant",
@@ -175,17 +167,15 @@
     },
     {
       "type":                 "virtualbox-windows-iso",
-      "vm_name":              "packer_CIC_2015R3",
+      "vm_name":              "packer-{{user `template`}}",
       "guest_os_type":        "Windows2012_64",
       "iso_urls": [
-        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "/var/cache/daas/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
         "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
       ],
       "iso_checksum_type":    "md5",
       "iso_checksum":         "458ff91f8abc21b75cb544744bf92e6a",
-      "output_directory":     "output-virtualbox-cic-2015R3",
+      "output_directory":     "output-virtualbox-{{user `template`}}",
       "boot_wait":            "30s",
       "headless":             false,
       "winrm_username":       "vagrant",
@@ -286,7 +276,7 @@
       "type": "vagrant",
       "keep_input_artifact": false,
       "compression_level":   1,
-      "vagrantfile_template": "./templates/{{user `template`}}/vagrantfile.template",
+      "vagrantfile_template": "./templates/cic-2015R3/vagrantfile.template",
       "output": "./boxes/{{user `template`}}/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
     }
   ]
