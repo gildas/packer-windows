@@ -287,6 +287,7 @@
     { "type": "powershell", "inline": [ "chocolatey install -y md5" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y git" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y ruby" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
     { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
     { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" }
