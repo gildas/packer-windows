@@ -5,6 +5,7 @@
     "organization":      "{{env `USERNAME` }}",
     "description":       "This is a packer generated box",
     "version":           "0.1.0",
+    "cache_dir":         "./iso",
     "os":                "",
     "os_version":        "",
     "os_install":        "",
@@ -20,11 +21,12 @@
   [
     {
       "type":                "hyperv-iso",
-      "vm_name":             "packer_windows_2012R2_core",
-      "iso_url": "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+      "vm_name":             "packer_{{user `template`}}",
+      "iso_url":
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
       "iso_checksum_type":   "md5",
       "iso_checksum":        "458ff91f8abc21b75cb544744bf92e6a",
-      "output_directory":    "output-hyperv-windows-2012R2-core",
+      "output_directory":     "output-virtualbox-{{user `template`}}",
       "boot_wait":           "30s",
       "ssh_username":        "vagrant",
       "ssh_password":        "vagrant",
@@ -49,16 +51,14 @@
     },
     {
       "type":                "qemu",
-      "vm_name":             "packer_windows_2012R2_core",
+      "vm_name":             "packer_{{user `template`}}",
       "iso_urls": [
-        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "/var/cache/daas/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
         "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
       ],
       "iso_checksum_type":      "md5",
       "iso_checksum":           "458ff91f8abc21b75cb544744bf92e6a",
-      "output_directory":       "output-qemu-windows-2012R2-core",
+      "output_directory":       "output-virtualbox-{{user `template`}}",
       "boot_wait":              "30s",
       "ssh_username":           "vagrant",
       "ssh_password":           "vagrant",
@@ -92,17 +92,15 @@
     },
     {
       "type":                "parallels-windows-iso",
-      "vm_name":             "packer_windows_2012R2_core",
+      "vm_name":             "packer_{{user `template`}}",
       "guest_os_type":       "win-2012",
       "iso_urls": [
-        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "/var/cache/daas/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
         "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
       ],
       "iso_checksum_type":      "md5",
       "iso_checksum":           "458ff91f8abc21b75cb544744bf92e6a",
-      "output_directory":       "output-parallels-windows-2012R2-core",
+      "output_directory":       "output-virtualbox-{{user `template`}}",
       "boot_wait":              "30s",
       "headless":               false,
       "winrm_username":         "vagrant",
@@ -134,17 +132,15 @@
     },
     {
       "type":                "vmware-windows-iso",
-      "vm_name":             "packer_windows_2012R2_core",
+      "vm_name":             "packer_{{user `template`}}",
       "guest_os_type":       "windows8srv-64",
       "iso_urls": [
-        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "/var/cache/daas/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
         "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
       ],
       "iso_checksum_type":   "md5",
       "iso_checksum":        "458ff91f8abc21b75cb544744bf92e6a",
-      "output_directory":    "output-vmware-windows-2012R2-core",
+      "output_directory":     "output-virtualbox-{{user `template`}}",
       "boot_wait":           "30s",
       "headless":            false,
       "winrm_username":      "vagrant",
@@ -192,17 +188,15 @@
     },
     {
       "type":                 "virtualbox-windows-iso",
-      "vm_name":              "packer_windows_2012R2_core",
+      "vm_name":              "packer-{{user `template`}}",
       "guest_os_type":        "Windows2012_64",
       "iso_urls": [
-        "./iso/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "/var/cache/daas/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
-        "http://files/public/ISO/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
         "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
       ],
       "iso_checksum_type":    "md5",
       "iso_checksum":         "458ff91f8abc21b75cb544744bf92e6a",
-      "output_directory":     "output-virtualbox-windows-2012R2-core",
+      "output_directory":     "output-virtualbox-{{user `template`}}",
       "boot_wait":            "30s",
       "headless":             false,
       "winrm_username":       "vagrant",
@@ -220,6 +214,50 @@
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
         "./scripts/04-install-imdisk.cmd",
+        "./scripts/99-start-services.cmd"
+      ],
+      "vboxmanage":
+      [
+        ["modifyvm", "{{.Name}}", "--ioapic", "on"],
+        ["modifyvm", "{{.Name}}", "--memory", "{{user `mem_size`}}"],
+        ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
+        ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"],
+        ["sharedfolder", "add", "{{.Name}}", "--name", "log", "--hostpath", "{{pwd}}/log", "--automount"]
+      ],
+      "vboxmanage_post":
+      [
+        ["sharedfolder", "remove", "{{.Name}}", "--name", "log"]
+      ]
+    },
+    {
+      "type":                 "virtualbox-iso",
+      "vm_name":              "packer_{{user `template`}}",
+      "guest_os_type":        "Windows2012_64",
+      "iso_urls": [
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
+      ],
+      "iso_checksum_type":    "md5",
+      "iso_checksum":         "458ff91f8abc21b75cb544744bf92e6a",
+      "output_directory":     "output-virtualbox-{{user `template`}}",
+      "boot_wait":            "30s",
+      "headless":             false,
+      "ssh_username":         "vagrant",
+      "ssh_password":         "vagrant",
+      "ssh_wait_timeout":     "20m",
+      "shutdown_command":     "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_additions_mode": "attach",
+      "disk_size":            "{{user `disk_size`}}",
+      "floppy_files":
+      [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/_packer_config.cmd",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
+        "./scripts/04-install-imdisk.cmd",
+        "./scripts/04-install-openssh.cmd",
         "./scripts/99-start-services.cmd"
       ],
       "vboxmanage":
@@ -259,7 +297,7 @@
       "type":                "vagrant",
       "keep_input_artifact": false,
       "compression_level":   1,
-      "vagrantfile_template": "./templates/{{user `template`}}/vagrantfile.template",
+      "vagrantfile_template": "templates/windows-2012R2-core-standard-eval/vagrantfile.template",
       "output": "./boxes/{{user `template`}}/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
     }
   ]
