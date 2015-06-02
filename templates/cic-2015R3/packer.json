@@ -96,7 +96,7 @@
         ["set", "{{.Name}}", "--shared-cloud",           "off"],
         ["set", "{{.Name}}", "--sh-app-guest-to-host",   "off"],
         ["set", "{{.Name}}", "--sh-app-host-to-guest",   "off"],
-        ["set", "{{.Name}}", "--shf-host-add",           "daas-cache", "--path", "/var/cache/daas", "--mode", "ro", "--enable"]
+        ["set", "{{.Name}}", "--shf-host-add",           "daas-cache", "--path", "{{user `cache_dir`}}", "--mode", "ro", "--enable"]
       ]
     },
     {
@@ -151,7 +151,7 @@
         "sharedFolder1.enabled":     "TRUE",
         "sharedFolder1.readAccess":  "TRUE",
         "sharedFolder1.writeAccess": "FALSE",
-        "sharedFolder1.hostPath":    "/var/cache/daas",
+        "sharedFolder1.hostPath":    "{{user `cache_dir`}}",
         "sharedFolder1.guestName":   "daas-cache",
         "sharedFolder1.expiration":  "never",
         "sharedFolder1.shareTags":   ""
@@ -203,7 +203,7 @@
         ["modifyvm", "{{.Name}}", "--vram",   "64"],
         ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"],
         ["sharedfolder", "add", "{{.Name}}", "--name", "log", "--hostpath", "{{pwd}}/log", "--automount"],
-        ["sharedfolder", "add", "{{.Name}}", "--name", "daas-cache", "--hostpath", "/var/cache/daas", "--automount", "--readonly"]
+        ["sharedfolder", "add", "{{.Name}}", "--name", "daas-cache", "--hostpath", "{{user `cache_dir`}}", "--automount", "--readonly"]
       ],
       "vboxmanage_post":
       [
