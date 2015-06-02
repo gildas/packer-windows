@@ -1,6 +1,29 @@
 <#
 #>
 
+function Eject-Drive  # {{{
+{
+<# {{{2
+  .SYNOPSIS
+    Eject the current CD-ROM from the given Drive
+  .PARAMETER DriveLetter
+    The drive letter to eject.
+    Mandatory, no default.
+  .EXAMPLE
+    Eject-Drive D
+  .EXAMPLE
+    Eject-Drive -DriveLetter D
+#> # }}}2
+  [CmdletBinding()] 
+  Param(
+    [Parameter(Mandatory=$true)][string] $DriveLetter
+  )
+  $shellapp = new-object -com Shell.Application
+  $shellapp.Namespace(17).ParseName("${DriveLetter}:").InvokeVerb("Eject")
+  [System.Runtime.Interopservices.Marshal]::ReleaseComObject($shellapp)
+  Remove-Variable shellapp
+} # }}}
+
 if ($env:PACKER_BUILDER_TYPE -match 'vmware')
 {
   $image  = $null
@@ -36,7 +59,6 @@ if ($env:PACKER_BUILDER_TYPE -match 'vmware')
 
   Write-Host "Installing VMWare Guest Additions"
   $process = Start-Process -Wait -PassThru -FilePath ${drive}:\setup64.exe -ArgumentList '/S /v"/qn REBOOT=ReallySuppress ADDLOCAL=ALL" /l C:\Windows\Logs\vmware-tools.log'
-  #cmd /c "${drive}:\setup64.exe /S /v`"/qn REBOOT=ReallySuppress ADDLOCAL=ALL`" /l C:\Windows\Logs\vmware-tools.log"
   if ($process.ExitCode -eq 0)
   {
     Write-Host "Installation was successful"
@@ -55,22 +77,7 @@ if ($env:PACKER_BUILDER_TYPE -match 'vmware')
   }
   if ($volume)
   {
-    $discMaster = New-Object -ComObject IMAPI2.MsftDiscMaster2
-    foreach ($dm in $discMaster)
-    {
-      $discRecorder = New-Object -ComObject IMAPI2.MsftDiscRecorder2
-      $discRecorder.InitializeDiscRecorder($dm)
-
-      foreach ($pathname in $discRecorder.VolumePathNames)
-      {
-        if ($pathname -eq "${drive}:\")
-        {
-          Write-Host "Ejecting Media ${pathname}"
-          $discRecorder.EjectMedia()
-          break
-        }
-      }
-    }
+    Eject-Drive -DriveLetter $drive
   }
   elseif ($image -ne $null)
   {
@@ -121,22 +128,7 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
     Write-Error "Installation failed: Error= $($process.ExitCode), Logs=C:\Windows\Logs\vmware-tools.log"
     Start-Sleep 2; exit $process.ExitCode
   }
-  $discMaster = New-Object -ComObject IMAPI2.MsftDiscMaster2
-  foreach ($dm in $discMaster)
-  {
-    $discRecorder = New-Object -ComObject IMAPI2.MsftDiscRecorder2
-    $discRecorder.InitializeDiscRecorder($dm)
-
-    foreach ($pathname in $discRecorder.VolumePathNames)
-    {
-      if ($pathname -eq "${drive}:\")
-      {
-        Write-Host "Ejecting Media ${pathname}"
-        $discRecorder.EjectMedia()
-        break
-      }
-    }
-  }
+  Eject-Drive -DriveLetter $drive
   Start-Sleep 2
 }
 elseif ($env:PACKER_BUILDER_TYPE -match 'parallels')
@@ -174,6 +166,6 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'parallels')
 }
 else
 {
-  Write-Error "Unsupported Packer builder: $env:PACKER_BUILDER_TYPE"
-  exit 1
+  Write-Error "Ignoring unsupported Packer builder: $env:PACKER_BUILDER_TYPE"
+  exit 0
 }
