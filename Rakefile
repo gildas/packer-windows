@@ -252,9 +252,17 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
   puts "Building #{box_filename} using #{builder[:name]}"
   verbose "  Rule source: #{_rule.source}"
   FileUtils.rm_rf "output-#{builder[:packer_type]}-#{box_name}"
-  packer_log="#{log_dir}/packer-build-#{builder[:name]}-#{box_filename}.log"
+  packer_log    = File.join(log_dir, "packer-build-#{builder[:name]}-#{box_filename}.log")
+  config_file   = File.join(template_path, 'config.json')
+  template_file = File.join(template_path, 'packer.json')
   File.open(packer_log, "a") { |f| f.puts "==== BEGIN %s %s" % ['=' * 60, Time.now.to_s] }
-  sh "PACKER_LOG=1 PACKER_LOG_PATH=\"#{packer_log}\" packer build -only=#{builder[:packer_type]} -var-file=#{template_path}/config.json #{template_path}/packer.json"
+  ENV['PACKER_LOG']='1'               # Set up child processes environment
+  ENV['PACKER_LOG_PATH']=packer_log   # Set up child processes environment
+  case RUBY_PLATFORM
+    when 'x64-mingw32' then cache_dir=ENV['DAAS_CACHE'] || File.join(ENV['PROGRAMDATA'], 'DaaS', 'cache')
+    else                    cache_dir=ENV['DAAS_CACHE'] || File.join('var', 'cache', 'daas')
+  end
+  sh "packer build -only=#{builder[:packer_type]} -var \"cache_dir=#{cache_dir}\" -var-file=\"#{config_file}\" \"#{template_file}\""
   File.open(packer_log, "a") { |f| f.puts "==== END   %s %s" % ['=' * 60, Time.now.to_s] }
 end
 
