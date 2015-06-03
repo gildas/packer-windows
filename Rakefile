@@ -296,17 +296,8 @@ builders.each do |builder_name, builder|
         task :all => "#{builder_name}:all"
       end
 
-      namespace :metadata do
-        desc "Generate the metadata for box #{box_name}"
-        task box_name => [metadata_file]
-
-        desc "Generate the metadata for all boxes"
-        task :all => box_name
-      end
-
       namespace :load do
         namespace builder_name.to_sym do
-          desc "Load box #{box_name} version #{version} in vagrant for #{builder_name}"
           box_root = "#{ENV['VAGRANT_HOME'] || (ENV['HOME'] + '/.vagrant.d')}/boxes/#{box_name}"
           vagrant_provider = builders[builder_name][:vagrant_type]
           loaded_box_marker = "#{box_root}/#{version}/#{vagrant_provider}/metadata.json"
