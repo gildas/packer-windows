@@ -265,10 +265,17 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
   ENV['PACKER_LOG']='1'               # Set up child processes environment
   ENV['PACKER_LOG_PATH']=packer_log   # Set up child processes environment
   case RUBY_PLATFORM
-    when 'x64-mingw32' then cache_dir=ENV['DAAS_CACHE'] || File.join(ENV['PROGRAMDATA'], 'DaaS', 'cache')
-    else                    cache_dir=ENV['DAAS_CACHE'] || File.join('var', 'cache', 'daas')
+    when 'x64-mingw32'
+      vmware_iso_dir = File.join(ENV['ProgramFiles(x86)'], 'VMWare', 'VMWare Workstation')
+      cache_dir      = ENV['DAAS_CACHE'] || File.join(ENV['PROGRAMDATA'], 'DaaS', 'cache')
+    when /.*darwin[0-9]+/
+      vmware_iso_dir = '/Applications/VMware Fusion.app/Contents/Library/isoimages'
+      cache_dir      = ENV['DAAS_CACHE'] || File.join('var', 'cache', 'daas')
+    else
+      vmware_iso_dir = ''
+      cache_dir      = ENV['DAAS_CACHE'] || File.join('var', 'cache', 'daas')
   end
-  sh "packer build -only=#{builder[:packer_type]} -var \"cache_dir=#{cache_dir}\" -var-file=\"#{config_file}\" \"#{template_file}\""
+  sh "packer build -only=#{builder[:packer_type]} -var \"cache_dir=#{cache_dir}\" -var \"vmware_iso_dir=#{vmware_iso_dir}\" -var-file=\"#{config_file}\" \"#{template_file}\""
   File.open(packer_log, "a") { |f| f.puts "==== END   %s %s" % ['=' * 60, Time.now.to_s] }
 end
 
