@@ -70,7 +70,8 @@ $builders = builders = {
     folder:       'hyperv',
     vagrant_type: 'hyperv',
     packer_type:  'hyperv-iso',
-    supported:    lambda { RUBY_PLATFORM == 'y64-mingw32' }
+    supported:    lambda { RUBY_PLATFORM == 'y64-mingw32' },
+    preclean:     lambda { |box_name|  }
   },
   qemu:
   {
@@ -78,7 +79,8 @@ $builders = builders = {
     folder:       'qemu',
     vagrant_type: 'libvirt',
     packer_type:  'qemu',
-    supported:    lambda { RUBY_PLATFORM == 'x86_64-linux' && which('kvm') }
+    supported:    lambda { RUBY_PLATFORM == 'x86_64-linux' && which('kvm') },
+    preclean:     lambda { |box_name|  }
   },
   parallels:
   {
@@ -86,7 +88,8 @@ $builders = builders = {
     folder:       'parallels',
     vagrant_type: 'parallels',
     packer_type:  'parallels-windows-iso',
-    supported:    lambda { RUBY_PLATFORM =~ /.*darwin.*/ && which('prlctl') }
+    supported:    lambda { RUBY_PLATFORM =~ /.*darwin.*/ && which('prlctl') },
+    preclean:     lambda { |box_name|  }
   },
   virtualbox:
   {
@@ -99,6 +102,30 @@ $builders = builders = {
       when 'x64-mingw32' then ! ENV['VBOX_INSTALL_PATH'].nil?
         else which('VBoxManage')
       end
+    },
+    preclean:     lambda { |box_name|
+      puts "Cleaning #{box_name}"
+      stdin, stdout, stderr = Open3.popen3 "VBoxManage showvminfo \"packer-#{box_name}\" --machinereadable"
+      status = $?
+      errors = stderr.readlines
+      if errors.nil?
+        puts "  Deleting Virtual Machine in Virtualbox"
+        stdin, stdout, stderr = Open3.popen3 "VBoxManage unregistervm \"packer-#{box_name}\" --delete"
+        status = $?
+        errors = stderr.readlines
+        STDERR.puts "Errors while deleting the Virtual Machine: #{errors}" unless errors.nil?
+      end
+
+      stdin, stdout, stderr = Open3.popen3 "VBoxManage list systemproperties"
+      while line = stdout.gets
+        next unless line =~ /^Default machine folder/
+        vm_dir = File.join(line.sub(/^[^:]+:\s+/, '').chomp, "packer-#{box_name}")
+        break
+      end
+      if Dir.exist? vm_dir
+        puts "  Deleting Virtual Machine folder"
+        FileUtils.rm_rf vm_dir
+      end
     }
   },
   vmware:
@@ -107,7 +134,8 @@ $builders = builders = {
     folder:       'vmware',
     vagrant_type: 'vmware_desktop',
     packer_type:  'vmware-windows-iso',
-    supported:    lambda { which('vmrun') || File.exist?('/Applications/VMware Fusion.app/Contents/Library/vmrun') }
+    supported:    lambda { which('vmrun') || File.exist?('/Applications/VMware Fusion.app/Contents/Library/vmrun') },
+    preclean:     lambda { |box_name|  }
   },
 }
 
@@ -166,6 +194,7 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
   builder       = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
   raise ArgumentError, File.basename(_rule.name.pathmap("%d")) if builder.nil?
   mkdir_p _rule.name.pathmap("%d")
+  builder[:preclean].call(box_name)
   puts "Building #{box_filename} using #{builder[:name]}"
   verbose "  Rule source: #{_rule.source}"
   FileUtils.rm_rf "output-#{builder[:packer_type]}-#{box_name}"
