@@ -1,6 +1,7 @@
 require 'rake'
 require 'fileutils'
 require 'json'
+require 'etc'
 require 'erb'
 require 'ostruct'
 require 'digest/sha1'
@@ -89,7 +90,30 @@ $builders = builders = {
     vagrant_type: 'parallels',
     packer_type:  'parallels-windows-iso',
     supported:    lambda { RUBY_PLATFORM =~ /.*darwin.*/ && which('prlctl') },
-    preclean:     lambda { |box_name|  }
+    preclean:     lambda { |box_name|
+      puts "Cleaning #{box_name}"
+      stdin, stdout, stderr = Open3.popen3 "prlctl list --info --json \"packer-#{box_name}\""
+      status = $?
+      errors = stderr.readlines
+      if errors.nil?
+        puts "  Deleting Virtual Machine in Virtualbox"
+        stdin, stdout, stderr = Open3.popen3 "prlctl unregister \"packer-#{box_name}\""
+        status = $?
+        errors = stderr.readlines
+        STDERR.puts "Errors while deleting the Virtual Machine: #{errors}" unless errors.nil?
+      end
+
+      stdin, stdout, stderr = Open3.popen3 "prlsrvctl user list"
+      while line = stdout.gets
+        next unless line =~ /^#{Etc.getlogin}/
+        vm_dir = File.join(line.chomp.split.last, "packer-#{box_name}")
+        break
+      end
+      if Dir.exist? vm_dir
+        puts "  Deleting Virtual Machine folder"
+        FileUtils.rm_rf vm_dir
+      end
+    }
   },
   virtualbox:
   {
