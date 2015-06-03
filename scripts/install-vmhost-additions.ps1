@@ -35,7 +35,7 @@ if ($env:PACKER_BUILDER_TYPE -match 'vmware')
   }
   else
   {
-    $iso_path = Join-Path $env:HOME "windows.iso"
+    $iso_path = Join-Path $env:USERPROFILE "windows.iso"
     if (Test-Path $iso_path)
     {
       Write-Host "Mounting ISO $iso_path"
