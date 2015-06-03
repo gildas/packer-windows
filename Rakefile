@@ -119,7 +119,7 @@ $builders = builders = {
       stdin, stdout, stderr = Open3.popen3 "VBoxManage list systemproperties"
       while line = stdout.gets
         next unless line =~ /^Default machine folder/
-        vm_dir = File.join(line.sub(/^[^:]+:\s+/, '').chomp, "packer-#{box_name}")
+        vm_dir = File.join(line.chomp.sub(/^[^:]+:\s+/, ''), "packer-#{box_name}")
         break
       end
       if Dir.exist? vm_dir
