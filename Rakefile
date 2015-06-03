@@ -21,6 +21,10 @@ log_dir        = 'log'
 temp_dir       = 'tmp'
 TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json}")
 
+def verbose(message)
+  puts message if $VERBOSE
+end
+
 def which(f)
   if RUBY_PLATFORM == 'x64-mingw32'
     path = ENV['PATH'].split(File::PATH_SEPARATOR).find do |p|
@@ -33,10 +37,6 @@ def which(f)
   end
   return File.join(path, f) unless path.nil?
   nil
-end
-
-def verbose(message)
-  puts message if $VERBOSE
 end
 
 class Task
@@ -71,7 +71,7 @@ $builders = builders = {
     folder:       'hyperv',
     vagrant_type: 'hyperv',
     packer_type:  'hyperv-iso',
-    supported:    lambda { RUBY_PLATFORM == 'y64-mingw32' },
+    supported:    lambda { RUBY_PLATFORM == 'x64-mingw32' },
     preclean:     lambda { |box_name|  }
   },
   qemu:
