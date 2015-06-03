@@ -143,7 +143,8 @@ $builders = builders = {
     packer_type:  'virtualbox-windows-iso',
     supported:    lambda {
       case RUBY_PLATFORM
-      when 'x64-mingw32' then ! ENV['VBOX_INSTALL_PATH'].nil?
+        when 'x64-mingw32'
+          File.exist?(File.join(ENV['ProgramFiles'], 'Oracle', 'VirtualBox', 'VBoxManage.exe'))
         else which('VBoxManage')
       end
     },
