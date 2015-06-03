@@ -150,24 +150,33 @@ $builders = builders = {
     },
     preclean:     lambda { |box_name|
       puts "Cleaning #{box_name}"
-      stdin, stdout, stderr = Open3.popen3 "VBoxManage showvminfo \"packer-#{box_name}\" --machinereadable"
+      case RUBY_PLATFORM
+        when 'x64-mingw32'
+          VBOXMGR=File.join(ENV['ProgramFiles'], 'Oracle', 'VirtualBox', 'VBoxManage.exe')
+        else
+          VBOXMGR='VBoxManage'
+      end
+      stdin, stdout, stderr = Open3.popen3 "\"#{VBOXMGR}\" showvminfo \"packer-#{box_name}\" --machinereadable"
       status = $?
       errors = stderr.readlines
-      if errors.nil?
+      if errors.empty?
         puts "  Deleting Virtual Machine in Virtualbox"
-        stdin, stdout, stderr = Open3.popen3 "VBoxManage unregistervm \"packer-#{box_name}\" --delete"
+        stdin, stdout, stderr = Open3.popen3 "\"#{VBOXMGR}\" unregistervm \"packer-#{box_name}\" --delete"
         status = $?
         errors = stderr.readlines
-        STDERR.puts "Errors while deleting the Virtual Machine: #{errors}" unless errors.nil?
+        STDERR.puts "Errors while deleting the Virtual Machine: #{errors}" unless errors.empty?
       end
 
-      stdin, stdout, stderr = Open3.popen3 "VBoxManage list systemproperties"
-      while line = stdout.gets
+      vm_dir = nil
+      stdin, stdout, stderr = Open3.popen3 "\"#{VBOXMGR}\" list systemproperties"
+      errors = stderr.readlines
+      STDERR.puts "Errors while querying Virtualbox configuration: #{errors}" unless errors.empty?
+      stdout.readlines.each do |line|
         next unless line =~ /^Default machine folder/
         vm_dir = File.join(line.chomp.sub(/^[^:]+:\s+/, ''), "packer-#{box_name}")
         break
       end
-      if Dir.exist? vm_dir
+      if !vm_dir.nil? && Dir.exist?(vm_dir)
         puts "  Deleting Virtual Machine folder"
         FileUtils.rm_rf vm_dir
       end
