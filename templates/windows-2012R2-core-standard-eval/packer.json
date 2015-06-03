@@ -11,7 +11,6 @@
     "os_install":        "",
     "os_edition":        "",
     "os_license":        "",
-    "http_directory":    "",
     "admin_username":    "vagrant",
     "admin_password":    "vagrant",
     "disk_size":         "40960",
@@ -35,9 +34,6 @@
       "ssh_wait_timeout":    "20m",
       "switch_name":         "Bridged Switch",
       "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
-      "http_directory":       "{{user `http_directory`}}",
-      "http_port_min":        "8116",
-      "http_port_max":        "8116",
       "disk_size":           "{{user `disk_size`}}",
       "ram_size_mb":         "{{user `mem_size`}}",
       "floppy_files": [

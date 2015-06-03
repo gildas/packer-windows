@@ -13,7 +13,6 @@
     "os_license":        "",
     "admin_username":    "vagrant",
     "admin_password":    "vagrant",
-    "http_directory":    "",
     "disk_size":         "40960",
     "mem_size":          "1024",
     "cpus":              "1"
