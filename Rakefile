@@ -85,7 +85,13 @@ $builders = builders = {
     folder:       'hyperv',
     vagrant_type: 'hyperv',
     packer_type:  'hyperv-iso',
-    supported:    lambda { RUBY_PLATFORM == 'x64-mingw32' },
+    supported:    lambda {
+      case RUBY_PLATFORM
+        when 'x64-mingw32'
+          shell("(Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V).State") == "Enabled"
+        else false
+      end
+    },
     preclean:     lambda { |box_name|  }
   },
   qemu:
