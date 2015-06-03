@@ -188,7 +188,13 @@ $builders = builders = {
     folder:       'vmware',
     vagrant_type: 'vmware_desktop',
     packer_type:  'vmware-windows-iso',
-    supported:    lambda { which('vmrun') || File.exist?('/Applications/VMware Fusion.app/Contents/Library/vmrun') },
+    supported:    lambda {
+      case RUBY_PLATFORM
+        when 'x64-mingw32'
+          File.exist?(File.join(ENV['ProgramFiles(x86)'], 'VMWare', 'VMWare Workstation', 'vmrun.exe'))
+        else which('vmrun') || File.exist?('/Applications/VMware Fusion.app/Contents/Library/vmrun')
+      end
+    },
     preclean:     lambda { |box_name|  }
   },
 }
