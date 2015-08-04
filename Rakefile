@@ -144,9 +144,7 @@ $builders = builders = {
     supported:    lambda {
       case RUBY_PLATFORM
         when 'x64-mingw32'
-          [ ENV['VBOX_MSI_INSTALL_PATH'], ENV['ProgramFiles'] ].find {|path|
-            File.exist?(File.join(path, 'Oracle', 'VirtualBox', 'VBoxManage.exe'))
-          }
+          File.exist?(File.join(ENV['VBOX_MSI_INSTALL_PATH'], 'VBoxManage.exe'))
         else which('VBoxManage')
       end
     },
@@ -154,9 +152,7 @@ $builders = builders = {
       puts "Cleaning #{box_name}"
       case RUBY_PLATFORM
         when 'x64-mingw32'
-          VBOXMGR=[ ENV['VBOX_MSI_INSTALL_PATH'], ENV['ProgramFiles'] ].find {|path|
-            File.exist?(File.join(path, 'Oracle', 'VirtualBox', 'VBoxManage.exe'))
-          }
+          VBOXMGR=File.join(ENV['VBOX_MSI_INSTALL_PATH'], 'VBoxManage.exe')
         else
           VBOXMGR='VBoxManage'
       end
