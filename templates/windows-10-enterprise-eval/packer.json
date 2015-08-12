@@ -1,0 +1,221 @@
+{
+  "variables":
+  {
+    "template":          "box",
+    "organization":      "{{env `USERNAME` }}",
+    "description":       "This is a packer generated box",
+    "version":           "0.1.0",
+    "cache_dir":         "./iso",
+    "vmware_iso_dir":    "",
+    "os":                "",
+    "os_version":        "",
+    "os_install":        "",
+    "os_edition":        "",
+    "os_license":        "",
+    "admin_username":    "vagrant",
+    "admin_password":    "vagrant",
+    "disk_size":         "40960",
+    "mem_size":          "1024",
+    "cpus":              "1"
+  },
+  "builders":
+  [
+    {
+      "type":                "qemu",
+      "vm_name":             "packer_{{user `template`}}",
+      "iso_urls": [
+        "{{user `cache_dir`}}/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
+        "http://download.microsoft.com/dl/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+      ],
+      "iso_checksum_type":      "md5",
+      "iso_checksum":           "6cd2f47f2c32faa7be85f1dc81af3220",
+      "output_directory":       "output-qemu-{{user `template`}}",
+      "boot_wait":              "30s",
+      "ssh_username":           "{{user `admin_username`}}",
+      "ssh_password":           "{{user `admin_password`}}",
+      "ssh_host_port_min":      2222,
+      "ssh_host_port_max":      2229,
+      "ssh_wait_timeout":       "20m",
+      "shutdown_command":       "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
+      "format":                 "qcow2",
+      "headless":               false,
+      "accelerator":            "kvm",
+      "net_device":             "virtio-net",
+      "disk_interface":         "virtio",
+      "disk_size":              "{{user `disk_size`}}",
+      "floppy_files": [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./data/drivers/virtio-win-0.1-100/win7/amd64/*",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/04-install-openssh.cmd",
+        "./scripts/99-start-services.cmd"
+      ],
+      "qemuargs":
+      [
+        [ "-m", "{{user `mem_size`}}M" ]
+      ]
+    },
+    {
+      "type":                "parallels-windows-iso",
+      "vm_name":             "packer_{{user `template`}}",
+      "guest_os_type":       "win-2012",
+      "iso_urls": [
+        "{{user `cache_dir`}}/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
+        "http://download.microsoft.com/dl/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+      ],
+      "iso_checksum_type":      "md5",
+      "iso_checksum":           "6cd2f47f2c32faa7be85f1dc81af3220",
+      "output_directory":       "output-parallels-{{user `template`}}",
+      "boot_wait":              "30s",
+      "headless":               false,
+      "winrm_username":         "{{user `admin_username`}}",
+      "winrm_password":         "{{user `admin_password`}}",
+      "winrm_wait_timeout":     "20m",
+      "shutdown_command":       "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "parallels_tools_flavor": "win",
+      "parallels_tools_mode":   "attach",
+      "disk_size":              "{{user `disk_size`}}",
+      "floppy_files": [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
+        "./scripts/99-start-services.cmd"
+      ],
+      "prlctl":
+      [
+        ["set", "{{.Name}}", "--memsize",                "{{user `mem_size`}}"],
+        ["set", "{{.Name}}", "--cpus",                   "{{user `cpus`}}"],
+        ["set", "{{.Name}}", "--smart-mount",            "off"],
+        ["set", "{{.Name}}", "--efi-boot",               "off"],
+        ["set", "{{.Name}}", "--shared-profile",         "off"],
+        ["set", "{{.Name}}", "--shared-cloud",           "off"],
+        ["set", "{{.Name}}", "--sh-app-guest-to-host",   "off"],
+        ["set", "{{.Name}}", "--sh-app-host-to-guest",   "off"]
+      ]
+    },
+    {
+      "type":                "vmware-windows-iso",
+      "vm_name":             "packer_{{user `template`}}",
+      "guest_os_type":       "windows10-64",
+      "iso_urls": [
+        "{{user `cache_dir`}}/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
+        "http://download.microsoft.com/dl/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+      ],
+      "iso_checksum_type":   "md5",
+      "iso_checksum":           "6cd2f47f2c32faa7be85f1dc81af3220",
+      "output_directory":     "output-vmware-{{user `template`}}",
+      "boot_wait":           "30s",
+      "headless":            false,
+      "winrm_username":      "{{user `admin_username`}}",
+      "winrm_password":      "{{user `admin_password`}}",
+      "winrm_wait_timeout":  "20m",
+      "shutdown_command":    "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "disk_size":           "{{user `disk_size`}}",
+      "floppy_files": [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
+        "./scripts/99-start-services.cmd"
+      ],
+      "vmx_data":
+      {
+        "memsize":                      "{{user `mem_size`}}",
+        "numvcpus":                     "{{user `cpus`}}",
+        "cpuid.coresPerSocket":         "1",
+        "isolation.tools.hgfs.disable": "FALSE",
+        "scsi0.virtualDev":             "lsisas1068",
+        "sata0.present":                "TRUE",
+        "sata0:1.present":              "TRUE",
+        "sata0:1.startConnected":       "TRUE",
+        "sata0:1.deviceType":           "cdrom-image",
+        "sata0:1.fileName":             "{{user `vmware_iso_dir`}}/windows.iso",
+        "sharedFolder.maxNum":          "1",
+        "sharedFolder0.present":        "TRUE",
+        "sharedFolder0.enabled":        "TRUE",
+        "sharedFolder0.expiration":     "never",
+        "sharedFolder0.readAccess":     "TRUE",
+        "sharedFolder0.writeAccess":    "TRUE",
+        "sharedFolder0.hostPath":       "{{pwd}}/log",
+        "sharedFolder0.guestName":      "log"
+      },
+      "vmx_data_post":
+      {
+        "sata0:1.present":           "FALSE",
+        "sata0:1.startConnected":    "FALSE",
+        "sata0:1.deviceType":        "cdrom-raw",
+        "sata0:1.fileName":          "auto detect",
+        "sharedFolder.maxNum":       "0"
+      }
+    },
+    {
+      "type":                 "virtualbox-windows-iso",
+      "vm_name":              "packer-{{user `template`}}",
+      "guest_os_type":        "Windows10_64",
+      "iso_urls": [
+        "{{user `cache_dir`}}/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
+        "http://download.microsoft.com/dl/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+      ],
+      "iso_checksum_type":    "md5",
+      "iso_checksum":         "6cd2f47f2c32faa7be85f1dc81af3220",
+      "output_directory":     "output-virtualbox-{{user `template`}}",
+      "boot_wait":            "30s",
+      "headless":             false,
+      "winrm_username":       "{{user `admin_username`}}",
+      "winrm_password":       "{{user `admin_password`}}",
+      "winrm_wait_timeout":   "20m",
+      "shutdown_command":     "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_additions_mode": "attach",
+      "disk_size":            "{{user `disk_size`}}",
+      "floppy_files":
+      [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/_packer_config.cmd",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
+        "./scripts/99-start-services.cmd"
+      ],
+      "vboxmanage":
+      [
+        ["modifyvm", "{{.Name}}", "--ioapic", "on"],
+        ["modifyvm", "{{.Name}}", "--memory", "{{user `mem_size`}}"],
+        ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
+        ["modifyvm", "{{.Name}}", "--vram",   "64"],
+        ["setextradata",  "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"],
+        ["sharedfolder", "add", "{{.Name}}", "--name", "log", "--hostpath", "{{pwd}}/log", "--automount"]
+      ],
+      "vboxmanage_post":
+      [
+        ["sharedfolder", "remove", "{{.Name}}", "--name", "log"]
+      ]
+    }
+  ],
+  "provisioners":
+  [
+    { "type": "file",       "source": "./data/GeoTrust_Global_CA.pem", "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem" },
+    { "type": "file",       "source": "./data/vagrant.jpg",            "destination": "C:/Users/vagrant/Pictures/vagrant.jpg" },
+    { "type": "powershell", "script": "./scripts/Set-AccountPicture.ps1" },
+    { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
+    { "type": "restart-windows" },
+    { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
+
+    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" }
+  ],
+  "post-processors":
+  [
+    {
+      "type": "vagrant",
+      "keep_input_artifact": false,
+      "compression_level":   0,
+      "vagrantfile_template": "./templates/windows-10-enterprise-eval/vagrantfile.template",
+      "output": "./boxes/{{user `template`}}/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
+    }
+  ]
+}
