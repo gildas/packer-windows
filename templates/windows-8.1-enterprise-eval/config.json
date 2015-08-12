@@ -1,0 +1,13 @@
+{
+  "template":          "windows-8.1-enterprise-eval",
+  "organization":      "gildas",
+  "description":       "This box contains Windows 8.1 full with the Evaluation license",
+  "version":           "0.1.0",
+  "os":                "windows",
+  "os_version":        "8.1",
+  "os_edition":        "enterprise",
+  "os_license":        "eval",
+  "cache_dir":         "/var/cache/daas",
+  "mem_size":          "2048",
+  "cpus":              "2"
+}
