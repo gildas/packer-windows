@@ -22,7 +22,10 @@ else
 
 $log_dir = Join-Path $share_name "log"
 
-Copy-Item C:\ProgramData\chocolatey\logs\chocolatey.log (Join-Path $log_dir "packer-build-${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-chocolatey.log")
+if (Test-Path "C:\ProgramData\chocolatey\logs\chocolatey.log")
+{
+  Copy-Item C:\ProgramData\chocolatey\logs\chocolatey.log (Join-Path $log_dir "packer-build-${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-chocolatey.log")
+}
 
 if (Test-Path "C:\Windows\Logs\icserver-*.log")
 {
