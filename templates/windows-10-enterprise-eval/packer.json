@@ -100,7 +100,7 @@
     {
       "type":                "vmware-windows-iso",
       "vm_name":             "packer_{{user `template`}}",
-      "guest_os_type":       "windows10-64",
+      "guest_os_type":       "windows9-64",
       "iso_urls": [
         "{{user `cache_dir`}}/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
         "http://download.microsoft.com/dl/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
