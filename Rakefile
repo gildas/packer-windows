@@ -109,7 +109,7 @@ $builders = builders = {
     name:         'parallels',
     folder:       'parallels',
     vagrant_type: 'parallels',
-    packer_type:  'parallels-windows-iso',
+    packer_type:  'parallels-iso',
     supported:    lambda { RUBY_PLATFORM =~ /.*darwin.*/ && which('prlctl') },
     preclean:     lambda { |box_name|
       puts "Cleaning #{box_name}"
@@ -141,7 +141,7 @@ $builders = builders = {
     name:         'virtualbox',
     folder:       'virtualbox',
     vagrant_type: 'virtualbox',
-    packer_type:  'virtualbox-windows-iso',
+    packer_type:  'virtualbox-iso',
     supported:    lambda {
       case RUBY_PLATFORM
         when 'x64-mingw32'
@@ -188,7 +188,7 @@ $builders = builders = {
     name:         'vmware',
     folder:       'vmware',
     vagrant_type: 'vmware_desktop',
-    packer_type:  'vmware-windows-iso',
+    packer_type:  'vmware-iso',
     supported:    lambda {
       case RUBY_PLATFORM
         when 'x64-mingw32'

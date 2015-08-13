@@ -31,11 +31,10 @@
       "iso_checksum":           "458ff91f8abc21b75cb544744bf92e6a",
       "output_directory":       "output-qemu-{{user `template`}}",
       "boot_wait":              "30s",
-      "ssh_username":           "{{user `admin_username`}}",
-      "ssh_password":           "{{user `admin_password`}}",
-      "ssh_host_port_min":      2222,
-      "ssh_host_port_max":      2229,
-      "ssh_wait_timeout":       "20m",
+      "communicator":           "winrm",
+      "winrm_username":         "{{user `admin_username`}}",
+      "winrm_password":         "{{user `admin_password`}}",
+      "winrm_timeout":          "20m",
       "shutdown_command":       "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
       "format":                 "qcow2",
       "headless":               false,
@@ -50,7 +49,6 @@
         "./scripts/01-config-os.cmd",
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
-        "./scripts/04-install-openssh.cmd",
         "./scripts/99-start-services.cmd"
       ],
       "qemuargs":
@@ -59,7 +57,7 @@
       ]
     },
     {
-      "type":                "parallels-windows-iso",
+      "type":                "parallels-iso",
       "vm_name":             "packer_{{user `template`}}",
       "guest_os_type":       "win-2012",
       "iso_urls": [
@@ -71,9 +69,10 @@
       "output_directory":       "output-parallels-{{user `template`}}",
       "boot_wait":              "30s",
       "headless":               false,
+      "communicator":           "winrm",
       "winrm_username":         "{{user `admin_username`}}",
       "winrm_password":         "{{user `admin_password`}}",
-      "winrm_wait_timeout":     "20m",
+      "winrm_timeout":          "20m",
       "shutdown_command":       "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
       "parallels_tools_flavor": "win",
       "parallels_tools_mode":   "attach",
@@ -100,7 +99,7 @@
       ]
     },
     {
-      "type":                "vmware-windows-iso",
+      "type":                "vmware-iso",
       "vm_name":             "packer_{{user `template`}}",
       "guest_os_type":       "windows8srv-64",
       "iso_urls": [
@@ -109,12 +108,13 @@
       ],
       "iso_checksum_type":   "md5",
       "iso_checksum":        "458ff91f8abc21b75cb544744bf92e6a",
-      "output_directory":     "output-vmware-{{user `template`}}",
+      "output_directory":    "output-vmware-{{user `template`}}",
       "boot_wait":           "30s",
       "headless":            false,
+      "communicator":        "winrm",
       "winrm_username":      "{{user `admin_username`}}",
       "winrm_password":      "{{user `admin_password`}}",
-      "winrm_wait_timeout":  "20m",
+      "winrm_timeout":       "20m",
       "shutdown_command":    "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
       "disk_size":           "{{user `disk_size`}}",
       "floppy_files": [
@@ -157,7 +157,7 @@
       }
     },
     {
-      "type":                 "virtualbox-windows-iso",
+      "type":                 "virtualbox-iso",
       "vm_name":              "packer-{{user `template`}}",
       "guest_os_type":        "Windows2012_64",
       "iso_urls": [
@@ -169,9 +169,10 @@
       "output_directory":     "output-virtualbox-{{user `template`}}",
       "boot_wait":            "30s",
       "headless":             false,
+      "communicator":         "winrm",
       "winrm_username":       "{{user `admin_username`}}",
       "winrm_password":       "{{user `admin_password`}}",
-      "winrm_wait_timeout":   "20m",
+      "winrm_timeout":        "20m",
       "shutdown_command":     "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
       "guest_additions_mode": "attach",
       "disk_size":            "{{user `disk_size`}}",
@@ -209,7 +210,7 @@
     { "type": "powershell", "inline": [ "Copy-Item C:/ProgramData/BGInfo/Set-Background.lnk \"C:/ProgramData/Microsoft/Windows/Start Menu/Programs/StartUp\"" ] },
     { "type": "powershell", "script": "./scripts/Set-AccountPicture.ps1" },
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
-    { "type": "restart-windows" },
+    { "type": "windows-restart" },
     { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
 
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
