@@ -25,7 +25,7 @@
       "vm_name":             "packer_{{user `template`}}",
       "iso_urls": [
         "{{user `cache_dir`}}/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
-        "http://download.microsoft.com/dl/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+        "http://download.microsoft.com/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
       ],
       "iso_checksum_type":      "md5",
       "iso_checksum":           "6cd2f47f2c32faa7be85f1dc81af3220",
@@ -61,7 +61,7 @@
       "guest_os_type":       "win-2012",
       "iso_urls": [
         "{{user `cache_dir`}}/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
-        "http://download.microsoft.com/dl/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+        "http://download.microsoft.com/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
       ],
       "iso_checksum_type":      "md5",
       "iso_checksum":           "6cd2f47f2c32faa7be85f1dc81af3220",
@@ -102,7 +102,7 @@
       "guest_os_type":       "windows9-64",
       "iso_urls": [
         "{{user `cache_dir`}}/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
-        "http://download.microsoft.com/dl/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+        "http://download.microsoft.com/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
       ],
       "iso_checksum_type":   "md5",
       "iso_checksum":           "6cd2f47f2c32faa7be85f1dc81af3220",
@@ -159,7 +159,7 @@
       "guest_os_type":        "Windows10_64",
       "iso_urls": [
         "{{user `cache_dir`}}/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
-        "http://download.microsoft.com/dl/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+        "http://download.microsoft.com/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
       ],
       "iso_checksum_type":    "md5",
       "iso_checksum":         "6cd2f47f2c32faa7be85f1dc81af3220",
