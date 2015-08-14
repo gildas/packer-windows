@@ -251,11 +251,7 @@
     { "type": "windows-shell", "script": "./scripts/install-ininextras.cmd" },
     { "type": "powershell",  "script": "./scripts/install-dotnet35.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell",  "script": "./scripts/install-icserver.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
-    {
-      "type":     "wait",
-      "duration": "15m",
-      "message":  "Giving ICServer install some air to breathe for 15 minutes..."
-    },
+    { "type": "shell-local", "command": "echo 'Giving ICServer install some air to breathe for 15 minutes...' && sleep 900" },
     { "type": "powershell", "script": "./scripts/check-icserver.ps1" },
     { "type": "powershell", "script": "./scripts/install-icfirmware.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "inline": [ "imdisk -d -m I:" ] },
