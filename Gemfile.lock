@@ -83,3 +83,6 @@ DEPENDENCIES
   rake
   serverspec
   winrm
+
+BUNDLED WITH
+   1.10.6
