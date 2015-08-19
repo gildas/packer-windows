@@ -21,6 +21,35 @@
   "builders":
   [
     {
+      "type":                "hyperv-iso",
+      "vm_name":             "packer_{{user `template`}}",
+      "iso_urls": [
+        "{{user `cache_dir`}}/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_ENTERPRISE_EVAL_EN-US-IR3_CENA_X64FREE_EN-US_DV9.ISO",
+        "http://download.microsoft.com/download/B/9/9/B999286E-0A47-406D-8B3D-5B5AD7373A4A/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_ENTERPRISE_EVAL_EN-US-IR3_CENA_X64FREE_EN-US_DV9.ISO"
+      ],
+      "iso_checksum_type":   "md5",
+      "iso_checksum":        "ee63618e3be220d86b993c1abbcf32eb",
+      "output_directory":    "output-hyperv-{{user `template`}}",
+      "boot_wait":           "30s",
+      "communicator":        "winrm",
+      "winrm_username":      "{{user `admin_username`}}",
+      "winrm_password":      "{{user `admin_password`}}",
+      "winrm_timeout":       "20m",
+      "switch_name":         "Bridged Switch",
+      "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
+      "disk_size":           "{{user `disk_size`}}",
+      "ram_size_mb":         "{{user `mem_size`}}",
+      "floppy_files": [
+        "./templates/windows-2012R2-core-standard-eval/Autounattend.xml",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
+        "./scripts/04-install-imdisk.cmd",
+        "./scripts/99-start-services.cmd"
+      ]
+    },
+    {
       "type":                "qemu",
       "vm_name":             "packer_{{user `template`}}",
       "iso_urls": [
