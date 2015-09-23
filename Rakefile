@@ -273,11 +273,11 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
       packer_args    = "-var \"cache_dir=#{cache_dir}\" -var \"vmware_iso_dir=#{vmware_iso_dir}\""
     when /.*darwin[0-9]+/
       vmware_iso_dir = '/Applications/VMware Fusion.app/Contents/Library/isoimages'
-      cache_dir      = ENV['DAAS_CACHE'] || File.join('var', 'cache', 'daas')
+      cache_dir      = ENV['DAAS_CACHE'] || File.join('/var', 'cache', 'daas')
       packer_args    = "-var \"cache_dir=#{cache_dir}\" -var \"vmware_iso_dir=#{vmware_iso_dir}\""
     else
       vmware_iso_dir = ''
-      cache_dir      = ENV['DAAS_CACHE'] || File.join('var', 'cache', 'daas')
+      cache_dir      = ENV['DAAS_CACHE'] || File.join('/var', 'cache', 'daas')
       packer_args    = "-var \"cache_dir=#{cache_dir}\""
   end
   sh "packer build -only=#{builder[:packer_type]} -var-file=\"#{config_file}\" #{packer_args} \"#{template_file}\""
