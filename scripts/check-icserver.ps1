@@ -4,12 +4,36 @@
 #> # }}}
 [CmdletBinding()] 
 Param(
-  [Parameter(Mandatory=$false)][string] $User          = 'vagrant',
-  [Parameter(Mandatory=$false)][string] $Password      = 'vagrant',
-  [Parameter(Mandatory=$false)][string] $InstallPath   = 'C:\I3\IC',
-  [Parameter(Mandatory=$false)][string] $InstallSource,
-  [Parameter(Mandatory=$false)][switch] $Reboot
+  [Parameter(Mandatory=$false)]
+  [string] $User          = 'vagrant',
+  [Parameter(Mandatory=$false)]
+  [string] $Password      = 'vagrant',
+  [Parameter(Mandatory=$false)]
+  [string] $InstallPath   = 'C:\I3\IC',
+  [Parameter(Mandatory=$false)]
+  [string] $InstallSource,
+  [Parameter(Mandatory=$false)]
+  [switch] $Reboot
 )
+begin
+{
+  Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+  $Product = 'Interaction Center Server'
+}
+process
+{
+  function Show-Elapsed([Diagnostics.StopWatch] $watch) # {{{
+  {
+    $elapsed = ''
+        if ($watch.Elapsed.Days    -gt 1) { $elapsed += " $($watch.Elapsed.Days) days" }
+    elseif ($watch.Elapsed.Days    -gt 0) { $elapsed += " $($watch.Elapsed.Days) day"  }
+        if ($watch.Elapsed.Hours   -gt 1) { $elapsed += " $($watch.Elapsed.Hours) hours" }
+    elseif ($watch.Elapsed.Hours   -gt 0) { $elapsed += " $($watch.Elapsed.Hours) hour"  }
+        if ($watch.Elapsed.Minutes -gt 1) { $elapsed += " $($watch.Elapsed.Minutes) minutes" }
+    elseif ($watch.Elapsed.Minutes -gt 0) { $elapsed += " $($watch.Elapsed.Minutes) minute"  }
+        if ($watch.Elapsed.Seconds -gt 0) { $elapsed += " $($watch.Elapsed.Seconds) seconds" }
+    return $elapsed
+  } # }}}
 
 function Test-MsiExecMutex # {{{
 {
@@ -151,28 +175,39 @@ function Test-MsiExecMutex # {{{
     }
 } # }}}
 
-Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-$Now = Get-Date -Format 'yyyyMMddHHmmss'
+#$MSI_available=Test-MSIExecMutex -MsiExecWaitTime $(New-TimeSpan -Minutes 5)
+#if (-not $MSI_available)
+#{
+#  Write-Output "IC Server installation is not finished yet. This is bad news..."
+#  exit 1618
+#}
 
-$Product = 'Interaction Center Server'
+  $watch = [Diagnostics.StopWatch]::StartNew()
+  do
+  {
+    Start-Sleep 10
+    $msiexec_count = @(Get-Process | where ProcessName -eq 'msiexec').Count
+    $elapsed = Show-Elapsed($watch)
+    Write-Output "Found ${msiexec_count} MSI installers running after $elapsed"
+  }
+  while ($msiexec_count -gt 1)
+  $watch.Stop()
+  $elapsed = Show-Elapsed($watch)
+  Write-Output "No more MSI installers running after $elapsed"
 
-$MSI_available=Test-MSIExecMutex -MsiExecWaitTime $(New-TimeSpan -Minutes 5)
-if (-not $MSI_available)
-{
-  Write-Output "IC Server installation is not finished yet. This is bad news..."
-  exit 1618
+  if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
+  {
+    Write-Output "$Product is installed"
+  }
+  else
+  {
+    #TODO: Should we return values or raise exceptions?
+    Write-Output "Failed to install $Product (Error: $LastExitCode)"
+  }
 }
-
-if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
+end
 {
-  Write-Output "$Product is installed"
-}
-else
-{
-  #TODO: Should we return values or raise exceptions?
-  Write-Output "Failed to install $Product (Error: $LastExitCode)"
-  Start-Sleep 600
+  Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+  Start-Sleep 5
   exit $LastExitCode
 }
-Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-Start-Sleep 5

@@ -1,7 +1,7 @@
 {
-  "template":          "cic-2015R3",
+  "template":          "cic",
   "organization":      "Interactive Intelligence",
-  "description":       "This box contains CIC 2015R3",
+  "description":       "This box contains Interaction Center",
   "version":           "0.1.0",
   "os":                "windows",
   "os_version":        "2012R2",
