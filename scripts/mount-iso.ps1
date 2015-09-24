@@ -1,9 +1,19 @@
-[CmdletBinding()] 
+[CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')] 
 Param(
   [Parameter(Mandatory=$false)]
   [string] $DriveLetter,
   [Parameter(Mandatory=$false)]
-  [string] $HostShare = 'daas-cache'
+  [string] $HostShare = 'daas-cache',
+  [Parameter(Mandatory=$false)]
+  [string] $Product='CIC',
+  [Parameter(Mandatory=$false)]
+  [int] $Version,
+  [Parameter(Mandatory=$false)]
+  [int] $Release,
+  [Parameter(Mandatory=$false)]
+  [int] $Patch,
+  [Parameter(Mandatory=$false)]
+  [switch] $LastPatch
 )
 begin
 {
@@ -28,14 +38,23 @@ process
     default
     {
       Throw [System.IO.FileNotFound] "packer_builder", "Unsupported Packer Builder: $($env:PACKER_BUILDER_TYPE)"
+      exit 1
     }
   }
-  Write-Verbose "Checking $PACKER_BUILDER_SHARE for CIC Installation"
-  $InstallISO = Get-ChildItem $PACKER_BUILDER_SHARE -Name -Filter 'CIC_*.iso' | Where { $_ -match '.*R\d+\.iso$' } | Sort -Descending | Select -First 1
+  $pattern = ".*${Product}_"
+  if ($PSBoundParameters.ContainsKey('Version'))   { $pattern += "${Version}"     } else { $pattern += '\d{4}' }
+  if ($PSBoundParameters.ContainsKey('Release'))   { $pattern += "_R${Release}"   } else { $pattern += '_R\d+' }
+  if ($LastPatch)                                  { $pattern += '_Patch\d+'      }
+  elseif ($PSBoundParameters.ContainsKey('Patch')) { $pattern += "_Patch${Patch}" }
+  $pattern += '\.iso$'
+  Write-Verbose "Checking $PACKER_BUILDER_SHARE for $Product Installation (Version: $Version, Release: $Release, Patch: $Patch)"
+  Write-Verbose "Pattern: $pattern"
+  $InstallISO = Get-ChildItem $PACKER_BUILDER_SHARE -Name -Filter "${Product}_*.iso" | Where { $_ -match $pattern } | Sort -Descending | Select -First 1
 
   if ([string]::IsNullOrEmpty($InstallISO))
   {
     Throw [System.IO.FileNotFound] "ISO", "Could not find a suitable Interaction Center ISO in $DAAS_SHARE"
+    exit 2
   }
 
   if ([string]::IsNullOrEmpty($DriveLetter))
@@ -45,10 +64,17 @@ process
   }
 
   Write-Output "Mounting Windows Share on Drive ${DriveLetter}"
-  imdisk -a -m $DriveLetter -f (Join-Path $PACKER_BUILDER_SHARE $InstallISO)
-  if (! $?) { Throw "Could not mount $PACKER_BUILDER_SHARE on drive $DriveLetter" }
+  if ($PSCmdlet.ShouldProcess($DriveLetter, "Mounting ${PACKER_BUILDER_SHARE}\${InstallISO}"))
+  {
+    imdisk -a -m $DriveLetter -f (Join-Path $PACKER_BUILDER_SHARE $InstallISO)
+    if (! $?)
+    {
+      Throw "Could not mount $PACKER_BUILDER_SHARE on drive $DriveLetter"
+      exit 3
+    }
 
-  echo $DriveLetter > $env:USERPROFILE/mounted.info
+    echo $DriveLetter > $env:USERPROFILE/mounted.info
+  }
 }
 end
 {
