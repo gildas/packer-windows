@@ -70,9 +70,11 @@ process
 
   if (! (Test-Path $InstallPath))
   {
-    New-Item -ItemType Directory -Path $InstallPath
+    Write-Verbose "  Creating folder $InstallPath"
+    New-Item -ItemType Directory -Path $InstallPath | Out-Null
   }
 
+  Write-Verbose "  Copying files from $InstallSource to $InstallPath"
   Copy-Item "${InstallSource}\*" $InstallPath
   if (! $?)
   {
