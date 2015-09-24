@@ -2,7 +2,7 @@
   .Synopsis
   Installs Interaction Center Firmware
 #> # }}}
-[CmdletBinding()] 
+[CmdletBinding(SupportsShouldProcess=$true)]
 Param(
   [Parameter(Mandatory=$false)]
   [string] $SourceDriveLetter,
@@ -15,7 +15,7 @@ begin
   $Now        = Get-Date -Format 'yyyyMMddHHmmss'
   $Product    = 'Interaction Firmware'
   $msi_prefix = 'InteractionFirmware'
-  $Log        = "C:\Windows\Logs\icfirmware-${Now}.log"
+  $Log        = "C:\Windows\Logs\${msi_prefix}-${Now}.log"
 }
 process
 {
@@ -39,9 +39,6 @@ process
     Write-Output "$Product is already installed"
     exit
   }
-# 2}}}
-
-# Prerequisite: Product is not installed {{{2
   if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
   {
     Write-Output "$Product is already installed"
@@ -104,7 +101,6 @@ process
 # Prerequisites }}}
 
   Write-Output "Installing $Product"
-
   $parms  = '/i',"${InstallSource}"
   $parms += 'STARTEDBYEXEORIUPDATE=1'
   $parms += 'REBOOT=ReallySuppress'
@@ -114,35 +110,39 @@ process
   $parms += '/norestart'
 
   Write-Verbose "Arguments: $($parms -join ',')"
-  $watch   = [Diagnostics.StopWatch]::StartNew()
-  $process = Start-Process -FilePath msiexec -ArgumentList $parms -Wait -PassThru
-  $watch.Stop()
-  $elapsed = Show-Elapsed($watch)
-  if ($process.ExitCode -eq 0)
+
+  if ($PSCmdlet.ShouldProcess($Product, "Running msiexec /install"))
   {
-    Write-Output "$Product installed successfully in $elapsed!"
-    $exit_code = 0
-  }
-  elseif ($process.ExitCode -eq 3010)
-  {
-    Write-Output "$Product installed successfully in $elapsed!"
-    $exit_code = 0
-    if ($Reboot)
+    $watch   = [Diagnostics.StopWatch]::StartNew()
+    $process = Start-Process -FilePath msiexec -ArgumentList $parms -Wait -PassThru
+    $watch.Stop()
+    $elapsed = Show-Elapsed($watch)
+    if ($process.ExitCode -eq 0)
     {
-      Write-Output "Restarting..."
-      Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-      Restart-Computer
-      Start-Sleep 30
+      Write-Output "$Product installed successfully in $elapsed!"
+      $exit_code = 0
+    }
+    elseif ($process.ExitCode -eq 3010)
+    {
+      Write-Output "$Product installed successfully in $elapsed!"
+      $exit_code = 0
+      if ($Reboot)
+      {
+        Write-Output "Restarting..."
+        Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+        Restart-Computer
+        Start-Sleep 30
+      }
+      else
+      {
+        Write-Warning "Rebooting is needed before using $Product"
+      }
     }
     else
     {
-      Write-Warning "Rebooting is needed before using $Product"
+      Write-Error "Failure: Error= $($process.ExitCode), Logs=$Log, Execution time=$elapsed"
+      $exit_code = $process.ExitCode
     }
-  }
-  else
-  {
-    Write-Error "Failure: Error= $($process.ExitCode), Logs=$Log, Execution time=$elapsed"
-    $exit_code = $process.ExitCode
   }
 }
 end

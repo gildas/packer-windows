@@ -2,7 +2,7 @@
   .Synopsis
   Installs .Net 3.5
 #> # }}}
-[CmdletBinding()] 
+[CmdletBinding(SupportsShouldProcess=$true)]
 Param(
 )
 begin
@@ -38,14 +38,19 @@ process
   {
     Write-Output "Installing .Net 3.5"
     $watch   = [Diagnostics.StopWatch]::StartNew()
-    Install-WindowsFeature -Name Net-Framework-Core
-    if (! $?)
+    if ($PSCmdlet.ShouldProcess('.Net 3.5', "Running msiexec /install"))
     {
-      Write-Error "ERROR $LastExitCode while installing .Net 3.5"
-      Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-      Start-Sleep 10
-      exit $LastExitCode
+      Install-WindowsFeature -Name Net-Framework-Core
+      if (! $?)
+      {
+        Write-Error "ERROR $LastExitCode while installing .Net 3.5"
+        Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+        Start-Sleep 10
+        exit $LastExitCode
+      }
     }
+    $watch.Stop()
+    $elapsed = Show-Elapsed($watch)
     Write-Output ".Net 3.5 installed successfully in $elapsed!"
   }
 }

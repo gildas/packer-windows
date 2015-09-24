@@ -2,7 +2,7 @@
   .Synopsis
   Installs CIC
 #> # }}}
-[CmdletBinding()] 
+[CmdletBinding(SupportsShouldProcess=$true)]
 Param(
   [Parameter(Mandatory=$false)]
   [string] $User        = 'vagrant',
@@ -22,8 +22,8 @@ begin
   Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
   $Now        = Get-Date -Format 'yyyyMMddHHmmss'
   $Product    = 'Interaction Center Server'
-  $msi_prefix = 'ICServer'
-  $Log        = "C:\Windows\Logs\icserver-${Now}.log"
+  $msi_prefix = 'icserver'
+  $Log        = "C:\Windows\Logs\${msi_prefix}-${Now}.log"
 }
 process
 {
@@ -123,47 +123,49 @@ process
   $parms += '/norestart'
 
   Write-Verbose "Arguments: $($parms -join ',')"
-  if ($Wait)
+  if ($PSCmdlet.ShouldProcess($_.ProductName, "Running msiexec /update"))
   {
-    $watch   = [Diagnostics.StopWatch]::StartNew()
-    $process = Start-Process -FilePath msiexec -ArgumentList $parms -Wait -PassThru
-    $watch.Stop()
-    $elapsed = Show-Elapsed($watch)
-    if ($process.ExitCode -eq 0)
+    if ($Wait)
     {
-      Write-Output "$Product installed successfully in $elapsed!"
-      $exit_code = 0
-    }
-    elseif ($process.ExitCode -eq 3010)
-    {
-      Write-Output "$Product installed successfully in $elapsed!"
-      $exit_code = 0
-      if ($Reboot)
+      $watch   = [Diagnostics.StopWatch]::StartNew()
+      $process = Start-Process -FilePath msiexec -ArgumentList $parms -Wait -PassThru
+      $watch.Stop()
+      $elapsed = Show-Elapsed($watch)
+      if ($process.ExitCode -eq 0)
       {
-        Write-Output "Restarting..."
-        Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-        Restart-Computer
-        Start-Sleep 30
+        Write-Output "$Product installed successfully in $elapsed!"
+        $exit_code = 0
+      }
+      elseif ($process.ExitCode -eq 3010)
+      {
+        Write-Output "$Product installed successfully in $elapsed!"
+        $exit_code = 0
+        if ($Reboot)
+        {
+          Write-Output "Restarting..."
+          Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+          Restart-Computer
+          Start-Sleep 30
+        }
+        else
+        {
+          Write-Warning "Rebooting is needed before using $Product"
+        }
       }
       else
       {
-        Write-Warning "Rebooting is needed before using $Product"
+        Write-Error "Failure: Error= $($process.ExitCode), Logs=$Log, Execution time=$elapsed"
+        $exit_code = $process.ExitCode
       }
     }
     else
     {
-      Write-Error "Failure: Error= $($process.ExitCode), Logs=$Log, Execution time=$elapsed"
+      $process = Start-Process -FilePath msiexec -ArgumentList $parms -PassThru
+      # Give some time for the msiexec process to start
+      Start-Sleep 30
+      Write-Output "$Product is being installed"
       $exit_code = $process.ExitCode
     }
-  }
-  else
-  {
-    $process = Start-Process -FilePath msiexec -ArgumentList $parms -PassThru
-    # Give some time for the msiexec process to start
-    Start-Sleep 30
-    Write-Output "$Product is being installed"
-    $exit_code = $process.ExitCode
-  }
 
 # The ICServer MSI tends to not finish properly even if successful   
 #  $process = Start-Process -FilePath msiexec -ArgumentList $parms -PassThru   
@@ -193,6 +195,7 @@ process
 #    Write-Error "Failed to install $Product"   
 #    return -2    
 #  }
+  }
 }
 end
 {

@@ -2,7 +2,7 @@
   .Synopsis
   Installs CIC
 #> # }}}
-[CmdletBinding(SupportsShouldProcess=$true)] 
+[CmdletBinding(SupportsShouldProcess=$true)]
 Param(
   [Parameter(Mandatory=$false)]
   [string] $SourceDriveLetter,
@@ -102,18 +102,18 @@ process
     }
     Write-Output  "Patching $($_.ProductName)..."
     Write-Verbose "  from $InstallSource"
+    $Log = "C:\Windows\Logs\${msi_prefix}-patch-${Now}.log"
+    $parms  = '/update',"${InstallSource}"
+    $parms += 'STARTEDBYEXEORIUPDATE=1'
+    $parms += 'REBOOT=ReallySuppress'
+    $parms += '/l*v'
+    $parms += $Log
+    $parms += '/qn'
+    $parms += '/norestart'
+    Write-Verbose "Arguments: $($parms -join ',')"
+
     if ($PSCmdlet.ShouldProcess($_.ProductName, "Running msiexec /update"))
     {
-      $Log = "C:\Windows\Logs\${msi_prefix}-patch-${Now}.log"
-      $parms  = '/update',"${InstallSource}"
-      $parms += 'STARTEDBYEXEORIUPDATE=1'
-      $parms += 'REBOOT=ReallySuppress'
-      $parms += '/l*v'
-      $parms += $Log
-      $parms += '/qn'
-      $parms += '/norestart'
-      Write-Verbose "Arguments: $($parms -join ',')"
-
       $watch   = [Diagnostics.StopWatch]::StartNew()
       $process = Start-Process -FilePath msiexec -ArgumentList $parms -Wait -PassThru
       $watch.Stop()
