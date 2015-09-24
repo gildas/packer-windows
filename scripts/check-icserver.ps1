@@ -5,15 +5,7 @@
 [CmdletBinding()] 
 Param(
   [Parameter(Mandatory=$false)]
-  [string] $User          = 'vagrant',
-  [Parameter(Mandatory=$false)]
-  [string] $Password      = 'vagrant',
-  [Parameter(Mandatory=$false)]
-  [string] $InstallPath   = 'C:\I3\IC',
-  [Parameter(Mandatory=$false)]
-  [string] $InstallSource,
-  [Parameter(Mandatory=$false)]
-  [switch] $Reboot
+  [int] $Sleep = 10
 )
 begin
 {
@@ -185,7 +177,7 @@ function Test-MsiExecMutex # {{{
   $watch = [Diagnostics.StopWatch]::StartNew()
   do
   {
-    Start-Sleep 10
+    Start-Sleep $Sleep
     $msiexec_count = @(Get-Process | where ProcessName -eq 'msiexec').Count
     $elapsed = Show-Elapsed($watch)
     Write-Output "Found ${msiexec_count} MSI installers running after $elapsed"
