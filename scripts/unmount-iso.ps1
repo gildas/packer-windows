@@ -14,6 +14,7 @@ process
     if (Test-Path $env:USERPROFILE/mounted.info)
     {
       $DriveLetter = Get-Content $env:USERPROFILE/mounted.info
+      Remove-Item $env:USERPROFILE/mounted.info
     }
     else
     {
