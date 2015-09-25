@@ -255,12 +255,13 @@ end
 rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule|
   box_filename  = _rule.name.pathmap("%f")
   box_name      = _rule.source.pathmap("%2d").pathmap("%f")
+  box_version   = /.*-(\d+\.\d+\.\d+)\.box/i =~ box_filename ? $1 : '0.1.0'
   template_path = _rule.source.pathmap("%d")
   builder       = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
   raise ArgumentError, File.basename(_rule.name.pathmap("%d")) if builder.nil?
   mkdir_p _rule.name.pathmap("%d")
   builder[:preclean].call(box_name)
-  puts "Building #{box_filename} using #{builder[:name]}"
+  puts "Building box #{box_name} in #{box_filename} using #{builder[:name]}"
   verbose "  Rule source: #{_rule.source}"
   FileUtils.rm_rf "output-#{builder[:packer_type]}-#{box_name}"
   packer_log    = File.join(log_dir, "packer-build-#{builder[:name]}-#{box_filename}.log")
@@ -295,7 +296,12 @@ builders.each do |builder_name, builder|
     builders_in_use += 1
     TEMPLATE_FILES.each do |template_file|
       config        = load_json(template_file.pathmap("%d/config.json"))
-      version       = config['version'] || '0.1.0'
+      version       = config['version'] || case config['template']
+        when 'cic'
+          cic_iso = Rake::FileList.new("#{cache_dir}/CIC_*.iso").sort.last
+          /CIC_(\d+)_R(\d+)(?:_Patch(\d+))?\.iso/i =~ cic_iso ? "#{$1[2..-1]}.#{$2}.#{$3 || 0}" : '0.1.0'
+        else '0.1.0'
+      end
       box_name      = template_file.pathmap("%{templates/,}d")
       box_file      = "#{boxes_dir}/#{box_name}/#{builder[:folder]}/#{box_name}-#{version}.box"
       box_url       = "file://#{Dir.pwd}/#{box_file}"
