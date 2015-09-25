@@ -20,6 +20,10 @@ boxes_dir      = 'boxes'
 scripts_dir    = 'scripts'
 log_dir        = 'log'
 temp_dir       = 'tmp'
+cache_dir      = ENV['DAAS_CACHE'] || case RUBY_PLATFORM
+  when 'x64-mingw32' then File.join(ENV['PROGRAMDATA'], 'DaaS', 'cache')
+  else File.join('/var', 'cache', 'daas')
+end
 TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json}")
 
 def verbose(message)
@@ -269,17 +273,11 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
   case RUBY_PLATFORM
     when 'x64-mingw32'
       vmware_iso_dir = File.join(ENV['ProgramFiles(x86)'], 'VMWare', 'VMWare Workstation')
-      cache_dir      = ENV['DAAS_CACHE'] || File.join(ENV['PROGRAMDATA'], 'DaaS', 'cache')
-      packer_args    = "-var \"cache_dir=#{cache_dir}\" -var \"vmware_iso_dir=#{vmware_iso_dir}\""
+      packer_args    = "-var \"vmware_iso_dir=#{vmware_iso_dir}\""
     when /.*darwin[0-9]+/
-      vmware_iso_dir = '/Applications/VMware Fusion.app/Contents/Library/isoimages'
-      cache_dir      = ENV['DAAS_CACHE'] || File.join('/var', 'cache', 'daas')
-      packer_args    = "-var \"cache_dir=#{cache_dir}\" -var \"vmware_iso_dir=#{vmware_iso_dir}\""
-    else
-      vmware_iso_dir = ''
-      cache_dir      = ENV['DAAS_CACHE'] || File.join('/var', 'cache', 'daas')
-      packer_args    = "-var \"cache_dir=#{cache_dir}\""
+      packer_args += "-var \"vmware_iso_dir=/Applications/VMware Fusion.app/Contents/Library/isoimages\""
   end
+  packer_args += " -var \"cache_dir=#{cache_dir}\" -var \"version=#{box_version}\""
   sh "packer build -only=#{builder[:packer_type]} -var-file=\"#{config_file}\" #{packer_args} \"#{template_file}\""
   File.open(packer_log, "a") { |f| f.puts "==== END   %s %s" % ['=' * 60, Time.now.to_s] }
 end
