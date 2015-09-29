@@ -246,7 +246,8 @@
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
     { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
 
-    { "type": "powershell", "inline": [ "psexec -accepteula -s schtasks /change /tn \"\\Microsoft\\Windows\\TaskScheduler\\Maintenance Configurator\" /Disable" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "inline": [ "psexec -accepteula -s schtasks /change /tn \"\\Microsoft\\Windows\\TaskScheduler\\Regular Maintenance\" /Disable" ] },
+    { "type": "powershell", "inline": [ "psexec -accepteula -s schtasks /change /tn \"\\Microsoft\\Windows\\TaskScheduler\\Idle Maintenance\" /Disable" ] },
 
     { "type": "powershell", "inline": [ "install-dotnet35.ps1" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
 
