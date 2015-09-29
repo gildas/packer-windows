@@ -253,7 +253,7 @@
     { "type": "powershell", "inline": [ "mount-iso.ps1" ] },
     { "type": "powershell", "inline": [ "install-icextras.ps1" ] },
     { "type": "powershell", "inline": [ "install-icserver.ps1" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
-    { "type": "powershell", "script": "./scripts/check-icserver.ps1", "pause_before": "10m" },
+    { "type": "powershell", "inline": [ "check-icserver.ps1 -Verbose" ], "remote_path": "C:/Windows/Temp/check.ps1",  "pause_before": "10m" },
     { "type": "powershell", "inline": [ "install-icfirmware.ps1 -Verbose" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "inline": [ "unmount-iso.ps1 -Verbose" ] },
 
