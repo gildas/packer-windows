@@ -217,6 +217,8 @@
   ],
   "provisioners":
   [
+    { "type": "powershell", "inline": [ "Disable-ScheduledTask \"\\Microsoft\\Windows\\TaskScheduler\\Regular Maintenance\"" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "inline": [ "Disable-ScheduledTask \"\\Microsoft\\Windows\\TaskScheduler\\Idle Maintenance\"" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "file",       "source": "./data/GeoTrust_Global_CA.pem",    "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem" },
     { "type": "file",       "source": "./data/bginfo",                    "destination": "C:/ProgramData/BGInfo" },
     { "type": "file",       "source": "./data/vagrant.jpg",               "destination": "C:/Users/vagrant/Pictures/vagrant.jpg" },
@@ -246,10 +248,7 @@
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
     { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
 
-    { "type": "powershell", "inline": [ "psexec -accepteula -s schtasks /change /tn \"\\Microsoft\\Windows\\TaskScheduler\\Regular Maintenance\" /Disable" ] },
-    { "type": "powershell", "inline": [ "psexec -accepteula -s schtasks /change /tn \"\\Microsoft\\Windows\\TaskScheduler\\Idle Maintenance\" /Disable" ] },
-
-    { "type": "powershell", "inline": [ "install-dotnet35.ps1" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "script": "./scripts/install-dotnet35.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
 
     { "type": "powershell", "inline": [ "mount-iso.ps1" ] },
     { "type": "powershell", "inline": [ "install-icextras.ps1" ] },
