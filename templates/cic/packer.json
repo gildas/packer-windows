@@ -261,7 +261,8 @@
     { "type": "powershell", "inline": [ "install-icpatch.ps1 -Verbose" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "inline": [ "unmount-iso.ps1 -Verbose" ] },
 
-    { "type": "powershell", "inline": [ "Backup-Logs.ps1" ] }
+    { "type": "powershell", "inline": [ "Backup-Logs.ps1" ] },
+    { "type": "powershell", "inline": [ "Remove-Item C:/Windows/Temp/GeoTrust_Global_CA.pem,C:/Windows/Temp/check.ps1" ] }
   ],
   "post-processors":
   [
