@@ -232,6 +232,8 @@
   ],
   "provisioners":
   [
+    { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Regular Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Idle Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "file",       "source": "./data/GeoTrust_Global_CA.pem", "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem" },
     { "type": "powershell", "script": "./scripts/config-shell.ps1" },
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
