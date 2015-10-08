@@ -12,7 +12,7 @@ begin
 
   RSpec::Core::RakeTask.new
 rescue LoadError
-  puts "Warning: Test Framework not loaded."
+  #puts "Warning: Test Framework not loaded."
 end
 
 templates_dir  = 'templates'
