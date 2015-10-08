@@ -1,3 +1,4 @@
+require 'logger'
 require 'rake'
 require 'fileutils'
 require 'json'
@@ -14,6 +15,15 @@ begin
 rescue LoadError
   #puts "Warning: Test Framework not loaded."
 end
+
+
+# And IO class to send logs to nowhere
+class NullIO
+  def write(*args) ; end
+  def close        ; end
+end
+
+$logger = Logger.new(NullIO.new)
 
 templates_dir  = 'templates'
 boxes_dir      = 'boxes'
@@ -204,7 +214,6 @@ $builders = builders = {
   },
 }
 
-
 directory boxes_dir
 directory temp_dir
 directory log_dir
@@ -296,12 +305,17 @@ builders.each do |builder_name, builder|
     builders_in_use += 1
     TEMPLATE_FILES.each do |template_file|
       config        = load_json(template_file.pathmap("%d/config.json"))
+      $logger.info "Processing Template: #{config['template']}"
       version       = config['version'] || case config['template']
         when 'cic'
+          $logger.debug "  Calculating version..."
+          $logger.debug "  Search cache in #{cache_dir}"
           cic_iso = Rake::FileList.new(File.join(cache_dir, 'CIC_*.iso')).sort.last
+          $logger.debug "  Using ISO: #{cic_iso}"
           /CIC_(\d+)_R(\d+)(?:_Patch(\d+))?\.iso/i =~ cic_iso ? "#{$1[2..-1]}.#{$2}.#{$3 || 0}" : '0.1.0'
         else '0.1.0'
       end
+      $logger.info "  Version: #{version}"
       box_name      = template_file.pathmap("%{templates/,}d")
       box_file      = "#{boxes_dir}/#{box_name}/#{builder[:folder]}/#{box_name}-#{version}.box"
       box_url       = "file://#{Dir.pwd}/#{box_file}"
@@ -436,6 +450,17 @@ end
 
 unless builders_in_use > 0
     STDERR.puts "Error: could not find any virtualization builder!"
+end
+
+desc "Turn on verbose mode"
+task :verbose do
+  $logger = Logger.new(STDOUT)
+  $logger.level = Logger::INFO
+end
+
+desc "Turn on debug mode"
+task :debug => [:verbose] do
+  $logger.level = Logger::DEBUG
 end
 
 task :default => ['build:all', 'metadata:all']
