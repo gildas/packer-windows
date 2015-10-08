@@ -30,10 +30,11 @@ boxes_dir      = 'boxes'
 scripts_dir    = 'scripts'
 log_dir        = 'log'
 temp_dir       = 'tmp'
-cache_dir      = ENV['DAAS_CACHE'].gsub(/\\/, '/') || case RUBY_PLATFORM
-  when 'x64-mingw32' then File.join(ENV['PROGRAMDATA'].gsub(/\\/, '/'), 'DaaS', 'cache')
+cache_dir      = ENV['DAAS_CACHE'] || case RUBY_PLATFORM
+  when 'x64-mingw32' then File.join(ENV['PROGRAMDATA'], 'DaaS', 'cache')
   else File.join('/var', 'cache', 'daas')
 end
+cache_dir.gsub!(/\\/, '/')
 TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json}")
 
 def verbose(message)
