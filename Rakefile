@@ -20,8 +20,8 @@ boxes_dir      = 'boxes'
 scripts_dir    = 'scripts'
 log_dir        = 'log'
 temp_dir       = 'tmp'
-cache_dir      = ENV['DAAS_CACHE'] || case RUBY_PLATFORM
-  when 'x64-mingw32' then File.join(ENV['PROGRAMDATA'], 'DaaS', 'cache')
+cache_dir      = ENV['DAAS_CACHE'].gsub(/\\/, '/') || case RUBY_PLATFORM
+  when 'x64-mingw32' then File.join(ENV['PROGRAMDATA'].gsub(/\\/, '/'), 'DaaS', 'cache')
   else File.join('/var', 'cache', 'daas')
 end
 TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json}")
@@ -298,7 +298,7 @@ builders.each do |builder_name, builder|
       config        = load_json(template_file.pathmap("%d/config.json"))
       version       = config['version'] || case config['template']
         when 'cic'
-          cic_iso = Rake::FileList.new("#{cache_dir}/CIC_*.iso").sort.last
+          cic_iso = Rake::FileList.new(File.join(cache_dir, 'CIC_*.iso')).sort.last
           /CIC_(\d+)_R(\d+)(?:_Patch(\d+))?\.iso/i =~ cic_iso ? "#{$1[2..-1]}.#{$2}.#{$3 || 0}" : '0.1.0'
         else '0.1.0'
       end
