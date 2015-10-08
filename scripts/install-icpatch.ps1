@@ -95,12 +95,13 @@ process
       return # aka continue (We are in a foreack ScriptBlock!)
     }
 
+    if ($InstallSource -match '.*Patch([0-9]+)\.msp') { $Patch = $matches[1] }
     if ((Split-Path $InstallSource -Leaf) -le "${msi_prefix}_$($_.SU).msp")
     {
-      Write-Output "  already patched to $($_.SU)"
+      Write-Output "  already patched to $($_.SU) (Patch $Patch)"
       return # aka continue (We are in a foreack ScriptBlock!)
     }
-    Write-Output  "Patching $($_.ProductName)..."
+    Write-Output  "Patching $($_.ProductName) to Patch $Patch..."
     Write-Verbose "  from $InstallSource"
     $Log = "C:\Windows\Logs\${msi_prefix}-patch-${Now}.log"
     $parms  = '/update',"${InstallSource}"
