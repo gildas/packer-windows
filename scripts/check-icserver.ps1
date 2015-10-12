@@ -5,6 +5,8 @@
 [CmdletBinding()] 
 Param(
   [Parameter(Mandatory=$false)]
+  [int] $RunningMsiAllowed = 1,
+  [Parameter(Mandatory=$false)]
   [int] $Sleep = 10
 )
 begin
@@ -182,7 +184,7 @@ function Test-MsiExecMutex # {{{
     $elapsed = Show-Elapsed($watch)
     Write-Output "Found ${msiexec_count} MSI installers running after $elapsed"
   }
-  while ($msiexec_count -gt 1)
+  while ($msiexec_count -gt $RunningMsiAllowed)
   $watch.Stop()
   $elapsed = Show-Elapsed($watch)
   Write-Output "No more MSI installers running after $elapsed"
@@ -200,6 +202,6 @@ function Test-MsiExecMutex # {{{
 end
 {
   Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-  Start-Sleep 5
+  Start-Sleep 2
   exit $LastExitCode
 }

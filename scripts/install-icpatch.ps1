@@ -5,7 +5,17 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
 Param(
   [Parameter(Mandatory=$false)]
+  [ValidateNotNullOrEmpty()]
   [string] $SourceDriveLetter,
+  [Parameter(Mandatory=$false)]
+  [ValidateNotNullOrEmpty()]
+  [Alias('Product')]
+  [string] $ProductName,
+  [Parameter(Mandatory=$false)]
+  [switch] $AsJob,
+  [Parameter(Mandatory=$false)]
+  [ValidateNotNullOrEmpty()]
+  [string] $JobName,
   [Parameter(Mandatory=$false)]
   [switch] $Reboot
 )
@@ -13,6 +23,7 @@ begin
 {
   Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
   $Now = Get-Date -Format 'yyyyMMddHHmmss'
+  $product_key = "HKLM:\SOFTWARE\Wow6432Node\Interactive Intelligence\Installed\Products\*"
 }
 process
 {
@@ -62,7 +73,16 @@ process
 # Prerequisites }}}
 
   $want_reboot = $false
-  Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Interactive Intelligence\Installed\Products\*" | Where { $_.ProductName -ne $null } | ForEach {
+  if ($PSBoundParameters.ContainsKey('ProductName'))
+  {
+    $products = Get-ItemProperty $product_key | Where { $_.ProductName -like "*${ProductName}*" }
+  }
+  else
+  {
+    $products = Get-ItemProperty $product_key | Where { $_.ProductName -ne $null }
+  }
+  $jobs = @()
+  $products | ForEach {
     Write-Output "Checking $($_.ProductName)"
 
     if ($product_info = Get-ItemProperty HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -eq $_.ProductName)
@@ -115,27 +135,40 @@ process
 
     if ($PSCmdlet.ShouldProcess($_.ProductName, "Running msiexec /update"))
     {
-      $watch   = [Diagnostics.StopWatch]::StartNew()
-      $process = Start-Process -FilePath msiexec -ArgumentList $parms -Wait -PassThru
-      $watch.Stop()
-      $elapsed = Show-Elapsed($watch)
-
-      if ($process.ExitCode -eq 0)
+      if ($AsJob)
       {
-        Write-Output "$Product patched successfully in $elapsed!"
-        $exit_code = 0
-      }
-      elseif ($process.ExitCode -eq 3010)
-      {
-        Write-Output "$($_.ProductName) patched successfully in $elapsed!"
-        Write-Warning "Rebooting is needed before using $($_.ProductName)"
-        $want_reboot = $true
-        $exit_code = 0
+        #$job_parms = @{}
+        #if (! [string]::IsNullOrEmpty($JobName)) { $job_parms['Name'] = $JobName }
+        #$job = Start-Job @job_parms -ScriptBlock { &msiexec.exe $args } -ArgumentList $parms
+        #Write-Verbose "Job Created: $Job"
+        #$jobs += $job
+        $process = Start-Process -FilePath msiexec -ArgumentList $parms -PassThru
+        Write-Output "$Product is pactching (process: $($process.Id))"
       }
       else
       {
-        Write-Error "Failure: Error= $($process.ExitCode), Logs=$Log, Execution time=$elapsed"
-        $exit_code = $process.ExitCode
+        $watch   = [Diagnostics.StopWatch]::StartNew()
+        $process = Start-Process -FilePath msiexec -ArgumentList $parms -Wait -PassThru
+        $watch.Stop()
+        $elapsed = Show-Elapsed($watch)
+
+        if ($process.ExitCode -eq 0)
+        {
+          Write-Output "$Product patched successfully in $elapsed!"
+          $exit_code = 0
+        }
+        elseif ($process.ExitCode -eq 3010)
+        {
+          Write-Output "$($_.ProductName) patched successfully in $elapsed!"
+          Write-Warning "Rebooting is needed before using $($_.ProductName)"
+          $want_reboot = $true
+          $exit_code = 0
+        }
+        else
+        {
+          Write-Error "Failure: Error= $($process.ExitCode), Logs=$Log, Execution time=$elapsed"
+          $exit_code = $process.ExitCode
+        }
       }
     }
   }
@@ -153,6 +186,7 @@ process
 end
 {
   Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+#  return $jobs
   Start-Sleep 2
   exit $exit_code
 }
