@@ -261,6 +261,7 @@
     { "type": "powershell", "inline": [ "mount-iso.ps1 -LastPatch"] },
     { "type": "powershell", "inline": [ "install-icpatch.ps1 -ProductName 'Interaction Center Server' -AsJob -JobName 'Patch-ICServer' -Verbose"], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "inline": [ "check-icserver.ps1 -RunningMsiAllowed 0" ], "remote_path": "C:/Windows/Temp/check.ps1",  "pause_before": "10m" },
+    { "type": "powershell", "inline": [ "Remove-Item C:/Windows/Temp/check.ps1" ] },
     { "type": "powershell", "inline": [ "install-icpatch.ps1 -ProductName 'Interaction Firmware' -Verbose"], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "script": "./scripts/unmount-iso.ps1" },
 
