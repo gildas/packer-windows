@@ -124,7 +124,12 @@
         ["set", "{{.Name}}", "--shared-profile",         "off"],
         ["set", "{{.Name}}", "--shared-cloud",           "off"],
         ["set", "{{.Name}}", "--sh-app-guest-to-host",   "off"],
-        ["set", "{{.Name}}", "--sh-app-host-to-guest",   "off"]
+        ["set", "{{.Name}}", "--sh-app-host-to-guest",   "off"],
+        ["set", "{{.Name}}", "--shf-host-add",           "log",        "--path", "{{pwd}}/log",          "--mode", "rw", "--enable"]
+      ],
+      "prlctl_post":
+      [
+        ["set", "{{.Name}}", "--shf-host-del",           "log"]
       ]
     },
     {
