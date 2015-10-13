@@ -200,12 +200,12 @@
   ],
   "provisioners":
   [
+    { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
     { "type": "file",       "source": "./data/GeoTrust_Global_CA.pem", "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem" },
     { "type": "file",       "source": "./data/vagrant.jpg",            "destination": "C:/Users/vagrant/Pictures/vagrant.jpg" },
     { "type": "powershell", "script": "./scripts/Set-AccountPicture.ps1" },
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
     { "type": "windows-restart" },
-    { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
 
     { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" }
   ],

@@ -217,6 +217,7 @@
   ],
   "provisioners":
   [
+    { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
     { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Regular Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Idle Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "file",       "source": "./data/GeoTrust_Global_CA.pem",    "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem" },
@@ -227,7 +228,6 @@
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
     { "type": "windows-restart" },
 
-    { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
     { "type": "powershell", "inline": [ "if (! (Test-Path C:/ProgramData/chocolatey/bin)) { Write-Error 'Chocolatey is not installed, please re-run packer' ; exit 1 }" ] },
     { "type": "file",       "source": "./scripts/Set-AccountPicture.ps1", "destination": "C:/ProgramData/chocolatey/bin/Set-AccountPicture.ps1" },
