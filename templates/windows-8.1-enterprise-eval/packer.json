@@ -117,6 +117,7 @@
       ],
       "prlctl":
       [
+        ["set", "{{.Name}}", "--startup-view",           "window"],
         ["set", "{{.Name}}", "--memsize",                "{{user `mem_size`}}"],
         ["set", "{{.Name}}", "--cpus",                   "{{user `cpus`}}"],
         ["set", "{{.Name}}", "--smart-mount",            "off"],
