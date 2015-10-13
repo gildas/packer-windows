@@ -393,7 +393,7 @@ builders.each do |builder_name, builder|
 
           $box_aliases[box_name].each do |box_alias|
             desc "Alias to load box #{box_name} in vagrant for #{builder_name}"
-            task box_alias => [ :folders, box_file ]
+            task box_alias => loaded_box_marker
           end if $box_aliases[box_name]
 
           desc "Load all boxes in vagrant for #{builder_name}"
