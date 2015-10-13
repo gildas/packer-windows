@@ -17,11 +17,11 @@ rescue LoadError
 end
 
 
-# And IO class to send logs to nowhere
-class NullIO
+# An IO class to send logs to nowhere
+class NullIO # {{{
   def write(*args) ; end
   def close        ; end
-end
+end # }}}
 
 $logger = Logger.new(NullIO.new)
 
@@ -44,11 +44,12 @@ $box_aliases = {
   'windows-2012R2-full-standard-eval' => [ 'windows-2012R2-full', 'windows-2012R2' ],
 }
 
-def verbose(message)
+# Tools {{{
+def verbose(message) # {{{
   puts message if $VERBOSE
-end
+end # }}}
 
-def which(f)
+def which(f) # {{{
   if RUBY_PLATFORM == 'x64-mingw32'
     path = ENV['PATH'].split(File::PATH_SEPARATOR).find do |p|
       ['.exe', '.bat', '.cmd', '.ps1'].find do |ext|
@@ -60,9 +61,9 @@ def which(f)
   end
   return File.join(path, f) unless path.nil?
   nil
-end
+end # }}}
 
-def shell(command)
+def shell(command) # {{{
   case RUBY_PLATFORM
     when 'x64-mingw32'
       stdin, stdout, stderr = Open3.popen3 "powershell.exe -NoLogo -ExecutionPolicy Bypass -Command #{command}" 
@@ -74,10 +75,15 @@ def shell(command)
     else
       system command
   end
-end
+end # }}}
 
-class Task
-  def investigation
+def load_json(filename) # {{{
+  return {} unless File.exist? filename
+  return File.open(filename) { |file| JSON.parse(file.read) }
+end # }}}
+
+class Task # {{{
+  def investigation # {{{
     return unless Rake.application.options.trace == true
     result = "------------------------------\n"
     result << "Investigating #{name}\n"
@@ -94,15 +100,60 @@ class Task
     result <<  "latest-prerequisite time: #{latest_prereq}\n"
     result << "................................\n\n"
     return result
+  end # }}}
+end # }}}
+
+class Binder # {{{
+  def initialize(config = {}) # {{{
+    self.class.class_eval { config.each {|key, value| define_method(key.to_sym){ value } } }
+  end # }}}
+  def get_binding ; binding() end
+end # }}}
+
+def sources_for_box(box_file, sources_root, scripts_root) # {{{
+  # box_file should be like: boxes/#{box_name}/#{provider}/#{box_name}-#{box_version}.box
+  verbose "box file: #{box_file}"
+  box_name = box_file.pathmap("%2d").pathmap("%f")
+  verbose "  Finding sources for box: #{box_name}"
+  box_sources = Rake::FileList.new("#{sources_root}/#{box_name}/*")
+  verbose "  ==> Box sources: #{box_sources.join(', ')}"
+  raise Errno::ENOENT, "no source for #{box_file}" if box_sources.empty?
+  current_builder = $builders.find { |builder| builder[1][:folder] == box_file.pathmap("%3d").pathmap("%f") }
+  raise ArgumentError, box_name if current_builder.nil?
+  current_builder = current_builder[1]
+  verbose "  Collecting scripts for #{current_builder[:name]}"
+  box_scripts = []
+  box_sources.each do |source|
+    next unless source =~ /.*packer\.json$/
+    verbose "Checking config file: #{source}"
+    config = load_json(source)
+    config['builders'].each do |packer_builder|
+      next unless packer_builder['type'] == current_builder[:packer_type]
+      box_scripts += packer_builder['floppy_files'].find_all {|path| ['.cmd', '.ps1'].include? path.pathmap("%x") }
+    end
+    config['provisioners'].each do |provisioner|
+      # TODO: support 'only', and 'except' from the JSON data
+      case provisioner['type']
+        when 'file'          then box_scripts << provisioner['source']
+        when 'powershell', 'windows-shell', 'shell'
+          box_scripts << provisioner['script'] if provisioner['script']
+          box_scripts += provisioner['scripts'] if provisioner['scripts']
+      end
+    end
   end
-end
+  verbose "  Box scripts: #{box_scripts.join(', ')}"
+  # TODO: What about the data folder?
+
+  box_sources + box_scripts
+end # }}}
+# }}}
 
 ['packer'].each do |application|
   raise RuntimeError, "Program #{application} is not accessible via the command line" unless which(application)
 end
 
-$builders = builders = {
-  hyperv:
+$builders = builders = { # {{{
+  hyperv: # {{{
   {
     name:         'hyperv',
     folder:       'hyperv',
@@ -116,8 +167,8 @@ $builders = builders = {
       end
     },
     preclean:     lambda { |box_name|  }
-  },
-  qemu:
+  }, # }}}
+  qemu: # {{{
   {
     name:         'qemu',
     folder:       'qemu',
@@ -125,8 +176,8 @@ $builders = builders = {
     packer_type:  'qemu',
     supported:    lambda { RUBY_PLATFORM == 'x86_64-linux' && which('kvm') },
     preclean:     lambda { |box_name|  }
-  },
-  parallels:
+  }, # }}}
+  parallels: # {{{
   {
     name:         'parallels',
     folder:       'parallels',
@@ -157,8 +208,8 @@ $builders = builders = {
         FileUtils.rm_rf vm_dir
       end
     }
-  },
-  virtualbox:
+  }, # }}}
+  virtualbox: # {{{
   {
     name:         'virtualbox',
     folder:       'virtualbox',
@@ -204,8 +255,8 @@ $builders = builders = {
         FileUtils.rm_rf vm_dir
       end
     }
-  },
-  vmware:
+  }, # }}}
+  vmware: # {{{
   {
     name:         'vmware',
     folder:       'vmware',
@@ -219,57 +270,15 @@ $builders = builders = {
       end
     },
     preclean:     lambda { |box_name|  }
-  },
-}
+  }, # }}}
+} # }}}
 
 directory boxes_dir
 directory temp_dir
 directory log_dir
 task :folders => [ boxes_dir, temp_dir, log_dir ]
 
-def load_json(filename)
-  return {} unless File.exist? filename
-  return File.open(filename) { |file| JSON.parse(file.read) }
-end
-
-def sources_for_box(box_file, sources_root, scripts_root)
-  # box_file should be like: boxes/#{box_name}/#{provider}/#{box_name}-#{box_version}.box
-  verbose "box file: #{box_file}"
-  box_name = box_file.pathmap("%2d").pathmap("%f")
-  verbose "  Finding sources for box: #{box_name}"
-  box_sources = Rake::FileList.new("#{sources_root}/#{box_name}/*")
-  verbose "  ==> Box sources: #{box_sources.join(', ')}"
-  raise Errno::ENOENT, "no source for #{box_file}" if box_sources.empty?
-  current_builder = $builders.find { |builder| builder[1][:folder] == box_file.pathmap("%3d").pathmap("%f") }
-  raise ArgumentError, box_name if current_builder.nil?
-  current_builder = current_builder[1]
-  verbose "  Collecting scripts for #{current_builder[:name]}"
-  box_scripts = []
-  box_sources.each do |source|
-    next unless source =~ /.*packer\.json$/
-    verbose "Checking config file: #{source}"
-    config = load_json(source)
-    config['builders'].each do |packer_builder|
-      next unless packer_builder['type'] == current_builder[:packer_type]
-      box_scripts += packer_builder['floppy_files'].find_all {|path| ['.cmd', '.ps1'].include? path.pathmap("%x") }
-    end
-    config['provisioners'].each do |provisioner|
-      # TODO: support 'only', and 'except' from the JSON data
-      case provisioner['type']
-        when 'file'          then box_scripts << provisioner['source']
-        when 'powershell', 'windows-shell', 'shell'
-          box_scripts << provisioner['script'] if provisioner['script']
-          box_scripts += provisioner['scripts'] if provisioner['scripts']
-      end
-    end
-  end
-  verbose "  Box scripts: #{box_scripts.join(', ')}"
-  # TODO: What about the data folder?
-
-  box_sources + box_scripts
-end
-
-rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule|
+rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule| # {{{
   box_filename  = _rule.name.pathmap("%f")
   box_name      = _rule.source.pathmap("%2d").pathmap("%f")
   box_version   = /.*-(\d+\.\d+\.\d+)\.box/i =~ box_filename ? $1 : '0.1.0'
@@ -298,15 +307,9 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
   packer_args += " -var \"cache_dir=#{cache_dir}\" -var \"version=#{box_version}\""
   sh "packer build -only=#{builder[:packer_type]} -var-file=\"#{config_file}\" #{packer_args} \"#{template_file}\""
   File.open(packer_log, "a") { |f| f.puts "==== END   %s %s" % ['=' * 60, Time.now.to_s] }
-end
+end # }}}
 
-class Binder
-  def initialize(config = {})
-    self.class.class_eval { config.each {|key, value| define_method(key.to_sym){value}}}
-  end
-  def get_binding ; binding() end
-end
-
+# builders tasks {{{
 builders_in_use=0
 builders.each do |builder_name, builder|
   if builder[:supported][]
@@ -329,7 +332,7 @@ builders.each do |builder_name, builder|
       box_url       = "file://#{Dir.pwd}/#{box_file}"
       metadata_file = "#{boxes_dir}/#{box_name}/metadata.json"
 
-      namespace :validate do
+      namespace :validate do # {{{
         namespace builder_name.to_sym do
           desc "Validate template #{box_name} version #{version} with #{builder_name}"
           task box_name do
@@ -342,9 +345,9 @@ builders.each do |builder_name, builder|
 
         desc "Validate all templates for all providers"
         task :all => "#{builder_name}:all"
-      end
+      end # }}}
 
-      namespace :build do
+      namespace :build do # {{{
         namespace builder_name.to_sym do
           desc "Build box #{box_name} version #{version} with #{builder_name}"
           task box_name => [ :folders, box_file ]
@@ -360,9 +363,9 @@ builders.each do |builder_name, builder|
 
         desc "Build all boxes for all providers"
         task :all => "#{builder_name}:all"
-      end
+      end # }}}
 
-      namespace :load do
+      namespace :load do # {{{
         namespace builder_name.to_sym do
           box_root = "#{ENV['VAGRANT_HOME'] || (ENV['HOME'] + '/.vagrant.d')}/boxes/#{box_name}"
           vagrant_provider = builders[builder_name][:vagrant_type]
@@ -402,18 +405,18 @@ builders.each do |builder_name, builder|
 
         desc "Load all boxes in vagrant"
         task :all => "#{builder_name}:all"
-      end
+      end # }}}
 
-      namespace :up do
+      namespace :up do # {{{
         namespace builder_name.to_sym do
           desc "Start a Virtual Machine after the box #{box_name} in #{builder_name}"
           task box_name => "load:#{builder_name}:#{box_name}" do
             sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant up --provider=#{builder[:vagrant_type]} --provision"
           end
         end
-      end
+      end # }}}
 
-      namespace :halt do
+      namespace :halt do # {{{
         namespace builder_name.to_sym do
           desc "Stop the Virtual Machine from the box #{box_name} in #{builder_name}"
           task box_name do
@@ -426,9 +429,9 @@ builders.each do |builder_name, builder|
 
         desc "Stop all boxes in all providers"
         task :all => "#{builder_name}:all"
-      end
+      end # }}}
 
-      namespace :destroy do
+      namespace :destroy do # {{{
         namespace builder_name.to_sym do
           desc "Destroy the Virtual Machine from the box #{box_name} from #{builder_name}"
           task box_name do
@@ -443,9 +446,9 @@ builders.each do |builder_name, builder|
 
         desc "Destroy all Virtual Machines from all boxes from all providers"
         task :all => "#{builder_name}:all"
-      end
+      end # }}}
 
-      namespace :remove do
+      namespace :remove do # {{{
         namespace builder_name.to_sym do
           desc "Remove box #{box_name} from #{builder_name}"
           task box_name => "destroy:#{builder_name}:#{box_name}" do
@@ -458,13 +461,13 @@ builders.each do |builder_name, builder|
 
         desc "Remove all boxes from all providers"
         task :all => "#{builder_name}:all"
-      end
+      end # }}}
 
       CLOBBER << box_file
       CLOBBER << metadata_file
     end
   end
-end
+end # }}}
 
 unless builders_in_use > 0
     STDERR.puts "Error: could not find any virtualization builder!"
