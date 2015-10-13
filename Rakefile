@@ -37,6 +37,13 @@ end
 cache_dir = cache_dir.gsub(/\\/, '/')
 TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json}")
 
+$box_aliases = {
+  'windows-10-enterprise-eval'        => [ 'windows-10' ],
+  'windows-8.1-enterprise-eval'       => [ 'windows-8.1' ],
+  'windows-2012R2-core-standard-eval' => [ 'windows-2012R2-core' ],
+  'windows-2012R2-full-standard-eval' => [ 'windows-2012R2-full', 'windows-2012R2' ],
+}
+
 def verbose(message)
   puts message if $VERBOSE
 end
@@ -342,6 +349,11 @@ builders.each do |builder_name, builder|
           desc "Build box #{box_name} version #{version} with #{builder_name}"
           task box_name => [ :folders, box_file ]
 
+          $box_aliases[box_name].each do |box_alias|
+            desc "Alias to build box #{box_name} in vagrant for #{builder_name}"
+            task box_alias => [ :folders, box_file ]
+          end if $box_aliases[box_name]
+
           desc "Build all boxes for #{builder_name}"
           task :all => box_name
         end
@@ -378,6 +390,11 @@ builders.each do |builder_name, builder|
 
           desc "Load box #{box_name} in vagrant for #{builder_name}"
           task box_name => loaded_box_marker
+
+          $box_aliases[box_name].each do |box_alias|
+            desc "Alias to load box #{box_name} in vagrant for #{builder_name}"
+            task box_alias => [ :folders, box_file ]
+          end if $box_aliases[box_name]
 
           desc "Load all boxes in vagrant for #{builder_name}"
           task :all => box_name
