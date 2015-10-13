@@ -99,11 +99,6 @@
         ["set", "{{.Name}}", "--sh-app-host-to-guest",   "off"],
         ["set", "{{.Name}}", "--shf-host-add",           "daas-cache", "--path", "{{user `cache_dir`}}", "--mode", "ro", "--enable"],
         ["set", "{{.Name}}", "--shf-host-add",           "log",        "--path", "{{pwd}}/log",          "--mode", "rw", "--enable"]
-      ],
-      "prlctl_post":
-      [
-        ["set", "{{.Name}}", "--shf-host-del",           "daas-cache"],
-        ["set", "{{.Name}}", "--shf-host-del",           "log"]
       ]
     },
     {
