@@ -239,6 +239,18 @@
     { "type": "windows-restart" },
     { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
 
+    { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
+    { "type": "powershell", "inline": [ "if (! (Test-Path C:/ProgramData/chocolatey/bin)) { Write-Error 'Chocolatey is not installed, please re-run packer' ; exit 1 }" ] },
+    { "type": "file",       "source": "./scripts/Set-AccountPicture.ps1", "destination": "C:/ProgramData/chocolatey/bin/Set-AccountPicture.ps1" },
+    { "type": "file",       "source": "./scripts/mount-iso.ps1",          "destination": "C:/ProgramData/chocolatey/bin/Mount-ISO.ps1" },
+    { "type": "file",       "source": "./scripts/unmount-iso.ps1",        "destination": "C:/ProgramData/chocolatey/bin/Unmount-ISO.ps1" },
+    { "type": "powershell", "inline": [ "chocolatey install -y sysinternals" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y md5" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y git" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y ruby" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y classic-shell" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
     { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" }
   ],
   "post-processors":
