@@ -301,11 +301,18 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
     when 'x64-mingw32'
       vmware_iso_dir = File.join(ENV['ProgramFiles(x86)'], 'VMWare', 'VMWare Workstation')
       packer_args    = "-var \"vmware_iso_dir=#{vmware_iso_dir}\""
+      time_this      = 'Measure-Object { '
+      time_over      = ' | Out-Default }'
     when /.*darwin[0-9]+/
       packer_args += "-var \"vmware_iso_dir=/Applications/VMware Fusion.app/Contents/Library/isoimages\""
+      time_this      = 'time'
+      time_over      = ''
+    else
+      time_this      = 'time'
+      time_over      = ''
   end
   packer_args += " -var \"cache_dir=#{cache_dir}\" -var \"version=#{box_version}\""
-  sh "packer build -only=#{builder[:packer_type]} -var-file=\"#{config_file}\" #{packer_args} \"#{template_file}\""
+  sh "#{time_this} packer build -only=#{builder[:packer_type]} -var-file=\"#{config_file}\" #{packer_args} \"#{template_file}\" #{time_over}"
   File.open(packer_log, "a") { |f| f.puts "==== END   %s %s" % ['=' * 60, Time.now.to_s] }
 end # }}}
 
