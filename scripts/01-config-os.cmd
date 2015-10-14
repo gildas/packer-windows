@@ -12,6 +12,9 @@ rem Turn on QuickEdit mode
 rem Show file extensions in Explorer
 %SystemRoot%\System32\reg.exe ADD HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ /v HideFileExt /t REG_DWORD /d 0 /f
 
+rem Network Prompt
+cmd.exe /c reg add "HKLM\System\CurrentControlSet\Control\Network\NewNetworkWindowOff"
+
 title Configuring User Accounts...
 cmd.exe /c wmic useraccount where "name='packer'"  set PasswordExpires=FALSE
 cmd.exe /c wmic useraccount where "name='vagrant'" set PasswordExpires=FALSE
