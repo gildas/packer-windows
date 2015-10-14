@@ -48,6 +48,7 @@
         "./scripts/00-run-all-scripts.cmd",
         "./scripts/01-config-os.cmd",
         "./scripts/02-config-posh.cmd",
+        "./scripts/04-install-imdisk.cmd",
         "./scripts/99-start-services.cmd"
       ],
       "qemuargs":
@@ -82,6 +83,7 @@
         "./scripts/01-config-os.cmd",
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
+        "./scripts/04-install-imdisk.cmd",
         "./scripts/99-start-services.cmd"
       ],
       "prlctl":
@@ -123,6 +125,7 @@
         "./scripts/01-config-os.cmd",
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
+        "./scripts/04-install-imdisk.cmd",
         "./scripts/99-start-services.cmd"
       ],
       "vmx_data":
@@ -183,6 +186,7 @@
         "./scripts/01-config-os.cmd",
         "./scripts/02-config-posh.cmd",
         "./scripts/03-config-winrm.cmd",
+        "./scripts/04-install-imdisk.cmd",
         "./scripts/99-start-services.cmd"
       ],
       "vboxmanage":
