@@ -23,23 +23,27 @@
   [
     {
       "type":                "hyperv-iso",
-      "vm_name":             "packer_{{user `template`}}",
-      "iso_url":
-        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+      "vm_name":             "packer-{{user `template`}}",
+      "iso_url":             "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
       "iso_checksum_type":   "md5",
       "iso_checksum":        "458ff91f8abc21b75cb544744bf92e6a",
-      "output_directory":    "output-virtualbox-{{user `template`}}",
-      "boot_wait":           "30s",
+      "output_directory":    "output-hyperv-{{user `template`}}",
+      "boot_wait":           "0",
+      "headless":            false,
       "communicator":        "winrm",
       "winrm_username":      "{{user `admin_username`}}",
       "winrm_password":      "{{user `admin_password`}}",
       "winrm_timeout":       "20m",
       "switch_name":         "Bridged Switch",
-      "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
+      "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "generation":          "1",
       "disk_size":           "{{user `disk_size`}}",
+      "cpu":                 "{{user `cpus`}}",
       "ram_size_mb":         "{{user `mem_size`}}",
+      "enable_secure_boot":  true,
       "floppy_files": [
         "./templates/windows-2012R2-core-standard-eval/Autounattend.xml",
+        "./scripts/_packer_config.cmd",
         "./scripts/00-run-all-scripts.cmd",
         "./scripts/01-config-os.cmd",
         "./scripts/02-config-posh.cmd",
@@ -240,7 +244,7 @@
     { "type": "file",       "source": "./data/GeoTrust_Global_CA.pem", "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem" },
     { "type": "powershell", "script": "./scripts/config-shell.ps1" },
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
-    { "type": "windows-restart" },
+    { "type": "windows-restart", "except": [ "hyperv-iso" ] },
 
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
     { "type": "powershell", "inline": [ "if (! (Test-Path C:/ProgramData/chocolatey/bin)) { Write-Error 'Chocolatey is not installed, please re-run packer' ; exit 1 }" ] },
@@ -260,7 +264,6 @@
     {
       "type":                "vagrant",
       "keep_input_artifact": false,
-      "compression_level":   0,
       "vagrantfile_template": "templates/windows-2012R2-core-standard-eval/vagrantfile.template",
       "output": "./boxes/{{user `template`}}/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
     }
