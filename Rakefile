@@ -2,6 +2,7 @@ require 'logger'
 require 'rake'
 require 'fileutils'
 require 'json'
+require 'securerandom'
 require 'benchmark'
 require 'etc'
 require 'erb'
@@ -156,18 +157,20 @@ end
 $builders = builders = { # {{{
   hyperv: # {{{
   {
-    name:         'hyperv',
-    folder:       'hyperv',
-    vagrant_type: 'hyperv',
-    packer_type:  'hyperv-iso',
-    supported:    lambda {
+    name:           'hyperv',
+    folder:         'hyperv',
+    vagrant_type:   'hyperv',
+    packer_type:    'hyperv-iso',
+    supported:      lambda {
       case RUBY_PLATFORM
         when 'x64-mingw32'
           shell("(Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V).State") == "Enabled"
         else false
       end
     },
-    preclean:     lambda { |box_name|  }
+    preclean:       lambda { |box_name|  },
+    share_user:     'packer',
+    share_password: SecureRandom.urlsafe_base64(9)
   }, # }}}
   qemu: # {{{
   {
@@ -298,23 +301,70 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
   ENV['PACKER_LOG']='1'               # Set up child processes environment
   ENV['PACKER_LOG_PATH']=packer_log   # Set up child processes environment
   packer_args=''
-  case RUBY_PLATFORM
-    when 'x64-mingw32'
-      vmware_iso_dir = File.join(ENV['ProgramFiles(x86)'], 'VMWare', 'VMWare Workstation')
-      packer_args    = "-var \"vmware_iso_dir=#{vmware_iso_dir}\""
-    when /.*darwin[0-9]+/
-      packer_args += "-var \"vmware_iso_dir=/Applications/VMware Fusion.app/Contents/Library/isoimages\""
+  case builder[:name]
+    when 'hyperv'
+      # Make sure password is complex enough
+      share_password = builder[:share_password]
+      good=0
+      while good < 3
+        good = 0
+        good +=1 if share_password !~ /[a-zA-Z0-9]/
+        good +=1 if share_password =~ /[0-9]/
+        good +=1 if share_password =~ /[a-z]/
+        good +=1 if share_password =~ /[A-Z]/
+        puts "Generating a new password (#{share_password} does not meet Windows complexity requirements)" unless good >= 3
+        share_password = SecureRandom.urlsafe_base64(9) unless good >= 3
+      end
+      # Create a temp user
+      puts "Creating temporary user: #{builder[:share_user]}"
+      system "net user #{builder[:share_user]} /DEL >NUL"  if system("net user #{builder[:share_user]} 2>NUL >NUL")
+      system "net user #{builder[:share_user]} #{share_password} /ADD" 
+      # Share log, full permission the temp user
+      puts "Creating share: log at #{Dir.pwd}/log"
+      shell "if (Get-SmbShare log -ErrorAction SilentlyContinue) { Remove-SmbShare log -Force }" 
+      shell "New-SmbShare -Name log -Path '#{Dir.pwd}/log' -FullAccess '#{builder[:share_user]}'"
+      # Share daas/cache, read permission the temp user
+      puts "Creating share: daas-cache at #{cache_dir}"
+      shell "if (Get-SmbShare daas-cache -ErrorAction SilentlyContinue) { Remove-SmbShare daas-cache -Force }" 
+      shell "New-SmbShare -Name daas-cache -Path '#{cache_dir}' -ReadAccess '#{builder[:share_user]}'"
+      host_ip=shell("Get-NetIPConfiguration | Where InterfaceAlias -like '*Bridged Switch*' | Select -ExpandProperty IPv4Address | Select -ExpandProperty IPAddress")
+      packer_args += " -var \"share_host=#{host_ip}\""
+      packer_args += " -var \"share_username=#{builder[:share_user]}\""
+      packer_args += " -var \"share_password=#{builder[:share_password]}\""
+    when 'vmware'
+      case RUBY_PLATFORM
+        when 'x64-mingw32'
+          vmware_iso_dir  = File.join(ENV['ProgramFiles(x86)'], 'VMWare', 'VMWare Workstation')
+          packer_args    += " -var \"vmware_iso_dir=#{vmware_iso_dir}\""
+        when /.*darwin[0-9]+/
+          packer_args += " -var \"vmware_iso_dir=/Applications/VMware Fusion.app/Contents/Library/isoimages\""
+      end
   end
   packer_args += " -var \"cache_dir=#{cache_dir}\" -var \"version=#{box_version}\""
+  begin
   build_time = Benchmark.measure {
     sh "packer build -only=#{builder[:packer_type]} -var-file=\"#{config_file}\" #{packer_args} \"#{template_file}\""
   }
   puts "Build time: #{build_time.real} seconds"
-  File.open(packer_log, "a") { |f|
-    f.puts "Build time: #{build_time.real} seconds"
-    f.puts "==== END   %s %s" % ['=' * 60, Time.now.to_s]
-  }
-end # }}}
+  ensure
+    case builder[:name]
+      when 'hyperv'
+        # Unshare log
+        puts "Removing share: log"
+        shell "Remove-SmbShare log -Force" 
+        # Unshare daas/cache
+        puts "Removing share: daas-cache"
+        shell "Remove-SmbShare daas-cache -Force" 
+        # Delete the temp user
+        puts "Deleting temporary user: #{builder[:share_user]}"
+        sh "net user #{builder[:share_user]} /DEL"
+    end
+    File.open(packer_log, "a") { |f|
+      f.puts "Build time: #{build_time.real} seconds"
+      f.puts "==== END   %s %s" % ['=' * 60, Time.now.to_s]
+    }
+  end
+end 
 
 # builders tasks {{{
 builders_in_use=0
