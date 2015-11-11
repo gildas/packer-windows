@@ -364,7 +364,7 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
       f.puts "==== END   %s %s" % ['=' * 60, Time.now.to_s]
     }
   end
-end 
+end # }}}
 
 # builders tasks {{{
 builders_in_use=0
