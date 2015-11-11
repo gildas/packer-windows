@@ -35,6 +35,17 @@ process
     {
       $PACKER_BUILDER_SHARE="\\vmware-host\Shared Folders\$HostShare"
     }
+    'hyperv-iso'
+    {
+      if ([string]::IsNullOrEmpty($env:SMBHOST))  { Write-Error "Environment variable SMBHOST is empty"  ; exit 1 }
+      if ([string]::IsNullOrEmpty($env:SMBSHARE)) { Write-Error "Environment variable SMBSHARE is empty" ; exit 1 }
+      if ([string]::IsNullOrEmpty($env:SMBUSER))  { Write-Error "Environment variable SMBUSER is empty"  ; exit 1 }
+      if ([string]::IsNullOrEmpty($env:SMBPASS))  { Write-Error "Environment variable SMBPASS is empty"  ; exit 1 }
+      $ShareDriveLetter = ls function:[D-Z]: -n | ?{ !(Test-Path $_) } | Select -Last 1
+      Write-Output "Mounting $($env:SMBSHARE) from $($env:SMBHOST) on $ShareDriveLetter as $($env:SMBUSER)"
+      $ShareDrive = New-PSDrive -Name $ShareDriveLetter.Substring(0,1) -PSProvider FileSystem -Root \\${env:SMBHOST}\${env:SMBSHARE} -Persist -Scope Global -Credential (New-Object System.Management.Automation.PSCredential("${env:SMBHOST}\${env:SMBUSER}", ($env:SMBPASS | ConvertTo-SecureString -AsPlainText -Force)))
+      $PACKER_BUILDER_SHARE = $ShareDriveLetter
+    }
     default
     {
       Throw [System.IO.FileNotFound] "packer_builder", "Unsupported Packer Builder: $($env:PACKER_BUILDER_TYPE)"
@@ -53,14 +64,15 @@ process
 
   if ([string]::IsNullOrEmpty($InstallISO))
   {
-    Throw [System.IO.FileNotFound] "ISO", "Could not find a suitable Interaction Center ISO in $DAAS_SHARE"
+    Throw "Could not find a suitable Interaction Center ISO in $DAAS_SHARE"
     exit 2
   }
+  Write-Verbose "Found: $InstallISO"
 
   if ([string]::IsNullOrEmpty($DriveLetter))
   {
     Write-Verbose "Searching for the last unused drive letter"
-    $DriveLetter = ls function:[d-z]: -n | ?{ !(Test-Path $_) } | Select -Last 1
+    $DriveLetter = ls function:[D-Z]: -n | ?{ !(Test-Path $_) } | Select -Last 1
   }
 
   Write-Output "Mounting Windows Share on Drive ${DriveLetter}"
