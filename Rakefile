@@ -222,7 +222,7 @@ $builders = builders = { # {{{
     supported:    lambda {
       case RUBY_PLATFORM
         when 'x64-mingw32'
-          File.exist?(File.join(ENV['VBOX_MSI_INSTALL_PATH'], 'VBoxManage.exe'))
+          ENV['VBOX_MSI_INSTALL_PATH'] && File.exist?(File.join(ENV['VBOX_MSI_INSTALL_PATH'], 'VBoxManage.exe'))
         else which('VBoxManage')
       end
     },
