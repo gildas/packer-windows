@@ -156,7 +156,7 @@ process
   $parms += '/norestart'
 
   Write-Verbose "Arguments: $($parms -join ',')"
-  if ($PSCmdlet.ShouldProcess($_.ProductName, "Running msiexec /update"))
+  if ($PSCmdlet.ShouldProcess($_.ProductName, "Running msiexec /install"))
   {
     if ($Wait)
     {
