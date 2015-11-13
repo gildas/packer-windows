@@ -197,7 +197,20 @@ process
       # Give some time for the msiexec process to start
       Start-Sleep 30
       Write-Output "$Product is being installed"
+      if ($process.HasExited)
+      {
       $exit_code = $process.ExitCode
+      #if ($exit_code -ne 0)
+      #{
+        #Write-Error "$Product failed to start installing itself. Error: $exit_code."
+        Write-Output "Install process exit code: [${exit_code}]."
+        $exit_code = 0
+      #}
+      }
+      else
+      {
+        Write-Output "Installing..."
+      }
     }
 
 # The ICServer MSI tends to not finish properly even if successful   
