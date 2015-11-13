@@ -58,4 +58,5 @@ end
 {
   Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
   Start-Sleep 5
+  exit $LastExitCode
 }
