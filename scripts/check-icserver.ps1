@@ -169,6 +169,8 @@ function Test-MsiExecMutex # {{{
     }
 } # }}}
 
+  try
+  {
 #$MSI_available=Test-MSIExecMutex -MsiExecWaitTime $(New-TimeSpan -Minutes 5)
 #if (-not $MSI_available)
 #{
@@ -176,32 +178,32 @@ function Test-MsiExecMutex # {{{
 #  exit 1618
 #}
 
-  $watch = [Diagnostics.StopWatch]::StartNew()
-  do
-  {
-    Start-Sleep $Sleep
-    $msiexec_count = @(Get-Process | where ProcessName -eq 'msiexec').Count
+    $watch = [Diagnostics.StopWatch]::StartNew()
+    do
+    {
+      Start-Sleep $Sleep
+      $msiexec_count = @(Get-Process | where ProcessName -eq 'msiexec').Count
+      $elapsed = Show-Elapsed($watch)
+      Write-Output "Found ${msiexec_count} MSI installers running after $elapsed"
+    }
+    while ($msiexec_count -gt $RunningMsiAllowed)
+    $watch.Stop()
     $elapsed = Show-Elapsed($watch)
-    Write-Output "Found ${msiexec_count} MSI installers running after $elapsed"
-  }
-  while ($msiexec_count -gt $RunningMsiAllowed)
-  $watch.Stop()
-  $elapsed = Show-Elapsed($watch)
-  Write-Output "No more MSI installers running after $elapsed"
+    Write-Output "No more MSI installers running after $elapsed"
 
-  if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
-  {
-    Write-Output "$Product is installed"
+    if (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -match "${Product}.*")
+    {
+      Write-Output "$Product is installed"
+    }
+    else
+    {
+      Write-Output "Failed to install $Product"
+      #exit 2
+    }
   }
-  else
+  finally
   {
-    #TODO: Should we return values or raise exceptions?
-    Write-Output "Failed to install $Product (Error: $LastExitCode)"
+    Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Start-Sleep 2
   }
-}
-end
-{
-  Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-  Start-Sleep 2
-  exit $LastExitCode
 }
