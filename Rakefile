@@ -47,10 +47,6 @@ $box_aliases = {
 }
 
 # Tools {{{
-def verbose(message) # {{{
-  puts message if $VERBOSE
-end # }}}
-
 def which(f) # {{{
   if RUBY_PLATFORM == 'x64-mingw32'
     path = ENV['PATH'].split(File::PATH_SEPARATOR).find do |p|
@@ -114,20 +110,20 @@ end # }}}
 
 def sources_for_box(box_file, sources_root, scripts_root) # {{{
   # box_file should be like: boxes/#{box_name}/#{provider}/#{box_name}-#{box_version}.box
-  verbose "box file: #{box_file}"
+  $logger.info "box file: #{box_file}"
   box_name = box_file.pathmap("%2d").pathmap("%f")
-  verbose "  Finding sources for box: #{box_name}"
+  $logger.info "  Finding sources for box: #{box_name}"
   box_sources = Rake::FileList.new("#{sources_root}/#{box_name}/*")
-  verbose "  ==> Box sources: #{box_sources.join(', ')}"
+  $logger.info "  ==> Box sources: #{box_sources.join(', ')}"
   raise Errno::ENOENT, "no source for #{box_file}" if box_sources.empty?
   current_builder = $builders.find { |builder| builder[1][:folder] == box_file.pathmap("%3d").pathmap("%f") }
   raise ArgumentError, box_name if current_builder.nil?
   current_builder = current_builder[1]
-  verbose "  Collecting scripts for #{current_builder[:name]}"
+  $logger.info "  Collecting scripts for #{current_builder[:name]}"
   box_scripts = []
   box_sources.each do |source|
     next unless source =~ /.*packer\.json$/
-    verbose "Checking config file: #{source}"
+    $logger.info "Checking config file: #{source}"
     config = load_json(source)
     config['builders'].each do |packer_builder|
       next unless packer_builder['type'] == current_builder[:packer_type]
@@ -143,10 +139,12 @@ def sources_for_box(box_file, sources_root, scripts_root) # {{{
       end
     end
   end
-  verbose "  Box scripts: #{box_scripts.join(', ')}"
-  # TODO: What about the data folder?
-
-  box_sources + box_scripts
+  $logger.info "  Box scripts ##{box_scripts.size}: #{box_scripts.join(', ')}"
+  sources = box_sources + box_scripts
+  $logger.info "  Box sources ##{sources.size}: #{sources.join(', ')}"
+  return sources
+rescue
+  STDERR.puts "Cannot find sources for #{box_file}, #{$_}"
 end # }}}
 # }}}
 
@@ -282,7 +280,9 @@ directory temp_dir
 directory log_dir
 task :folders => [ boxes_dir, temp_dir, log_dir ]
 
-rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule| # {{{
+# rule .box {{{
+rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule|
+  verbose "Found rule"
   box_filename  = _rule.name.pathmap("%f")
   box_name      = _rule.source.pathmap("%2d").pathmap("%f")
   box_version   = /.*-(\d+\.\d+\.\d+)\.box/i =~ box_filename ? $1 : '0.1.0'
@@ -292,7 +292,7 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
   mkdir_p _rule.name.pathmap("%d")
   builder[:preclean].call(box_name)
   puts "Building box #{box_name} in #{box_filename} using #{builder[:name]}"
-  verbose "  Rule source: #{_rule.source}"
+  $logger.info "  Rule source: #{_rule.source}"
   FileUtils.rm_rf "output-#{builder[:packer_type]}-#{box_name}"
   packer_log    = File.join(log_dir, "packer-build-#{builder[:name]}-#{box_filename}.log")
   config_file   = File.join(template_path, 'config.json')
@@ -429,24 +429,24 @@ builders.each do |builder_name, builder|
           loaded_box_marker = "#{box_root}/#{version}/#{vagrant_provider}/metadata.json"
 
           file loaded_box_marker => box_file do |_task|
-            verbose _task.investigation
+            $logger.info _task.investigation
 
             if Dir.exist? "#{box_root}/#{version}"
-              verbose "removing #{box_root}/#{version}/#{vagrant_provider}"
+              $logger.info "removing #{box_root}/#{version}/#{vagrant_provider}"
               FileUtils.rm_r "#{box_root}/#{version}/#{vagrant_provider}", force: true
             else
-              verbose "removing #{box_root}/#{version}"
+              $logger.info "removing #{box_root}/#{version}"
               FileUtils.mkdir_p "#{box_root}/#{version}"
             end
-            verbose "adding #{box_file} as #{box_name}"
+            $logger.info "adding #{box_file} as #{box_name}"
             load_time = Benchmark.measure {
               sh "vagrant box add --force #{box_name} #{box_file}"
             }
             puts "Load time: #{load_time.real} seconds"
             # Now move the new box in the proper version folder
-            verbose "moving #{box_root}/0/#{vagrant_provider} to #{box_root}/#{version}"
+            $logger.info "moving #{box_root}/0/#{vagrant_provider} to #{box_root}/#{version}"
             FileUtils.mv   "#{box_root}/0/#{vagrant_provider}", "#{box_root}/#{version}"
-            verbose "removing #{box_root}/0"
+            $logger.info "removing #{box_root}/0"
             FileUtils.rm_r "#{box_root}/0", force: true
             puts "==> box: Successfully updated box '#{box_name}' version to #{version} for '#{vagrant_provider}'"
           end
@@ -535,13 +535,15 @@ end
 
 desc "Turn on verbose mode"
 task :verbose do
-  $logger = Logger.new(STDOUT)
+  $logger = Logger.new(STDERR)
   $logger.level = Logger::INFO
+  $logger.info "Verbose started at: %s" % [ Time.now.to_s ]
 end
 
 desc "Turn on debug mode"
 task :debug => [:verbose] do
   $logger.level = Logger::DEBUG
+  $logger.debug "Debug started at: %s" % [ Time.now.to_s ]
 end
 
 task :default => ['build:all', 'metadata:all']
