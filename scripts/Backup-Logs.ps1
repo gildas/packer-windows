@@ -31,21 +31,23 @@ else
   exit 0
 }
 
-$log_dir = Join-Path $share_name "log"
+$log_dir = (Join-Path $log_dir "${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-$(Get-Date -Format 'yyyyMMddHHmmss')")
+New-Item -ItemType Directory -Path $log_dir | Out-Null
 
 if (Test-Path "C:\ProgramData\chocolatey\logs\chocolatey.log")
 {
-  Copy-Item C:\ProgramData\chocolatey\logs\chocolatey.log (Join-Path $log_dir "packer-build-${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-chocolatey.log")
+  Write-Output "Backup: chocolatey.log"
+  Copy-Item C:\ProgramData\chocolatey\logs\chocolatey.log $log_dir
 }
 
-if (Test-Path "C:\Windows\Logs\icserver-*.log")
-{
-  Copy-Item C:\Windows\Logs\icserver-*.log (Join-Path $log_dir "packer-build-${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-icserver.log")
+Get-ChildItem "C:\Windows\Logs\*.log" | ForEach {
+  Write-Output "Backup: $(Split-Path $_ -Leaf)"
+  Copy-Item $_ $log_dir
 }
 
-if (Test-Path "C:\Windows\Logs\icfirmware-*.log")
-{
-  Copy-Item C:\Windows\Logs\icfirmware-*.log (Join-Path $log_dir "packer-build-${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-icfirmware.log")
+Get-ChildItem "C:\Windows\Logs\*.txt" | ForEach {
+  Write-Output "Backup: $(Split-Path $_ -Leaf)"
+  Copy-Item $_ $log_dir
 }
 
 Start-Sleep 5
