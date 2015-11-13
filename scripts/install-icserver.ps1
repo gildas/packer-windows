@@ -59,21 +59,6 @@ process
   }
 # 2}}}
 
-# Prerequisite: .Net 3.5 {{{2
-  if ((Get-WindowsFeature -Name Net-Framework-Core -Verbose:$false).InstallState -ne 'Installed')
-  {
-    Write-Output "Installing .Net 3.5"
-    Install-WindowsFeature -Name Net-Framework-Core
-    if (! $?)
-    {
-      Write-Error "ERROR $LastExitCode while installing .Net 3.5"
-      Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-      Start-Sleep 10
-      exit $LastExitCode
-    }
-  }
-# 2}}}
-
 # Prerequisite: Find the source! {{{2
   if ([string]::IsNullOrEmpty($SourceDriveLetter))
   {
@@ -99,8 +84,56 @@ process
     Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
     exit 2
   }
-  Write-Output "Installing from $InstallSource"
+  if ($InstallSource -match '.*\\ICServer_([0-9]+)_R([0-9]+)\.msi')
+  {
+    $ProductVersion = $matches[1]
+    $ProductRelease = $matches[2]
+    Write-Output "Installing $Product ${ProducVersion}R${ProductRelease} from $InstallSource"
+  }
+  else
+  {
+    Write-Error "Cannot find version and release of $Product in $InstallSource"
+    Start-Sleep 2
+    Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    exit 2
+  }
 # 2}}}
+
+# Prerequisite: .Net {{{2
+  # For now, we always need .Net 3.5
+  if ((Get-WindowsFeature -Name Net-Framework-Core -Verbose:$false).InstallState -ne 'Installed')
+  {
+    Write-Output "Installing .Net 3.5"
+    Install-WindowsFeature -Name Net-Framework-Core
+    if (! $?)
+    {
+      Write-Error "ERROR $LastExitCode while installing .Net 3.5"
+      Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+      Start-Sleep 10
+      exit $LastExitCode
+    }
+  }
+  if ($ProductVersion -ge 2016)
+  {
+    Write-Output "Checking if .Net 4.5.2 or more is installed"
+    # We need .Net >= 4.5.2
+    $dotnet_info = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full' -ErrorAction SilentlyContinue
+    if ($dotnet_info -eq $null -or $dotnet_info.Release -lt 379893)
+    {
+      if (Test-Path "${SourceDriveLetter}\ThirdPartyInstalls\Microsoft\DotNET4.5.2\dotNetFx452_Full_x86_x64.exe")
+      {
+        Write-Output "Installing .Net 4.5.2 from the ISO"
+        & ${SourceDriveLetter}ThirdPartyInstalls\Microsoft\DotNET4.5.2\dotNetFx452_Full_x86_x64.exe /Passive /norestart /Log C:\Windows\Logs\dotnet-4.5.2.log.txt
+      }
+      else
+      {
+        Write-Output "Installing .Net 4.5.2 from the Internet"
+        choco install -y dotnet4.5.2
+      }
+    }
+  }
+# 2}}}
+
 # Prerequisites }}}
 
   Write-Output "Installing $Product"
