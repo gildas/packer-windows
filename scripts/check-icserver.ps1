@@ -198,7 +198,7 @@ function Test-MsiExecMutex # {{{
     else
     {
       Write-Output "Failed to install $Product"
-      #exit 2
+      exit 2
     }
   }
   finally
