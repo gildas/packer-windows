@@ -312,8 +312,8 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
         good +=1 if share_password =~ /[0-9]/
         good +=1 if share_password =~ /[a-z]/
         good +=1 if share_password =~ /[A-Z]/
-        puts "Generating a new password (#{share_password} does not meet Windows complexity requirements)" unless good >= 3
-        share_password = SecureRandom.urlsafe_base64(9) unless good >= 3
+        puts "Generating a new password (#{share_password} did not meet Windows complexity requirements)" unless good >= 3
+        share_password = SecureRandom.urlsafe_base64(9) if good >= 3
       end
       # Create a temp user
       puts "Creating temporary user: #{builder[:share_user]}"
