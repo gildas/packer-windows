@@ -18,7 +18,8 @@ process
     }
     else
     {
-      Write-Warning "No drive was mounted"
+      Write-Output "No drive was mounted"
+      Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
       exit
     }
   }

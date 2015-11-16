@@ -64,8 +64,18 @@ process
 
   if ([string]::IsNullOrEmpty($InstallISO))
   {
-    Throw "Could not find a suitable Interaction Center ISO in $DAAS_SHARE"
-    exit 2
+    if ($LastPatch)
+    {
+      Write-Output "There is no patch available for Interaction Center in $DAAS_SHARE"
+      Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+      exit 0
+    }
+    else
+    {
+      Throw "Could not find a suitable Interaction Center ISO in $DAAS_SHARE"
+      Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+      exit 2
+    }
   }
   Write-Verbose "Found: $InstallISO"
 
@@ -82,6 +92,7 @@ process
     if (! $?)
     {
       Throw "Could not mount $PACKER_BUILDER_SHARE on drive $DriveLetter"
+      Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
       exit 3
     }
 

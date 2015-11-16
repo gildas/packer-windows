@@ -63,8 +63,9 @@ process
       $SourceDriveLetter = ls function:[d-z]: -n | ?{ Test-Path "$_\Installs\ServerComponents" } | Select -First 1
       if ([string]::IsNullOrEmpty($SourceDriveLetter))
       {
-        Write-Error "No drive containing installation for $Product was mounted"
-        exit 3
+        Write-Output "No drive containing patches for $Product was mounted"
+        Write-Output "No action will be taken"
+        exit 0
       }
     }
   }
