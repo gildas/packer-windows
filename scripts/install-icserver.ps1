@@ -65,6 +65,7 @@ process
     if (Test-Path $env:USERPROFILE/mounted.info)
     {
       $SourceDriveLetter = Get-Content $env:USERPROFILE/mounted.info
+      Write-Verbose "Got drive letter from a previous mount: $SourceDriveLetter"
     }
     else
     {
@@ -74,6 +75,7 @@ process
         Write-Error "No drive containing installation for $Product was mounted"
         exit 3
       }
+      Write-Verbose "Calculated drive letter: $SourceDriveLetter"
     }
   }
   $InstallSource = (Get-ChildItem -Path "${SourceDriveLetter}\Installs\ServerComponents" -Filter "${msi_prefix}_*.msi").FullName
@@ -103,6 +105,7 @@ process
   # For now, we always need .Net 3.5
   if ((Get-WindowsFeature -Name Net-Framework-Core -Verbose:$false).InstallState -ne 'Installed')
   {
+    Write-Output ".Net 3.5 install state: $((Get-WindowsFeature -Name Net-Framework-Core -Verbose:$false).InstallState)"
     Write-Output "Installing .Net 3.5"
     Install-WindowsFeature -Name Net-Framework-Core
     if (! $?)
@@ -112,6 +115,10 @@ process
       Start-Sleep 10
       exit $LastExitCode
     }
+  }
+  else
+  {
+    Write-Output ".Net 3.5 is installed"
   }
   if ($ProductVersion -ge 2016)
   {
@@ -130,6 +137,10 @@ process
         Write-Output "Installing .Net 4.5.2 from the Internet"
         choco install -y dotnet4.5.2
       }
+    }
+    else
+    {
+      Write-Output ".Net 4.5.2 or better is installed"
     }
   }
 # 2}}}

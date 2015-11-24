@@ -76,6 +76,7 @@ process
     if (Test-Path $env:USERPROFILE/mounted.info)
     {
       $SourceDriveLetter = Get-Content $env:USERPROFILE/mounted.info
+      Write-Verbose "Got drive letter from a previous mount: $SourceDriveLetter"
     }
     else
     {
@@ -85,8 +86,10 @@ process
         Write-Error "No drive containing installation for $Product was mounted"
         exit 3
       }
+      Write-Verbose "Calculated drive letter: $SourceDriveLetter"
     }
   }
+  Write-Verbose "Searching for $msi_prefix in $(Get-ChildItem -Path ${SourceDriveLetter}\Installs\ServerComponents)"
   $InstallSource = (Get-ChildItem -Path "${SourceDriveLetter}\Installs\ServerComponents" -Filter "${msi_prefix}_*.msi").FullName
   if (! (Test-Path $InstallSource))
   {
