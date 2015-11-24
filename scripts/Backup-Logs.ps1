@@ -12,7 +12,7 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
 }
 elseif ($env:PACKER_BUILDER_TYPE -match 'parallels')
 {
-  $log_dir = Join-Path $share_name "\\psf\log"
+  $log_dir = "\\psf\log"
 }
 elseif ($env:PACKER_BUILDER_TYPE -match 'hyperv-iso')
 {
@@ -22,7 +22,7 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'hyperv-iso')
   if ([string]::IsNullOrEmpty($env:SMBPASS))  { Write-Error "Environment variable SMBPASS is empty"  ; exit 1 }
   $DriveLetter = ls function:[d-z]: -n | ?{ !(Test-Path $_) } | Select -Last 1
   Write-Output "Mounting $($env:SMBSHARE) from $($env:SMBHOST) on $DriveLetter as $($env:SMBUSER)"
-  $Drive = New-PSDrive -Name $DriveLetter.Substring(0,1) -PSProvider FileSystem -Root \\${env:SMBHOST}\${env:SMBSHARE} -Credential (New-Object System.Management.Automation.PSCredential("${env:SMBHOST}\${env:SMBUSER}", ($env:SMBPASS | ConvertTo-SecureString -AsPlainText -Force)))
+  $Drive = New-PSDrive -Name $DriveLetter.Substring(0,1) -PSProvider FileSystem -Root \\${env:SMBHOST}\${env:SMBSHARE} -Credential (New-Object System.Management.Automation.PSCredential("${env:SMBHOST}\${env:SMBUSER}", (ConvertTo-SecureString -String $env:SMBPASS -AsPlainText -Force)))
   $log_dir = $DriveLetter
 }
 else
