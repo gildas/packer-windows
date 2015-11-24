@@ -14,6 +14,9 @@
     "os_license":        "",
     "admin_username":    "vagrant",
     "admin_password":    "vagrant",
+    "share_host":        "",
+    "share_username":    "",
+    "share_password":    "",
     "disk_size":         "40960",
     "mem_size":          "2048",
     "cpus":              "1"
@@ -271,6 +274,7 @@
     { "type": "file",       "source": "./scripts/install-icfirmware.ps1", "destination": "C:/ProgramData/chocolatey/bin/install-icfirmware.ps1" },
     { "type": "file",       "source": "./scripts/install-icpatch.ps1",    "destination": "C:/ProgramData/chocolatey/bin/install-icpatch.ps1" },
     { "type": "file",       "source": "./scripts/check-icserver.ps1",     "destination": "C:/ProgramData/chocolatey/bin/check-icserver.ps1" },
+
     { "type": "powershell", "inline": [ "chocolatey install -y sysinternals" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y md5" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y git" ] },
