@@ -304,21 +304,23 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
   case builder[:name]
     when 'hyperv'
       # Make sure password is complex enough
-      share_password = builder[:share_password]
+      share_password = ''
       good=0
       while good < 3
+        share_password = SecureRandom.urlsafe_base64(9)
         good = 0
         good +=1 if share_password !~ /[a-zA-Z0-9]/
         good +=1 if share_password =~ /[0-9]/
         good +=1 if share_password =~ /[a-z]/
         good +=1 if share_password =~ /[A-Z]/
         puts "Generating a new password (#{share_password} did not meet Windows complexity requirements)" unless good >= 3
-        share_password = SecureRandom.urlsafe_base64(9) if good >= 3
       end
       # Create a temp user
-      puts "Creating temporary user: #{builder[:share_user]}"
+      puts "Creating temporary user: #{builder[:share_user]}, password: #{share_password}"
+      $logger.info "Creating temporary user: #{builder[:share_user]}, password: #{share_password}"
       system "net user #{builder[:share_user]} /DEL >NUL"  if system("net user #{builder[:share_user]} 2>NUL >NUL")
-      system "net user #{builder[:share_user]} #{share_password} /ADD" 
+      system "net user #{builder[:share_user]} #{share_password} /ADD"
+      puts "system \"net user #{builder[:share_user]} #{share_password} /ADD\""
       # Share log, full permission the temp user
       puts "Creating share: log at #{Dir.pwd}/log"
       shell "if (Get-SmbShare log -ErrorAction SilentlyContinue) { Remove-SmbShare log -Force }" 
@@ -330,7 +332,7 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
       host_ip=shell("Get-NetIPConfiguration | Where InterfaceAlias -like '*Bridged Switch*' | Select -ExpandProperty IPv4Address | Select -ExpandProperty IPAddress")
       packer_args += " -var \"share_host=#{host_ip}\""
       packer_args += " -var \"share_username=#{builder[:share_user]}\""
-      packer_args += " -var \"share_password=#{builder[:share_password]}\""
+      packer_args += " -var \"share_password=#{share_password}\""
     when 'vmware'
       case RUBY_PLATFORM
         when 'x64-mingw32'
