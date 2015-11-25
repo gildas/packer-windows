@@ -1,53 +1,78 @@
-<#
-#>
-
-
-if ($env:PACKER_BUILDER_TYPE -match 'vmware')
+[CmdletBinding(SupportsShouldProcess=$true)] 
+Param(
+)
+begin
 {
-  $log_dir = "\\vmware-host\Shared Folders\log"
+  Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 }
-elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
+process
 {
-  $log_dir = "\\vboxsrv\log"
+  if (Test-Path $env:USERPROFILE/share-log.info)
+  {
+    $ShareArgs = @{ PSProvider = 'FileSystem'; ErrorAction = 'Stop' }
+    $ShareInfo = Get-Content $env:USERPROFILE/share-log.info -Raw | ConvertFrom-Json
+
+    if ($ShareInfo.DriveLetter -ne $null)
+    {
+      if ($ShareInfo.User -ne $null)
+      {
+        if ($ShareInfo.Password -eq $null)
+        {
+          Throw "No password for $($ShareInfo.User) in $($env:USERPROFILE)/share-log.info"
+          exit 1
+        }
+        $ShareArgs['Credential'] = New-Object System.Management.Automation.PSCredential($ShareInfo.User, (ConvertTo-SecureString -String $ShareInfo.Password -AsPlainText -Force))
+      }
+      $Drive   = New-PSDrive -Name $ShareInfo.DriveLetter -Root $ShareInfo.Path @ShareArgs
+      $log_dir = $Drive.Root
+    }
+    else
+    {
+      $log_dir = $ShareInfo.Path
+    }
+    Write-Output "Using Share at $log_dir"
+  }
+  else
+  {
+    Write-Output "Share log information was not found"
+    Write-Warning "No log will be backed up"
+    Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    exit
+  }
+  if ([string]::IsNullOrEmpty($log_dir))
+  {
+    Throw "No share to use from $($env:USERPROFILE)/share-log.info"
+    exit 2
+  }
+
+  $log_dir = (Join-Path $log_dir "${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-$(Get-Date -Format 'yyyyMMddHHmmss')")
+  if (! (Test-Path $log_dir)) { New-Item -ItemType Directory -Path $log_dir -ErrorAction Stop | Out-Null }
+
+  if (Test-Path "C:\ProgramData\chocolatey\logs\chocolatey.log")
+  {
+    if ($PSCmdlet.ShouldProcess("chocolatey.log", "Backing up"))
+    {
+      Copy-Item C:\ProgramData\chocolatey\logs\chocolatey.log $log_dir
+    }
+  }
+
+  Get-ChildItem "C:\Windows\Logs\*.log" | ForEach {
+    if ($PSCmdlet.ShouldProcess((Split-Path $_ -Leaf), "Backing up"))
+    {
+      Copy-Item $_ $log_dir
+    }
+  }
+
+  Get-ChildItem "C:\Windows\Logs\*.txt" | ForEach {
+    if ($PSCmdlet.ShouldProcess((Split-Path $_ -Leaf), "Backing up"))
+    {
+      Copy-Item $_ $log_dir
+    }
+  }
+
+  Start-Sleep 5
 }
-elseif ($env:PACKER_BUILDER_TYPE -match 'parallels')
+end
 {
-  $log_dir = "\\psf\log"
+  Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 }
-elseif ($env:PACKER_BUILDER_TYPE -match 'hyperv-iso')
-{
-  if ([string]::IsNullOrEmpty($env:SMBHOST))  { Write-Error "Environment variable SMBHOST is empty"  ; exit 1 }
-  if ([string]::IsNullOrEmpty($env:SMBSHARE)) { Write-Error "Environment variable SMBSHARE is empty" ; exit 1 }
-  if ([string]::IsNullOrEmpty($env:SMBUSER))  { Write-Error "Environment variable SMBUSER is empty"  ; exit 1 }
-  if ([string]::IsNullOrEmpty($env:SMBPASS))  { Write-Error "Environment variable SMBPASS is empty"  ; exit 1 }
-  $DriveLetter = ls function:[d-z]: -n | ?{ !(Test-Path $_) } | Select -Last 1
-  Write-Output "Mounting $($env:SMBSHARE) from $($env:SMBHOST) on $DriveLetter as $($env:SMBUSER)"
-  $Drive = New-PSDrive -Name $DriveLetter.Substring(0,1) -PSProvider FileSystem -Root \\${env:SMBHOST}\${env:SMBSHARE} -Credential (New-Object System.Management.Automation.PSCredential("${env:SMBHOST}\${env:SMBUSER}", (ConvertTo-SecureString -String $env:SMBPASS -AsPlainText -Force)))
-  $log_dir = $DriveLetter
-}
-else
-{
-  Write-Warning "Unknown Packer builder ${env:PACKER_BUILDER_TYPE}, ignoring"
-  exit 0
-}
-
-$log_dir = (Join-Path $log_dir "${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-$(Get-Date -Format 'yyyyMMddHHmmss')")
-New-Item -ItemType Directory -Path $log_dir | Out-Null
-
-if (Test-Path "C:\ProgramData\chocolatey\logs\chocolatey.log")
-{
-  Write-Output "Backup: chocolatey.log"
-  Copy-Item C:\ProgramData\chocolatey\logs\chocolatey.log $log_dir
-}
-
-Get-ChildItem "C:\Windows\Logs\*.log" | ForEach {
-  Write-Output "Backup: $(Split-Path $_ -Leaf)"
-  Copy-Item $_ $log_dir
-}
-
-Get-ChildItem "C:\Windows\Logs\*.txt" | ForEach {
-  Write-Output "Backup: $(Split-Path $_ -Leaf)"
-  Copy-Item $_ $log_dir
-}
-
-Start-Sleep 5

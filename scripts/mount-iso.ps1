@@ -21,58 +21,66 @@ begin
 }
 process
 {
-  switch ($env:PACKER_BUILDER_TYPE)
+  # TODO: Use $HostShare
+  if (Test-Path $env:USERPROFILE/share-daas-cache.info)
   {
-    'parallels-iso'
+    $ShareArgs = @{ PSProvider = 'FileSystem'; ErrorAction = 'Stop' }
+    $ShareInfo = Get-Content $env:USERPROFILE/share-daas-cache.info -Raw | ConvertFrom-Json
+
+    if ($ShareInfo.DriveLetter -ne $null)
     {
-      $PACKER_BUILDER_SHARE="\\psf\$HostShare"
+      if ($ShareInfo.User -ne $null)
+      {
+        if ($ShareInfo.Password -eq $null)
+        {
+          Throw "No password for $($ShareInfo.User) in $($env:USERPROFILE)/share-daas-cache.info"
+          exit 1
+        }
+        $ShareArgs['Credential'] = New-Object System.Management.Automation.PSCredential($ShareInfo.User, (ConvertTo-SecureString -String $ShareInfo.Password -AsPlainText -Force))
+      }
+      $Drive     = New-PSDrive -Name $ShareInfo.DriveLetter -Root $ShareInfo.Path @ShareArgs
+      $share_dir = $Drive.Root
     }
-    'virtualbox-iso'
+    else
     {
-      $PACKER_BUILDER_SHARE="\\vboxsrv\$HostShare"
+      $share_dir = $ShareInfo.Path
     }
-    'vmware-iso'
-    {
-      $PACKER_BUILDER_SHARE="\\vmware-host\Shared Folders\$HostShare"
-    }
-    'hyperv-iso'
-    {
-      if ([string]::IsNullOrEmpty($env:SMBHOST))  { Write-Error "Environment variable SMBHOST is empty"  ; exit 1 }
-      if ([string]::IsNullOrEmpty($env:SMBSHARE)) { Write-Error "Environment variable SMBSHARE is empty" ; exit 1 }
-      if ([string]::IsNullOrEmpty($env:SMBUSER))  { Write-Error "Environment variable SMBUSER is empty"  ; exit 1 }
-      if ([string]::IsNullOrEmpty($env:SMBPASS))  { Write-Error "Environment variable SMBPASS is empty"  ; exit 1 }
-      $ShareDriveLetter = ls function:[D-Z]: -n | ?{ !(Test-Path $_) } | Select -Last 1
-      Write-Output "Mounting $($env:SMBSHARE) from $($env:SMBHOST) on $ShareDriveLetter as $($env:SMBUSER)"
-      $ShareDrive = New-PSDrive -Name $ShareDriveLetter.Substring(0,1) -PSProvider FileSystem -Root \\${env:SMBHOST}\${env:SMBSHARE} -Persist -Scope Global -Credential (New-Object System.Management.Automation.PSCredential("${env:SMBHOST}\${env:SMBUSER}", ($env:SMBPASS | ConvertTo-SecureString -AsPlainText -Force)))
-      $PACKER_BUILDER_SHARE = $ShareDriveLetter
-    }
-    default
-    {
-      Throw [System.IO.FileNotFound] "packer_builder", "Unsupported Packer Builder: $($env:PACKER_BUILDER_TYPE)"
-      exit 1
-    }
+    Write-Output "Using Share at $share_dir"
   }
+  else
+  {
+    Write-Output "Share daas-cache information was not found"
+    Write-Warning "No iso can be mounted"
+    Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    exit
+  }
+  if ([string]::IsNullOrEmpty($share_dir))
+  {
+    Throw "No share to use from $($env:USERPROFILE)/share-daas-cache.info"
+    exit 2
+  }
+
   $pattern = ".*${Product}_"
   if ($PSBoundParameters.ContainsKey('Version'))   { $pattern += "${Version}"     } else { $pattern += '\d{4}' }
   if ($PSBoundParameters.ContainsKey('Release'))   { $pattern += "_R${Release}"   } else { $pattern += '_R\d+' }
   if ($LastPatch)                                  { $pattern += '_Patch\d+'      }
   elseif ($PSBoundParameters.ContainsKey('Patch')) { $pattern += "_Patch${Patch}" }
   $pattern += '\.iso$'
-  Write-Verbose "Checking $PACKER_BUILDER_SHARE for $Product Installation (Version: $Version, Release: $Release, Patch: $Patch)"
+  Write-Verbose "Checking $share_dir for $Product Installation (Version: $Version, Release: $Release, Patch: $Patch)"
   Write-Verbose "Pattern: $pattern"
-  $InstallISO = Get-ChildItem $PACKER_BUILDER_SHARE -Name -Filter "${Product}_*.iso" | Where { $_ -match $pattern } | Sort -Descending | Select -First 1
+  $InstallISO = Get-ChildItem $share_dir -Name -Filter "${Product}_*.iso" | Where { $_ -match $pattern } | Sort -Descending | Select -First 1
 
   if ([string]::IsNullOrEmpty($InstallISO))
   {
     if ($LastPatch)
     {
-      Write-Output "There is no patch available for Interaction Center in $DAAS_SHARE"
+      Write-Output "There is no patch available for Interaction Center in $share_dir"
       Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
       exit 0
     }
     else
     {
-      Throw "Could not find a suitable Interaction Center ISO in $DAAS_SHARE"
+      Throw "Could not find a suitable Interaction Center ISO in $share_dir"
       Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
       exit 2
     }
@@ -82,16 +90,16 @@ process
   if ([string]::IsNullOrEmpty($DriveLetter))
   {
     Write-Verbose "Searching for the last unused drive letter"
-    $DriveLetter = ls function:[D-Z]: -n | ?{ !(Test-Path $_) } | Select -Last 1
+    $DriveLetter = ls function:[D-T]: -n | ?{ !(Test-Path $_) } | Select -Last 1
   }
 
   Write-Output "Mounting Windows Share on Drive ${DriveLetter}"
-  if ($PSCmdlet.ShouldProcess($DriveLetter, "Mounting ${PACKER_BUILDER_SHARE}\${InstallISO}"))
+  if ($PSCmdlet.ShouldProcess($DriveLetter, "Mounting ${share_dir}\${InstallISO}"))
   {
-    imdisk -a -m $DriveLetter -f (Join-Path $PACKER_BUILDER_SHARE $InstallISO)
+    imdisk -a -m $DriveLetter -f (Join-Path $share_dir $InstallISO)
     if (! $?)
     {
-      Throw "Could not mount $PACKER_BUILDER_SHARE on drive $DriveLetter"
+      Throw "Could not mount $share_dir on drive $DriveLetter"
       Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
       exit 3
     }

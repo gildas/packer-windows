@@ -26,19 +26,6 @@ process
 
   Write-Output "Unmounting drive $DriveLetter"
   imdisk -d -m $DriveLetter
-
-  switch ($env:PACKER_BUILDER_TYPE)
-  {
-    'hyperv-iso'
-    {
-      if ([string]::IsNullOrEmpty($env:SMBHOST))  { Write-Error "Environment variable SMBHOST is empty"  ; exit 1 }
-      if ([string]::IsNullOrEmpty($env:SMBSHARE)) { Write-Error "Environment variable SMBSHARE is empty" ; exit 1 }
-      if ([string]::IsNullOrEmpty($env:SMBUSER))  { Write-Error "Environment variable SMBUSER is empty"  ; exit 1 }
-      if ([string]::IsNullOrEmpty($env:SMBPASS))  { Write-Error "Environment variable SMBPASS is empty"  ; exit 1 }
-      Write-Output "Unmounting $($env:SMBSHARE) from $($env:SMBHOST)"
-      Get-PSDrive | Where Root -eq "\\${env:SMBHOST}\${env:SMBSHARE}" | Select -ExpandProperty Name | Remove-PSDrive
-    }
-  }
 }
 end
 {

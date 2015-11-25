@@ -241,6 +241,13 @@
   ],
   "provisioners":
   [
+    { "type": "powershell",
+      "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=log", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Z" ],
+      "script": "./scripts/prep-share.ps1" },
+    { "type": "powershell",
+      "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=daas-cache", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Y" ],
+      "script": "./scripts/prep-share.ps1" },
+
     { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
     { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Regular Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Idle Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
@@ -251,6 +258,7 @@
 
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
     { "type": "powershell", "inline": [ "if (! (Test-Path C:/ProgramData/chocolatey/bin)) { Write-Error 'Chocolatey is not installed, please re-run packer' ; exit 1 }" ] },
+    { "type": "file",       "source": "./scripts/prep-share.ps1",          "destination": "C:/ProgramData/chocolatey/bin/prep-share.ps1" },
     { "type": "file",       "source": "./scripts/mount-iso.ps1",          "destination": "C:/ProgramData/chocolatey/bin/Mount-ISO.ps1" },
     { "type": "file",       "source": "./scripts/unmount-iso.ps1",        "destination": "C:/ProgramData/chocolatey/bin/Unmount-ISO.ps1" },
     { "type": "powershell", "inline": [ "chocolatey install -y sysinternals" ] },
@@ -260,9 +268,9 @@
     { "type": "powershell", "inline": [ "chocolatey install -y ruby" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
     { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
-    { "type": "powershell",
-      "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=log", "SMBUSER={{user `share_username`}}", "SMBPASS={{user `share_password`}}" ],
-      "script": "./scripts/Backup-Logs.ps1" }
+
+    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" },
+    { "type": "powershell", "inline": [ "Remove-Item $env:HOME/*.info -Force" ] }
   ],
   "post-processors":
   [
