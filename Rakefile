@@ -76,7 +76,9 @@ def shell(command) # {{{
 end # }}}
 
 def load_json(filename) # {{{
+  $logger.debug "Checking JSON file: #{filename}"
   return {} unless File.exist? filename
+  $logger.debug "Loading JSON file: #{filename}"
   return File.open(filename) { |file| JSON.parse(file.read) }
 end # }}}
 
@@ -126,11 +128,14 @@ def sources_for_box(box_file, sources_root, scripts_root) # {{{
     $logger.info "Checking config file: #{source}"
     config = load_json(source)
     config['builders'].each do |packer_builder|
+      $logger.debug "  Checking builder: #{packer_builder['type']}"
       next unless packer_builder['type'] == current_builder[:packer_type]
+      $logger.debug "  Adding floppy scripts..."
       box_scripts += packer_builder['floppy_files'].find_all {|path| ['.cmd', '.ps1'].include? path.pathmap("%x") }
     end
     config['provisioners'].each do |provisioner|
       # TODO: support 'only', and 'except' from the JSON data
+      $logger.debug "  Checking provisioner: #{provisioner['type']}"
       case provisioner['type']
         when 'file'          then box_scripts << provisioner['source']
         when 'powershell', 'windows-shell', 'shell'
@@ -143,8 +148,12 @@ def sources_for_box(box_file, sources_root, scripts_root) # {{{
   sources = box_sources + box_scripts
   $logger.info "  Box sources ##{sources.size}: #{sources.join(', ')}"
   return sources
+rescue JSON::UnparserError
+  STDERR.puts "JSON Format error in #{source}:\n#{$!}"
+  exit 1
 rescue
-  STDERR.puts "Cannot find sources for #{box_file}, #{$_}"
+  STDERR.puts "Cannot find sources for #{box_file}, #{$!}"
+  exit 1
 end # }}}
 # }}}
 
