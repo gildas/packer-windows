@@ -255,7 +255,7 @@
     { "type": "file",       "source": "./scripts/unmount-iso.ps1",        "destination": "C:/ProgramData/chocolatey/bin/Unmount-ISO.ps1" },
     { "type": "powershell", "inline": [ "chocolatey install -y sysinternals" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y md5" ] },
-    { "type": "powershell", "inline": [ "chocolatey install -y git -params '/GitOnlyOnPath'" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y git --params '/GitOnlyOnPath'" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y ruby" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
