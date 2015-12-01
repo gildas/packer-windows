@@ -298,8 +298,9 @@
 
     { "type": "powershell", "script": "./scripts/install-dotnet35.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "windows-restart" },
+    { "type": "powershell", "inline": [ "mount-iso.ps1 -Verbose"] },
     { "type": "powershell", "script": "./scripts/install-dotnet452.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
-    { "type": "windows-restart" },
+    { "type": "windows-restart", "pause_before": "2m" },
 
     { "type": "powershell", "inline": [ "mount-iso.ps1 -Verbose"] },
     { "type": "powershell", "script": "./scripts/install-icextras.ps1" },

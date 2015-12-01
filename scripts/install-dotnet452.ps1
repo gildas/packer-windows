@@ -38,6 +38,20 @@ process
   $dotnet_info = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full' -ErrorAction SilentlyContinue
   if ($dotnet_info -eq $null -or $dotnet_info.Release -lt 379893)
   {
+    if (Test-Path $env:USERPROFILE/mounted.info)
+    {
+      $SourceDriveLetter = Get-Content $env:USERPROFILE/mounted.info
+      Write-Verbose "Got drive letter from a previous mount: $SourceDriveLetter"
+      if (Test-Path "${SourceDriveLetter}\ThirdPartyInstalls\Microsoft\DotNET4.5.2\dotNetFx452_Full_x86_x64.exe")
+      {
+        Write-Output "Installing .Net 4.5.2 from the ISO ($SourceDriveLetter)"
+        & ${SourceDriveLetter}ThirdPartyInstalls\Microsoft\DotNET4.5.2\dotNetFx452_Full_x86_x64.exe /Passive /norestart /Log C:\Windows\Logs\dotnet-4.5.2.log.txt
+        Start-Sleep 60
+        Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+        Start-Sleep 5
+       exit
+      }
+    }
     $install='NDP452-KB2901907-x86-x64-AllOS-ENU.exe'
     $source_url="https://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/$install"
     $dest=Join-Path $env:TEMP $install
