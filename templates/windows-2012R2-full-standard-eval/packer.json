@@ -19,7 +19,8 @@
     "share_password":    "",
     "disk_size":         "40960",
     "mem_size":          "1024",
-    "cpus":              "1"
+    "cpus":              "1",
+    "hyperv_switch":     ""
   },
   "builders":
   [
@@ -36,8 +37,9 @@
       "winrm_username":      "{{user `admin_username`}}",
       "winrm_password":      "{{user `admin_password`}}",
       "winrm_timeout":       "20m",
-      "switch_name":         "Bridged Switch",
+      "switch_name":          "{{user `hyperv_switch`}}",
       "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_additions_mode": "none",
       "generation":          "1",
       "disk_size":           "{{user `disk_size`}}",
       "cpu":                 "{{user `cpus`}}",

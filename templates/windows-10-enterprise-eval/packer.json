@@ -14,9 +14,13 @@
     "os_license":        "",
     "admin_username":    "vagrant",
     "admin_password":    "vagrant",
+    "share_host":        "",
+    "share_username":    "",
+    "share_password":    "",
     "disk_size":         "40960",
     "mem_size":          "1024",
-    "cpus":              "1"
+    "cpus":              "1",
+    "hyperv_switch":     ""
   },
   "builders":
   [

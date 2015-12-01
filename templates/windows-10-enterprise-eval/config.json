@@ -9,5 +9,6 @@
   "os_license":        "eval",
   "cache_dir":         "/var/cache/daas",
   "mem_size":          "2048",
-  "cpus":              "2"
+  "cpus":              "2",
+  "hyperv_switch":     "Bridged Switch"
 }
