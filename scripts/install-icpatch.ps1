@@ -144,7 +144,7 @@ process
         #Write-Verbose "Job Created: $Job"
         #$jobs += $job
         $process = Start-Process -FilePath msiexec -ArgumentList $parms -PassThru
-        Write-Output "$Product is pactching (process: $($process.Id))"
+        Write-Output "$Product is patching (process: $($process.Id))"
       }
       else
       {
