@@ -12,6 +12,9 @@ boxes/
 boxes
 *.box
 
+# test box
+templates/test/
+
 # temp folder
 tmp/
 
