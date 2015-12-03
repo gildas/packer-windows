@@ -42,18 +42,20 @@ process
     if (Test-Path $env:USERPROFILE/mounted.info)
     {
       $SourceDriveLetter = Get-Content $env:USERPROFILE/mounted.info
+      Write-Verbose "Got drive letter from a previous mount: $SourceDriveLetter"
     }
     else
     {
-      $SourceDriveLetter = ls function:[d-z]: -n | ?{ Test-Path "$_\Additional_files\GetHostID" } | Select -First 1
+      $SourceDriveLetter = ls function:[d-z]: -n | ?{ Test-Path "$_\Additional_Files\GetHostID" } | Select -First 1
       if ([string]::IsNullOrEmpty($SourceDriveLetter))
       {
         Write-Error "No drive containing installation was mounted"
         exit 3
       }
+      Write-Verbose "Calculated drive letter: $SourceDriveLetter"
     }
   }
-  $InstallSource = "${SourceDriveLetter}\Additional_files\GetHostID"
+  $InstallSource = "${SourceDriveLetter}\Additional_Files\GetHostID"
   if (! (Test-Path $InstallSource))
   {
     Write-Error "$Product Installation source not found in $SourceDriveLetter"
