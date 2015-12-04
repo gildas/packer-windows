@@ -311,7 +311,7 @@
     { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" },
 
     { "type": "powershell", "inline": [ "mount-iso.ps1 -Verbose"] },
-    { "type": "powershell", "inline": [ "install-icfirmware.ps1 -Verbose" ], "pause_before": "10m" },
+    { "type": "powershell", "inline": [ "install-icfirmware.ps1 -Verbose" ] },
     { "type": "powershell", "script": "./scripts/unmount-iso.ps1" },
 
     { "type": "powershell", "inline": [ "mount-iso.ps1 -LastPatch -Verbose"] },
