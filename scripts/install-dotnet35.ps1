@@ -81,9 +81,20 @@ process
     $elapsed = Show-Elapsed($watch)
     Write-Output ".Net 3.5 installed successfully in $elapsed!"
     Write-Output $results.FeatureResult
-    if ($results.RestartNeeded)
+    switch($results.RestartNeeded)
     {
-      Write-Warning "The system will need to be restarted to be able to use the new features"
+      [Microsoft.Windows.ServerManager.Commands.RestartState]::Yes
+      {
+        Write-Warning "The system will need to be restarted to be able to use the new features"
+      }
+      [Microsoft.Windows.ServerManager.Commands.RestartState]::Maybe
+      {
+        Write-Warning "The system might need to be restarted to be able to use the new features"
+      }
+      [Microsoft.Windows.ServerManager.Commands.RestartState]::No
+      {
+        Write-Output "The system does not need to be restarted to be able to use the new features"
+      }
     }
   }
 }
