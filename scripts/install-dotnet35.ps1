@@ -36,27 +36,48 @@ process
 
   if ((Get-WindowsFeature Net-Framework-Core -Verbose:$false).InstallState -ne 'Installed')
   {
+
+    if (Get-Hotfix -id 2966828 -ErrorAction SilentlyContinue)
+    {
+      Write-Output "KB 2966828 was installed, we need to uninstall it"
+
+      $install='NDPFixit-KB3005628-X64.exe'
+      $source_url="http://download.microsoft.com/download/8/0/8/80894270-D665-4E7A-8A2C-814373FC25C1/$install"
+      $dest=Join-Path $env:TEMP $install
+
+      Write-Output "Downloading KB 3005628"
+      #Start-BitsTransfer -Source $source_url -Destination $dest -ErrorAction Stop
+      (New-Object System.Net.WebClient).DownloadFile($source_url, $dest)
+
+      #& ${env:TEMP}\NDPFixit-KB3005628-X64.exe /Log C:\Windows\Logs\KB-3005628.log
+      & ${env:TEMP}\NDPFixit-KB3005628-X64.exe
+    }
     Write-Output "Installing .Net 3.5"
     $watch   = [Diagnostics.StopWatch]::StartNew()
     if ($PSCmdlet.ShouldProcess('.Net 3.5', "Running msiexec /install"))
     {
-      Install-WindowsFeature -Name Net-Framework-Core
-      if (! $?)
+      $results = Install-WindowsFeature -Name Net-Framework-Core -LogPath C:\Windows\Logs\dotnet-3.5.log -Verbose
+      if (! $results.Success)
       {
-        Write-Error "ERROR $LastExitCode while installing .Net 3.5"
+        Write-Error "Failure while installing .Net 3.5, exit code: $($results.ExitCode)"
         Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
         Start-Sleep 10
-        exit $LastExitCode
+        exit 1
       }
     }
     $watch.Stop()
     $elapsed = Show-Elapsed($watch)
     Write-Output ".Net 3.5 installed successfully in $elapsed!"
+    Write-Output $results.FeatureResult
+    if ($results.RestartNeeded)
+    {
+      Write-Warning "The system will need to be restarted to be able to use the new features"
+    }
   }
 }
 end
 {
   Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
   Start-Sleep 5
-  exit $LastExitCode
+  exit 0
 }
