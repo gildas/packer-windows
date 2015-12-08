@@ -36,7 +36,6 @@ process
 
   if ((Get-WindowsFeature Net-Framework-Core -Verbose:$false).InstallState -ne 'Installed')
   {
-
     if (Get-Hotfix -id 2966828 -ErrorAction SilentlyContinue)
     {
       Write-Output "KB 2966828 was installed, we need to uninstall it"
@@ -56,7 +55,20 @@ process
     $watch   = [Diagnostics.StopWatch]::StartNew()
     if ($PSCmdlet.ShouldProcess('.Net 3.5', "Running msiexec /install"))
     {
-      $results = Install-WindowsFeature -Name Net-Framework-Core -LogPath C:\Windows\Logs\dotnet-3.5.log -Verbose
+      $parms  = @{}
+      $dvd_drives = Get-WmiObject Win32_LogicalDisk -Filter 'DriveType=5' | Select -ExpandProperty DeviceID
+      foreach ($_ in $dvd_drives)
+      {
+        $sources = (Join-Path $_ (Join-Path 'sources' 'sxs'))
+        if (Test-Path $sources)
+        {
+          $parms['Source'] = $sources
+          Write-Output "Using $sources to install .Net"
+          break
+        }
+      }
+
+      $results = Install-WindowsFeature -Name Net-Framework-Core -LogPath C:\Windows\Logs\dotnet-3.5.log @parms -Verbose
       if (! $results.Success)
       {
         Write-Error "Failure while installing .Net 3.5, exit code: $($results.ExitCode)"
