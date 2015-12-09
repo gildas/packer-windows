@@ -371,7 +371,7 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
         sh "net user #{builder[:share_user]} /DEL"
     end
     File.open(packer_log, "a") { |f|
-      f.puts "Build time: #{build_time.real} seconds"
+      f.puts "Build time: #{build_time.real} seconds" unless build_time.nil?
       f.puts "==== END   %s %s" % ['=' * 60, Time.now.to_s]
     }
   end
