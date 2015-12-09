@@ -28,7 +28,7 @@ process
   switch ($env:PACKER_BUILDER_TYPE)
   {
     'parallels-iso'  { $ShareInfo['Path'] = "\\psf\${Share}" }
-    'virtualbox-iso' { $ShareInfo['Path'] = "\\vboxsrv\${Share}" }
+    'virtualbox-iso' { $ShareInfo['Path'] = "\\vboxsvr\${Share}" }
     'vmware-iso    ' { $ShareInfo['Path'] = "\\vmware-host\Shared Folders\${Share}" }
     #'hyperv-iso'
     default
