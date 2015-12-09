@@ -43,10 +43,15 @@ $box_aliases = {
   'windows-10-enterprise-eval'        => [ 'windows-10' ],
   'windows-8.1-enterprise-eval'       => [ 'windows-8.1' ],
   'windows-2012R2-core-standard-eval' => [ 'windows-2012R2-core' ],
-  'windows-2012R2-full-standard-eval' => [ 'windows-2012R2-full', 'windows-2012R2' ],
+  'windows-2012R2-full-standard-eval' => [ 'windows-2012R2-full', 'windows-2012R2', 'windows-2012r2' ],
 }
 
 # Tools {{{
+def alias_task(alias_task, original_task) # {{{
+  desc "Alias #{original_task}" if Rake::Task[original_task].full_comment
+  task alias_task, *Rake.application[:original_task].arg_names, needs: original_task
+end # }}}
+
 def which(f) # {{{
   if RUBY_PLATFORM == 'x64-mingw32'
     path = ENV['PATH'].split(File::PATH_SEPARATOR).find do |p|
