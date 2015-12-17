@@ -240,6 +240,7 @@
   ],
   "provisioners":
   [
+    { "type": "powershell", "script": "./scripts/disable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell",
       "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=log", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Z" ],
       "script": "./scripts/prep-share.ps1" },
@@ -267,6 +268,7 @@
     { "type": "powershell", "inline": [ "chocolatey install -y classic-shell" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
 
+    { "type": "powershell", "script": "./scripts/enable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" },
     { "type": "powershell", "inline": [ "Remove-Item $env:HOME/*.info -Force" ] }
   ],

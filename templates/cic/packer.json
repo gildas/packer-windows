@@ -255,6 +255,9 @@
   ],
   "provisioners":
   [
+    { "type": "powershell", "script": "./scripts/disable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Regular Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Idle Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell",
       "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=log", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Z" ],
       "script": "./scripts/prep-share.ps1" },
@@ -263,8 +266,6 @@
       "script": "./scripts/prep-share.ps1" },
 
     { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
-    { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Regular Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
-    { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Idle Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "file",       "source": "./data/GeoTrust_Global_CA.pem",    "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem" },
     { "type": "file",       "source": "./data/bginfo",                    "destination": "C:/ProgramData/BGInfo" },
     { "type": "file",       "source": "./data/vagrant.jpg",               "destination": "C:/Users/vagrant/Pictures/vagrant.jpg" },
@@ -321,6 +322,7 @@
     { "type": "powershell", "inline": [ "install-icpatch.ps1 -ProductName 'Interaction Firmware' -Verbose"], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "script": "./scripts/unmount-iso.ps1" },
 
+    { "type": "powershell", "script": "./scripts/enable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" },
     { "type": "powershell", "inline": [ "Remove-Item $env:HOME/*.info -Force" ] }
   ],
