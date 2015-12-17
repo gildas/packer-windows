@@ -14,31 +14,37 @@
     "os_license":        "",
     "admin_username":    "vagrant",
     "admin_password":    "vagrant",
+    "share_host":        "",
+    "share_username":    "",
+    "share_password":    "",
     "disk_size":         "40960",
     "mem_size":          "1024",
-    "cpus":              "1"
+    "cpus":              "1",
+    "hyperv_switch":     ""
   },
   "builders":
   [
     {
-      "type":                "hyperv-iso",
-      "vm_name":             "packer_{{user `template`}}",
-      "iso_urls": [
-        "{{user `cache_dir`}}/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_ENTERPRISE_EVAL_EN-US-IR3_CENA_X64FREE_EN-US_DV9.ISO",
-        "http://download.microsoft.com/download/B/9/9/B999286E-0A47-406D-8B3D-5B5AD7373A4A/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_ENTERPRISE_EVAL_EN-US-IR3_CENA_X64FREE_EN-US_DV9.ISO"
-      ],
-      "iso_checksum_type":   "md5",
-      "iso_checksum":        "ee63618e3be220d86b993c1abbcf32eb",
-      "output_directory":    "output-hyperv-{{user `template`}}",
-      "boot_wait":           "30s",
-      "communicator":        "winrm",
-      "winrm_username":      "{{user `admin_username`}}",
-      "winrm_password":      "{{user `admin_password`}}",
-      "winrm_timeout":       "20m",
-      "switch_name":         "Bridged Switch",
-      "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
-      "disk_size":           "{{user `disk_size`}}",
-      "ram_size_mb":         "{{user `mem_size`}}",
+      "type":                 "hyperv-iso",
+      "vm_name":              "packer_{{user `template`}}",
+      "iso_url":              "{{user `cache_dir`}}/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_ENTERPRISE_EVAL_EN-US-IR3_CENA_X64FREE_EN-US_DV9.ISO",
+      "iso_checksum_type":    "md5",
+      "iso_checksum":         "ee63618e3be220d86b993c1abbcf32eb",
+      "output_directory":     "output-hyperv-{{user `template`}}",
+      "boot_wait":            "30s",
+      "headless":             false,
+      "communicator":         "winrm",
+      "winrm_username":       "{{user `admin_username`}}",
+      "winrm_password":       "{{user `admin_password`}}",
+      "winrm_timeout":        "20m",
+      "switch_name":          "{{user `hyperv_switch`}}",
+      "shutdown_command":     "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
+      "guest_additions_mode": "none",
+      "generation":           "1",
+      "disk_size":            "{{user `disk_size`}}",
+      "cpu":                  "{{user `cpus`}}",
+      "ram_size_mb":          "{{user `mem_size`}}",
+      "enable_secure_boot":   true,
       "floppy_files": [
         "./templates/windows-2012R2-core-standard-eval/Autounattend.xml",
         "./scripts/00-run-all-scripts.cmd",
@@ -234,6 +240,14 @@
   ],
   "provisioners":
   [
+    { "type": "powershell", "script": "./scripts/disable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell",
+      "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=log", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Z" ],
+      "script": "./scripts/prep-share.ps1" },
+    { "type": "powershell",
+      "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=daas-cache", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Y" ],
+      "script": "./scripts/prep-share.ps1" },
+
     { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
     { "type": "file",       "source": "./data/GeoTrust_Global_CA.pem", "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem" },
     { "type": "file",       "source": "./data/vagrant.jpg",            "destination": "C:/Users/vagrant/Pictures/vagrant.jpg" },
@@ -248,12 +262,15 @@
     { "type": "file",       "source": "./scripts/unmount-iso.ps1",        "destination": "C:/ProgramData/chocolatey/bin/Unmount-ISO.ps1" },
     { "type": "powershell", "inline": [ "chocolatey install -y sysinternals" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y md5" ] },
-    { "type": "powershell", "inline": [ "chocolatey install -y git" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y git --params '/GitOnlyOnPath'" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y ruby" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y classic-shell" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
-    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" }
+
+    { "type": "powershell", "script": "./scripts/enable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" },
+    { "type": "powershell", "inline": [ "Remove-Item $env:HOME/*.info -Force" ] }
   ],
   "post-processors":
   [

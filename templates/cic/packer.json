@@ -14,12 +14,48 @@
     "os_license":        "",
     "admin_username":    "vagrant",
     "admin_password":    "vagrant",
+    "share_host":        "",
+    "share_username":    "",
+    "share_password":    "",
     "disk_size":         "40960",
     "mem_size":          "2048",
-    "cpus":              "1"
+    "cpus":              "1",
+    "hyperv_switch":     ""
   },
   "builders":
   [
+    {
+      "type":                 "hyperv-iso",
+      "vm_name":              "packer-{{user `template`}}",
+      "iso_url":              "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+      "iso_checksum_type":    "md5",
+      "iso_checksum":         "458ff91f8abc21b75cb544744bf92e6a",
+      "output_directory":     "output-hyperv-{{user `template`}}",
+      "boot_wait":            "0",
+      "headless":             false,
+      "communicator":         "winrm",
+      "winrm_username":       "{{user `admin_username`}}",
+      "winrm_password":       "{{user `admin_password`}}",
+      "winrm_timeout":        "20m",
+      "switch_name":          "{{user `hyperv_switch`}}",
+      "shutdown_command":     "shutdown /s /t 1 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_additions_mode": "none",
+      "generation":           "1",
+      "disk_size":            "{{user `disk_size`}}",
+      "cpu":                  "{{user `cpus`}}",
+      "ram_size_mb":          "{{user `mem_size`}}",
+      "enable_secure_boot":   true,
+      "floppy_files": [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/_packer_config.cmd",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
+        "./scripts/04-install-imdisk.cmd",
+        "./scripts/99-start-services.cmd"
+      ]
+    },
     {
       "type":                "qemu",
       "vm_name":             "packer_{{user `template`}}",
@@ -219,20 +255,29 @@
   ],
   "provisioners":
   [
-    { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
+    { "type": "powershell", "script": "./scripts/disable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Regular Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Idle Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell",
+      "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=log", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Z" ],
+      "script": "./scripts/prep-share.ps1" },
+    { "type": "powershell",
+      "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=daas-cache", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Y" ],
+      "script": "./scripts/prep-share.ps1" },
+
+    { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
     { "type": "file",       "source": "./data/GeoTrust_Global_CA.pem",    "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem" },
     { "type": "file",       "source": "./data/bginfo",                    "destination": "C:/ProgramData/BGInfo" },
     { "type": "file",       "source": "./data/vagrant.jpg",               "destination": "C:/Users/vagrant/Pictures/vagrant.jpg" },
     { "type": "powershell", "inline": [ "Copy-Item C:/ProgramData/BGInfo/Set-Background.lnk \"C:/ProgramData/Microsoft/Windows/Start Menu/Programs/StartUp\"" ] },
     { "type": "powershell", "script": "./scripts/Set-AccountPicture.ps1" },
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
-    { "type": "windows-restart" },
+    { "type": "windows-restart", "except": [ "hyperv-iso" ] },
 
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
     { "type": "powershell", "inline": [ "if (! (Test-Path C:/ProgramData/chocolatey/bin)) { Write-Error 'Chocolatey is not installed, please re-run packer' ; exit 1 }" ] },
     { "type": "file",       "source": "./scripts/Set-AccountPicture.ps1", "destination": "C:/ProgramData/chocolatey/bin/Set-AccountPicture.ps1" },
+    { "type": "file",       "source": "./scripts/prep-share.ps1",         "destination": "C:/ProgramData/chocolatey/bin/Prep-Share.ps1" },
     { "type": "file",       "source": "./scripts/mount-iso.ps1",          "destination": "C:/ProgramData/chocolatey/bin/Mount-ISO.ps1" },
     { "type": "file",       "source": "./scripts/unmount-iso.ps1",        "destination": "C:/ProgramData/chocolatey/bin/Unmount-ISO.ps1" },
     { "type": "file",       "source": "./scripts/install-icextras.ps1",   "destination": "C:/ProgramData/chocolatey/bin/install-icextras.ps1" },
@@ -240,34 +285,46 @@
     { "type": "file",       "source": "./scripts/install-icfirmware.ps1", "destination": "C:/ProgramData/chocolatey/bin/install-icfirmware.ps1" },
     { "type": "file",       "source": "./scripts/install-icpatch.ps1",    "destination": "C:/ProgramData/chocolatey/bin/install-icpatch.ps1" },
     { "type": "file",       "source": "./scripts/check-icserver.ps1",     "destination": "C:/ProgramData/chocolatey/bin/check-icserver.ps1" },
+
     { "type": "powershell", "inline": [ "chocolatey install -y sysinternals" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y md5" ] },
-    { "type": "powershell", "inline": [ "chocolatey install -y git" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y git --params '/GitOnlyOnPath'" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y ruby" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y bginfo" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y classic-shell" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
     { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
+    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" },
 
     { "type": "powershell", "script": "./scripts/install-dotnet35.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "windows-restart" },
+    { "type": "powershell", "inline": [ "mount-iso.ps1 -Verbose"] },
+    { "type": "powershell", "script": "./scripts/install-dotnet452.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "windows-restart", "pause_before": "2m" },
 
-    { "type": "powershell", "script": "./scripts/mount-iso.ps1" },
-    { "type": "powershell", "script": "./scripts/install-icextras.ps1" },
-    { "type": "powershell", "script": "./scripts/install-icserver.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
-    { "type": "powershell", "script": "./scripts/check-icserver.ps1", "remote_path": "C:/Windows/Temp/check.ps1",  "pause_before": "10m" },
+    { "type": "powershell", "inline": [ "mount-iso.ps1 -Verbose"] },
+    { "type": "powershell", "inline": [ "install-icextras.ps1 -Verbose" ] },
+    { "type": "powershell", "inline": [ "install-icserver.ps1 -Verbose" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "script": "./scripts/check-icserver.ps1", "remote_path": "C:/Windows/Temp/check.ps1", "pause_before": "10m" },
     { "type": "powershell", "inline": [ "Remove-Item C:/Windows/Temp/check.ps1" ] },
-    { "type": "powershell", "script": "./scripts/install-icfirmware.ps1" },
+    { "type": "powershell", "script": "./scripts/unmount-iso.ps1" },
+    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" },
+
+    { "type": "powershell", "inline": [ "mount-iso.ps1 -Verbose"] },
+    { "type": "powershell", "inline": [ "install-icfirmware.ps1 -Verbose" ] },
     { "type": "powershell", "script": "./scripts/unmount-iso.ps1" },
 
-    { "type": "powershell", "inline": [ "mount-iso.ps1 -LastPatch"] },
+    { "type": "powershell", "inline": [ "mount-iso.ps1 -LastPatch -Verbose"] },
     { "type": "powershell", "inline": [ "install-icpatch.ps1 -ProductName 'Interaction Center Server' -AsJob -JobName 'Patch-ICServer' -Verbose"], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "inline": [ "check-icserver.ps1 -RunningMsiAllowed 0" ], "remote_path": "C:/Windows/Temp/check.ps1",  "pause_before": "10m" },
     { "type": "powershell", "inline": [ "Remove-Item C:/Windows/Temp/check.ps1" ] },
     { "type": "powershell", "inline": [ "install-icpatch.ps1 -ProductName 'Interaction Firmware' -Verbose"], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "script": "./scripts/unmount-iso.ps1" },
 
-    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" }
+    { "type": "powershell", "script": "./scripts/enable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" },
+    { "type": "powershell", "inline": [ "Remove-Item $env:HOME/*.info -Force" ] }
   ],
   "post-processors":
   [
@@ -275,7 +332,7 @@
       "type": "vagrant",
       "keep_input_artifact": false,
       "compression_level":   0,
-      "vagrantfile_template": "./templates/cic/vagrantfile.template",
+      "vagrantfile_template": "./templates/{{user `template`}}/vagrantfile.template",
       "output": "./boxes/{{user `template`}}/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
     }
   ]

@@ -59,27 +59,13 @@ process
   }
 # 2}}}
 
-# Prerequisite: .Net 3.5 {{{2
-  if ((Get-WindowsFeature -Name Net-Framework-Core -Verbose:$false).InstallState -ne 'Installed')
-  {
-    Write-Output "Installing .Net 3.5"
-    Install-WindowsFeature -Name Net-Framework-Core
-    if (! $?)
-    {
-      Write-Error "ERROR $LastExitCode while installing .Net 3.5"
-      Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-      Start-Sleep 10
-      exit $LastExitCode
-    }
-  }
-# 2}}}
-
 # Prerequisite: Find the source! {{{2
   if ([string]::IsNullOrEmpty($SourceDriveLetter))
   {
     if (Test-Path $env:USERPROFILE/mounted.info)
     {
       $SourceDriveLetter = Get-Content $env:USERPROFILE/mounted.info
+      Write-Verbose "Got drive letter from a previous mount: $SourceDriveLetter"
     }
     else
     {
@@ -89,6 +75,7 @@ process
         Write-Error "No drive containing installation for $Product was mounted"
         exit 3
       }
+      Write-Verbose "Calculated drive letter: $SourceDriveLetter"
     }
   }
   $InstallSource = (Get-ChildItem -Path "${SourceDriveLetter}\Installs\ServerComponents" -Filter "${msi_prefix}_*.msi").FullName
@@ -99,8 +86,65 @@ process
     Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
     exit 2
   }
-  Write-Output "Installing from $InstallSource"
+  if ($InstallSource -match '.*\\ICServer_([0-9]+)_R([0-9]+)\.msi')
+  {
+    $ProductVersion = $matches[1]
+    $ProductRelease = $matches[2]
+    Write-Output "Installing $Product ${ProducVersion}R${ProductRelease} from $InstallSource"
+  }
+  else
+  {
+    Write-Error "Cannot find version and release of $Product in $InstallSource"
+    Start-Sleep 2
+    Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    exit 2
+  }
 # 2}}}
+
+# Prerequisite: .Net {{{2
+  # For now, we always need .Net 3.5
+  if ((Get-WindowsFeature -Name Net-Framework-Core -Verbose:$false).InstallState -ne 'Installed')
+  {
+    Write-Output ".Net 3.5 install state: $((Get-WindowsFeature -Name Net-Framework-Core -Verbose:$false).InstallState)"
+    Write-Output "Installing .Net 3.5"
+    Install-WindowsFeature -Name Net-Framework-Core
+    if (! $?)
+    {
+      Write-Error "ERROR $LastExitCode while installing .Net 3.5"
+      Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+      Start-Sleep 10
+      exit $LastExitCode
+    }
+  }
+  else
+  {
+    Write-Output ".Net 3.5 is installed"
+  }
+  if ($ProductVersion -ge 2016)
+  {
+    Write-Output "Checking if .Net 4.5.2 or more is installed"
+    # We need .Net >= 4.5.2
+    $dotnet_info = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full' -ErrorAction SilentlyContinue
+    if ($dotnet_info -eq $null -or $dotnet_info.Release -lt 379893)
+    {
+      if (Test-Path "${SourceDriveLetter}\ThirdPartyInstalls\Microsoft\DotNET4.5.2\dotNetFx452_Full_x86_x64.exe")
+      {
+        Write-Output "Installing .Net 4.5.2 from the ISO"
+        & ${SourceDriveLetter}ThirdPartyInstalls\Microsoft\DotNET4.5.2\dotNetFx452_Full_x86_x64.exe /Passive /norestart /Log C:\Windows\Logs\dotnet-4.5.2.log.txt
+      }
+      else
+      {
+        Write-Output "Installing .Net 4.5.2 from the Internet"
+        choco install -y dotnet4.5.2
+      }
+    }
+    else
+    {
+      Write-Output ".Net 4.5.2 or better is installed"
+    }
+  }
+# 2}}}
+
 # Prerequisites }}}
 
   Write-Output "Installing $Product"
@@ -123,7 +167,7 @@ process
   $parms += '/norestart'
 
   Write-Verbose "Arguments: $($parms -join ',')"
-  if ($PSCmdlet.ShouldProcess($_.ProductName, "Running msiexec /update"))
+  if ($PSCmdlet.ShouldProcess($_.ProductName, "Running msiexec /install"))
   {
     if ($Wait)
     {
@@ -164,7 +208,20 @@ process
       # Give some time for the msiexec process to start
       Start-Sleep 30
       Write-Output "$Product is being installed"
+      if ($process.HasExited)
+      {
       $exit_code = $process.ExitCode
+      #if ($exit_code -ne 0)
+      #{
+        #Write-Error "$Product failed to start installing itself. Error: $exit_code."
+        Write-Output "Install process exit code: [${exit_code}]."
+        $exit_code = 0
+      #}
+      }
+      else
+      {
+        Write-Output "Installing..."
+      }
     }
 
 # The ICServer MSI tends to not finish properly even if successful   

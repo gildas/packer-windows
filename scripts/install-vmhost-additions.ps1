@@ -164,8 +164,12 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'parallels')
   }
   Start-Sleep 2
 }
+elseif ($env:PACKER_BUILDER_TYPE -match 'hyperv-iso')
+{
+  Write-Host "No guest software to install for Hyper-V"
+}
 else
 {
   Write-Error "Ignoring unsupported Packer builder: $env:PACKER_BUILDER_TYPE"
-  exit 0
+  exit 1
 }
