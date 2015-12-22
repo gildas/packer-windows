@@ -24,6 +24,9 @@ log/
 # vagrant folder
 .vagrant/
 
+# Bundler folder
+.bundle/
+
 # .GitEye
 /.project
 
