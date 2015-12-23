@@ -29,7 +29,7 @@ process
   {
     'parallels-iso'  { $ShareInfo['Path'] = "\\psf\${Share}" }
     'virtualbox-iso' { $ShareInfo['Path'] = "\\vboxsvr\${Share}" }
-    'vmware-iso    ' { $ShareInfo['Path'] = "\\vmware-host\Shared Folders\${Share}" }
+    'vmware-iso'     { $ShareInfo['Path'] = "\\vmware-host\Shared Folders\${Share}" }
     #'hyperv-iso'
     default
     {

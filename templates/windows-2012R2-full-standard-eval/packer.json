@@ -242,9 +242,6 @@
   ],
   "provisioners":
   [
-    { "type": "powershell", "script": "./scripts/disable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
-    { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Regular Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
-    { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Idle Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell",
       "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=log", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Z" ],
       "script": "./scripts/prep-share.ps1" },
@@ -252,6 +249,9 @@
       "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=daas-cache", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Y" ],
       "script": "./scripts/prep-share.ps1" },
 
+    { "type": "powershell", "script": "./scripts/disable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Regular Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Idle Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
     { "type": "file",       "source": "./data/GeoTrust_Global_CA.pem", "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem" },
     { "type": "file",       "source": "./data/bginfo",                 "destination": "C:/ProgramData/BGInfo" },
