@@ -31,10 +31,9 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provider :parallels do |provider, override|
-    provider.update_guest_tools         = true
-    provider.optimize_power_consumption = false # CIC is quite demanding on CPU!
-    provider.memory                     = 2048
-    provider.cpus                       = 2
+    provider.update_guest_tools = true
+    provider.memory             = 2048
+    provider.cpus               = 2
   end
 
   config.vm.provider :vmware_fusion do |provider, override|

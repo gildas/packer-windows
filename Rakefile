@@ -2,6 +2,7 @@ require 'logger'
 require 'rake'
 require 'fileutils'
 require 'json'
+require 'securerandom'
 require 'benchmark'
 require 'etc'
 require 'erb'
@@ -42,12 +43,13 @@ $box_aliases = {
   'windows-10-enterprise-eval'        => [ 'windows-10' ],
   'windows-8.1-enterprise-eval'       => [ 'windows-8.1' ],
   'windows-2012R2-core-standard-eval' => [ 'windows-2012R2-core' ],
-  'windows-2012R2-full-standard-eval' => [ 'windows-2012R2-full', 'windows-2012R2' ],
+  'windows-2012R2-full-standard-eval' => [ 'windows-2012R2-full', 'windows-2012R2', 'windows-2012r2' ],
 }
 
 # Tools {{{
-def verbose(message) # {{{
-  puts message if $VERBOSE
+def alias_task(alias_task, original_task) # {{{
+  desc "Alias #{original_task}" if Rake::Task[original_task].full_comment
+  task alias_task, *Rake.application[:original_task].arg_names, needs: original_task
 end # }}}
 
 def which(f) # {{{
@@ -67,19 +69,33 @@ end # }}}
 def shell(command) # {{{
   case RUBY_PLATFORM
     when 'x64-mingw32'
-      stdin, stdout, stderr = Open3.popen3 "powershell.exe -NoLogo -ExecutionPolicy Bypass -Command #{command}" 
+      stdin, stdout, stderr = Open3.popen3 "powershell.exe -NoLogo -ExecutionPolicy Bypass -Command \" #{command} \"" 
       stdin.close
-      output=stdout.readlines.join.chomp
-      error=stderr.readlines.join.chomp
-      return error unless error.empty? #TODO: throw error in the futur?
+      output = stdout.readlines.join.chomp
+      error  = stderr.readlines.join.chomp
+      raise error unless error.empty?
       return output
     else
-      system command
+      $logger.info "Executing: %x(#{command})"
+      stdin, stdout, stderr, wait_thread = Open3.popen3 command
+      $logger.info "  PID #{wait_thread[:pid]}: started"
+      stdin.close
+      status = wait_thread.value
+      output = stdout.readlines.join.chomp
+      error  = stderr.readlines.join.chomp
+      $logger.debug "  PID #{wait_thread[:pid]}: ended. Status: success=#{status.success?}, exitstatus=#{status.exitstatus}, pid=#{status.pid}"
+      unless status.success?
+        $logger.error "PID #{status.pid}: exit status: #{status.exitstatus}"
+        yield(status.exitstatus, error) if block_given?
+      end
+      return output
   end
 end # }}}
 
 def load_json(filename) # {{{
+  $logger.debug "Checking JSON file: #{filename}"
   return {} unless File.exist? filename
+  $logger.debug "Loading JSON file: #{filename}"
   return File.open(filename) { |file| JSON.parse(file.read) }
 end # }}}
 
@@ -113,27 +129,30 @@ end # }}}
 
 def sources_for_box(box_file, sources_root, scripts_root) # {{{
   # box_file should be like: boxes/#{box_name}/#{provider}/#{box_name}-#{box_version}.box
-  verbose "box file: #{box_file}"
+  $logger.info "box file: #{box_file}"
   box_name = box_file.pathmap("%2d").pathmap("%f")
-  verbose "  Finding sources for box: #{box_name}"
+  $logger.info "  Finding sources for box: #{box_name}"
   box_sources = Rake::FileList.new("#{sources_root}/#{box_name}/*")
-  verbose "  ==> Box sources: #{box_sources.join(', ')}"
+  $logger.info "  ==> Box sources: #{box_sources.join(', ')}"
   raise Errno::ENOENT, "no source for #{box_file}" if box_sources.empty?
   current_builder = $builders.find { |builder| builder[1][:folder] == box_file.pathmap("%3d").pathmap("%f") }
   raise ArgumentError, box_name if current_builder.nil?
   current_builder = current_builder[1]
-  verbose "  Collecting scripts for #{current_builder[:name]}"
+  $logger.info "  Collecting scripts for #{current_builder[:name]}"
   box_scripts = []
   box_sources.each do |source|
     next unless source =~ /.*packer\.json$/
-    verbose "Checking config file: #{source}"
+    $logger.info "Checking config file: #{source}"
     config = load_json(source)
     config['builders'].each do |packer_builder|
+      $logger.debug "  Checking builder: #{packer_builder['type']}"
       next unless packer_builder['type'] == current_builder[:packer_type]
+      $logger.debug "  Adding floppy scripts..."
       box_scripts += packer_builder['floppy_files'].find_all {|path| ['.cmd', '.ps1'].include? path.pathmap("%x") }
     end
     config['provisioners'].each do |provisioner|
       # TODO: support 'only', and 'except' from the JSON data
+      $logger.debug "  Checking provisioner: #{provisioner['type']}"
       case provisioner['type']
         when 'file'          then box_scripts << provisioner['source']
         when 'powershell', 'windows-shell', 'shell'
@@ -142,10 +161,16 @@ def sources_for_box(box_file, sources_root, scripts_root) # {{{
       end
     end
   end
-  verbose "  Box scripts: #{box_scripts.join(', ')}"
-  # TODO: What about the data folder?
-
-  box_sources + box_scripts
+  $logger.info "  Box scripts ##{box_scripts.size}: #{box_scripts.join(', ')}"
+  sources = box_sources + box_scripts
+  $logger.info "  Box sources ##{sources.size}: #{sources.join(', ')}"
+  return sources
+rescue JSON::UnparserError
+  STDERR.puts "JSON Format error in #{source}:\n#{$!}"
+  exit 1
+rescue
+  STDERR.puts "Cannot find sources for #{box_file}, #{$!}"
+  exit 1
 end # }}}
 # }}}
 
@@ -156,22 +181,26 @@ end
 $builders = builders = { # {{{
   hyperv: # {{{
   {
-    name:         'hyperv',
-    folder:       'hyperv',
-    vagrant_type: 'hyperv',
-    packer_type:  'hyperv-iso',
-    supported:    lambda {
+    name:           'hyperv',
+    say:            'Hi-per V',
+    folder:         'hyperv',
+    vagrant_type:   'hyperv',
+    packer_type:    'hyperv-iso',
+    supported:      lambda {
       case RUBY_PLATFORM
         when 'x64-mingw32'
           shell("(Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V).State") == "Enabled"
         else false
       end
     },
-    preclean:     lambda { |box_name|  }
+    preclean:       lambda { |box_name|  },
+    share_user:     'packer',
+    share_password: SecureRandom.urlsafe_base64(9)
   }, # }}}
   qemu: # {{{
   {
     name:         'qemu',
+    say:          'KVM',
     folder:       'qemu',
     vagrant_type: 'libvirt',
     packer_type:  'qemu',
@@ -181,45 +210,66 @@ $builders = builders = { # {{{
   parallels: # {{{
   {
     name:         'parallels',
+    say:          'Parallels Desktop',
     folder:       'parallels',
     vagrant_type: 'parallels',
     packer_type:  'parallels-iso',
     supported:    lambda { RUBY_PLATFORM =~ /.*darwin.*/ && which('prlctl') },
     preclean:     lambda { |box_name|
-      puts "Cleaning #{box_name}"
-      stdin, stdout, stderr = Open3.popen3 "prlctl list --info --json \"packer-#{box_name}\""
-      status = $?
-      errors = stderr.readlines
-      if errors.nil?
-        puts "  Deleting Virtual Machine in Virtualbox"
-        stdin, stdout, stderr = Open3.popen3 "prlctl unregister \"packer-#{box_name}\""
-        status = $?
-        errors = stderr.readlines
-        STDERR.puts "Errors while deleting the Virtual Machine: #{errors}" unless errors.nil?
+      tries = 3
+      begin
+        $logger.info "Checking if Parallels Desktop was initialized properly"
+        shell('prlctl list') do |error_code, error|
+          case error_code
+            when 6 then raise RuntimeError, 'not initialized'
+            else
+              STDERR.puts "Error #{error_code} while checking Parallels Desktop"
+              STDERR.puts error
+              exit error_code
+          end
+        end
+      rescue RuntimeError
+        $logger.warn "Parallels Desktop is not initialized"
+        puts "Initializing Parallels Desktop"
+        shell('sudo "/Applications/Parallels Desktop.app/Contents/MacOS/inittool" init -b "/Applications/Parallels Desktop.app"') do |error_code, error|
+          STDERR.puts "Error #{error_code} while checking Parallels Desktop"
+          STDERR.puts error
+          exit error_code
+        end
+        retry unless (tries -= 1).zero?
       end
 
-      stdin, stdout, stderr = Open3.popen3 "prlsrvctl user list"
-      while line = stdout.gets
-        next unless line =~ /^#{Etc.getlogin}/
-        vm_dir = File.join(line.chomp.split.last, "packer-#{box_name}")
-        break
+      $logger.info "Checking if Virtual Machine packer-#{box_name} exists"
+      shell("prlctl list --info --json \"packer-#{box_name}\"") do |error_code, error|
+        case error_code
+          when 255 then return # The VM was not found, no need to clean
+          else
+            STDERR.puts "Error #{error_code} while checking Virtual Machine packer-#{box_name}"
+            STDERR.puts error
+            exit error_code
+        end
       end
-      if Dir.exist? vm_dir
-        puts "  Deleting Virtual Machine folder"
-        FileUtils.rm_rf vm_dir
+
+      puts "Deleting Virtual Machine packer-#{box_name}"
+      $logger.info "Deleting Virtual Machine packer-#{box_name}"
+      shell("prlctl unregister \"packer-#{box_name}\"") do |error_code, error|
+        STDERR.puts "Error #{error_code} while deleting Virtual Machine packer-#{box_name}"
+        STDERR.puts error
+        exit error_code
       end
     }
   }, # }}}
   virtualbox: # {{{
   {
     name:         'virtualbox',
+    say:          'Virtual Box',
     folder:       'virtualbox',
     vagrant_type: 'virtualbox',
     packer_type:  'virtualbox-iso',
     supported:    lambda {
       case RUBY_PLATFORM
         when 'x64-mingw32'
-          File.exist?(File.join(ENV['VBOX_MSI_INSTALL_PATH'], 'VBoxManage.exe'))
+          ENV['VBOX_MSI_INSTALL_PATH'] && File.exist?(File.join(ENV['VBOX_MSI_INSTALL_PATH'], 'VBoxManage.exe'))
         else which('VBoxManage')
       end
     },
@@ -260,6 +310,7 @@ $builders = builders = { # {{{
   vmware: # {{{
   {
     name:         'vmware',
+    say:          'VM ware',
     folder:       'vmware',
     vagrant_type: 'vmware_desktop',
     packer_type:  'vmware-iso',
@@ -279,7 +330,9 @@ directory temp_dir
 directory log_dir
 task :folders => [ boxes_dir, temp_dir, log_dir ]
 
-rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule| # {{{
+# rule .box {{{
+rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule|
+  verbose "Found rule"
   box_filename  = _rule.name.pathmap("%f")
   box_name      = _rule.source.pathmap("%2d").pathmap("%f")
   box_version   = /.*-(\d+\.\d+\.\d+)\.box/i =~ box_filename ? $1 : '0.1.0'
@@ -289,7 +342,7 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
   mkdir_p _rule.name.pathmap("%d")
   builder[:preclean].call(box_name)
   puts "Building box #{box_name} in #{box_filename} using #{builder[:name]}"
-  verbose "  Rule source: #{_rule.source}"
+  $logger.info "  Rule source: #{_rule.source}"
   FileUtils.rm_rf "output-#{builder[:packer_type]}-#{box_name}"
   packer_log    = File.join(log_dir, "packer-build-#{builder[:name]}-#{box_filename}.log")
   config_file   = File.join(template_path, 'config.json')
@@ -298,22 +351,72 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
   ENV['PACKER_LOG']='1'               # Set up child processes environment
   ENV['PACKER_LOG_PATH']=packer_log   # Set up child processes environment
   packer_args=''
-  case RUBY_PLATFORM
-    when 'x64-mingw32'
-      vmware_iso_dir = File.join(ENV['ProgramFiles(x86)'], 'VMWare', 'VMWare Workstation')
-      packer_args    = "-var \"vmware_iso_dir=#{vmware_iso_dir}\""
-    when /.*darwin[0-9]+/
-      packer_args += "-var \"vmware_iso_dir=/Applications/VMware Fusion.app/Contents/Library/isoimages\""
+  case builder[:name]
+    when 'hyperv'
+      # Make sure password is complex enough
+      share_password = ''
+      good=0
+      while good < 3
+        share_password = SecureRandom.urlsafe_base64(9)
+        good = 0
+        good +=1 if share_password !~ /[a-zA-Z0-9]/
+        good +=1 if share_password =~ /[0-9]/
+        good +=1 if share_password =~ /[a-z]/
+        good +=1 if share_password =~ /[A-Z]/
+        puts "Generating a new password (#{share_password} did not meet Windows complexity requirements)" unless good >= 3
+      end
+      # Create a temp user
+      puts "Creating temporary user: #{builder[:share_user]}, password: #{share_password}"
+      $logger.info "Creating temporary user: #{builder[:share_user]}, password: #{share_password}"
+      system "net user #{builder[:share_user]} /DEL >NUL"  if system("net user #{builder[:share_user]} 2>NUL >NUL")
+      system "net user #{builder[:share_user]} #{share_password} /ADD"
+      puts "system \"net user #{builder[:share_user]} #{share_password} /ADD\""
+      # Share log, full permission the temp user
+      puts "Creating share: log at #{Dir.pwd}/log"
+      shell "if (Get-SmbShare log -ErrorAction SilentlyContinue) { Remove-SmbShare log -Force }" 
+      shell "New-SmbShare -Name log -Path '#{Dir.pwd}/log' -FullAccess '#{builder[:share_user]}'"
+      # Share daas/cache, read permission the temp user
+      puts "Creating share: daas-cache at #{cache_dir}"
+      shell "if (Get-SmbShare daas-cache -ErrorAction SilentlyContinue) { Remove-SmbShare daas-cache -Force }" 
+      shell "New-SmbShare -Name daas-cache -Path '#{cache_dir}' -ReadAccess '#{builder[:share_user]}'"
+      host_ip=shell("Get-NetIPConfiguration | Where InterfaceAlias -like '*Bridged Switch*' | Select -ExpandProperty IPv4Address | Select -ExpandProperty IPAddress")
+      packer_args += " -var \"share_host=#{host_ip}\""
+      packer_args += " -var \"share_username=#{builder[:share_user]}\""
+      packer_args += " -var \"share_password=#{share_password}\""
+    when 'vmware'
+      case RUBY_PLATFORM
+        when 'x64-mingw32'
+          vmware_iso_dir  = File.join(ENV['ProgramFiles(x86)'], 'VMWare', 'VMWare Workstation')
+          packer_args    += " -var \"vmware_iso_dir=#{vmware_iso_dir}\""
+        when /.*darwin[0-9]+/
+          packer_args += " -var \"vmware_iso_dir=/Applications/VMware Fusion.app/Contents/Library/isoimages\""
+      end
   end
   packer_args += " -var \"cache_dir=#{cache_dir}\" -var \"version=#{box_version}\""
+  begin
   build_time = Benchmark.measure {
     sh "packer build -only=#{builder[:packer_type]} -var-file=\"#{config_file}\" #{packer_args} \"#{template_file}\""
   }
   puts "Build time: #{build_time.real} seconds"
-  File.open(packer_log, "a") { |f|
-    f.puts "Build time: #{build_time.real} seconds"
-    f.puts "==== END   %s %s" % ['=' * 60, Time.now.to_s]
-  }
+  `say --voice=Samantha "Box built for #{builder[:say]}"` if RUBY_PLATFORM =~ /.*darwin.*/
+  ensure
+    case builder[:name]
+      when 'hyperv'
+        # Unshare log
+        puts "Removing share: log"
+        shell "Remove-SmbShare log -Force" 
+        # Unshare daas/cache
+        puts "Removing share: daas-cache"
+        shell "Remove-SmbShare daas-cache -Force" 
+        # Delete the temp user
+        puts "Deleting temporary user: #{builder[:share_user]}"
+        sh "net user #{builder[:share_user]} /DEL"
+    end
+    File.open(packer_log, "a") { |f|
+      f.puts "Build time: #{build_time.real} seconds" unless build_time.nil?
+      f.puts "==== END   %s %s" % ['=' * 60, Time.now.to_s]
+    }
+  end
 end # }}}
 
 # builders tasks {{{
@@ -379,24 +482,25 @@ builders.each do |builder_name, builder|
           loaded_box_marker = "#{box_root}/#{version}/#{vagrant_provider}/metadata.json"
 
           file loaded_box_marker => box_file do |_task|
-            verbose _task.investigation
+            $logger.info _task.investigation
 
             if Dir.exist? "#{box_root}/#{version}"
-              verbose "removing #{box_root}/#{version}/#{vagrant_provider}"
+              $logger.info "removing #{box_root}/#{version}/#{vagrant_provider}"
               FileUtils.rm_r "#{box_root}/#{version}/#{vagrant_provider}", force: true
             else
-              verbose "removing #{box_root}/#{version}"
+              $logger.info "removing #{box_root}/#{version}"
               FileUtils.mkdir_p "#{box_root}/#{version}"
             end
-            verbose "adding #{box_file} as #{box_name}"
+            $logger.info "adding #{box_file} as #{box_name}"
             load_time = Benchmark.measure {
               sh "vagrant box add --force #{box_name} #{box_file}"
             }
             puts "Load time: #{load_time.real} seconds"
+            `say --voice=Samantha "Box loaded in Vagrant"` if RUBY_PLATFORM =~ /.*darwin.*/
             # Now move the new box in the proper version folder
-            verbose "moving #{box_root}/0/#{vagrant_provider} to #{box_root}/#{version}"
+            $logger.info "moving #{box_root}/0/#{vagrant_provider} to #{box_root}/#{version}"
             FileUtils.mv   "#{box_root}/0/#{vagrant_provider}", "#{box_root}/#{version}"
-            verbose "removing #{box_root}/0"
+            $logger.info "removing #{box_root}/0"
             FileUtils.rm_r "#{box_root}/0", force: true
             puts "==> box: Successfully updated box '#{box_name}' version to #{version} for '#{vagrant_provider}'"
           end
@@ -485,13 +589,15 @@ end
 
 desc "Turn on verbose mode"
 task :verbose do
-  $logger = Logger.new(STDOUT)
+  $logger = Logger.new(STDERR)
   $logger.level = Logger::INFO
+  $logger.info "Verbose started at: %s" % [ Time.now.to_s ]
 end
 
 desc "Turn on debug mode"
 task :debug => [:verbose] do
   $logger.level = Logger::DEBUG
+  $logger.debug "Debug started at: %s" % [ Time.now.to_s ]
 end
 
 task :default => ['build:all', 'metadata:all']

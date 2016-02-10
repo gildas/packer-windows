@@ -12,6 +12,9 @@ boxes/
 boxes
 *.box
 
+# test box
+templates/test/
+
 # temp folder
 tmp/
 
@@ -20,6 +23,9 @@ log/
 
 # vagrant folder
 .vagrant/
+
+# Bundler folder
+.bundle/
 
 # .GitEye
 /.project

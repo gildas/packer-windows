@@ -14,9 +14,13 @@
     "os_license":        "",
     "admin_username":    "vagrant",
     "admin_password":    "vagrant",
+    "share_host":        "",
+    "share_username":    "",
+    "share_password":    "",
     "disk_size":         "40960",
     "mem_size":          "1024",
-    "cpus":              "1"
+    "cpus":              "1",
+    "hyperv_switch":     ""
   },
   "builders":
   [
@@ -206,6 +210,14 @@
   ],
   "provisioners":
   [
+    { "type": "powershell",
+      "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=log", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Z" ],
+      "script": "./scripts/prep-share.ps1" },
+    { "type": "powershell",
+      "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=daas-cache", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Y" ],
+      "script": "./scripts/prep-share.ps1" },
+
+    { "type": "powershell", "script": "./scripts/disable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
     { "type": "file",       "source": "./data/GeoTrust_Global_CA.pem", "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem" },
     { "type": "file",       "source": "./data/vagrant.jpg",            "destination": "C:/Users/vagrant/Pictures/vagrant.jpg" },
@@ -213,7 +225,9 @@
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
     { "type": "windows-restart" },
 
-    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" }
+    { "type": "powershell", "script": "./scripts/enable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" },
+    { "type": "powershell", "inline": [ "Remove-Item $env:HOME/*.info -Force" ] }
   ],
   "post-processors":
   [

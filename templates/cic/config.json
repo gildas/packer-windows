@@ -10,5 +10,6 @@
   "cache_dir":         "/var/cache/daas",
   "disk_size":         "81920",
   "mem_size":          "2048",
-  "cpus":              "2"
+  "cpus":              "2",
+  "hyperv_switch":     "Bridged Switch"
 }

@@ -1,40 +1,78 @@
-<#
-#>
-
-
-if ($env:PACKER_BUILDER_TYPE -match 'vmware')
+[CmdletBinding(SupportsShouldProcess=$true)] 
+Param(
+)
+begin
 {
-  $share_name = "\\vmware-host\Shared Folders"
+  Write-Output "Script started at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 }
-elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
+process
 {
-  $share_name = "\\vboxsrv"
-}
-elseif ($env:PACKER_BUILDER_TYPE -match 'parallels')
-{
-  $share_name = "\\psf"
-}
-else
-{
-  Write-Warning "Unknown Packer builder ${env:PACKER_BUILDER_TYPE}, ignoring"
-  exit 0
-}
+  if (Test-Path $env:USERPROFILE/share-log.info)
+  {
+    $ShareArgs = @{ PSProvider = 'FileSystem'; ErrorAction = 'Stop' }
+    $ShareInfo = Get-Content $env:USERPROFILE/share-log.info -Raw | ConvertFrom-Json
 
-$log_dir = Join-Path $share_name "log"
+    if ($ShareInfo.DriveLetter -ne $null)
+    {
+      if ($ShareInfo.User -ne $null)
+      {
+        if ($ShareInfo.Password -eq $null)
+        {
+          Throw "No password for $($ShareInfo.User) in $($env:USERPROFILE)/share-log.info"
+          exit 1
+        }
+        $ShareArgs['Credential'] = New-Object System.Management.Automation.PSCredential($ShareInfo.User, (ConvertTo-SecureString -String $ShareInfo.Password -AsPlainText -Force))
+      }
+      $Drive   = New-PSDrive -Name $ShareInfo.DriveLetter -Root $ShareInfo.Path @ShareArgs
+      $log_dir = $Drive.Root
+    }
+    else
+    {
+      $log_dir = $ShareInfo.Path
+    }
+    Write-Output "Using Share at $log_dir"
+  }
+  else
+  {
+    Write-Output "Share log information was not found"
+    Write-Warning "No log will be backed up"
+    Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    exit
+  }
+  if ([string]::IsNullOrEmpty($log_dir))
+  {
+    Throw "No share to use from $($env:USERPROFILE)/share-log.info"
+    exit 2
+  }
 
-if (Test-Path "C:\ProgramData\chocolatey\logs\chocolatey.log")
-{
-  Copy-Item C:\ProgramData\chocolatey\logs\chocolatey.log (Join-Path $log_dir "packer-build-${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-chocolatey.log")
+  $log_dir = (Join-Path $log_dir "${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-$(Get-Date -Format 'yyyyMMddHHmmss')")
+  if (! (Test-Path $log_dir)) { New-Item -ItemType Directory -Path $log_dir -ErrorAction Stop | Out-Null }
+
+  if (Test-Path "C:\ProgramData\chocolatey\logs\chocolatey.log")
+  {
+    if ($PSCmdlet.ShouldProcess("chocolatey.log", "Backing up"))
+    {
+      Copy-Item C:\ProgramData\chocolatey\logs\chocolatey.log $log_dir
+    }
+  }
+
+  Get-ChildItem "C:\Windows\Logs\*.log" | ForEach {
+    if ($PSCmdlet.ShouldProcess((Split-Path $_ -Leaf), "Backing up"))
+    {
+      Copy-Item $_ $log_dir
+    }
+  }
+
+  Get-ChildItem "C:\Windows\Logs\*.txt" | ForEach {
+    if ($PSCmdlet.ShouldProcess((Split-Path $_ -Leaf), "Backing up"))
+    {
+      Copy-Item $_ $log_dir
+    }
+  }
+
+  Start-Sleep 5
 }
-
-if (Test-Path "C:\Windows\Logs\icserver-*.log")
+end
 {
-  Copy-Item C:\Windows\Logs\icserver-*.log (Join-Path $log_dir "packer-build-${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-icserver.log")
+  Write-Output "Script ended at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 }
-
-if (Test-Path "C:\Windows\Logs\icfirmware-*.log")
-{
-  Copy-Item C:\Windows\Logs\icfirmware-*.log (Join-Path $log_dir "packer-build-${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-icfirmware.log")
-}
-
-Start-Sleep 5
