@@ -71,12 +71,24 @@ def shell(command) # {{{
     when 'x64-mingw32'
       stdin, stdout, stderr = Open3.popen3 "powershell.exe -NoLogo -ExecutionPolicy Bypass -Command \" #{command} \"" 
       stdin.close
-      output=stdout.readlines.join.chomp
-      error=stderr.readlines.join.chomp
+      output = stdout.readlines.join.chomp
+      error  = stderr.readlines.join.chomp
       raise error unless error.empty?
       return output
     else
-      system command
+      $logger.info "Executing: %x(#{command})"
+      stdin, stdout, stderr, wait_thread = Open3.popen3 command
+      $logger.info "  PID #{wait_thread[:pid]}: started"
+      stdin.close
+      status = wait_thread.value
+      output = stdout.readlines.join.chomp
+      error  = stderr.readlines.join.chomp
+      $logger.debug "  PID #{wait_thread[:pid]}: ended. Status: success=#{status.success?}, exitstatus=#{status.exitstatus}, pid=#{status.pid}"
+      unless status.success?
+        $logger.error "PID #{status.pid}: exit status: #{status.exitstatus}"
+        yield(status.exitstatus, error) if block_given?
+      end
+      return output
   end
 end # }}}
 
