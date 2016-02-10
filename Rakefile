@@ -182,6 +182,7 @@ $builders = builders = { # {{{
   hyperv: # {{{
   {
     name:           'hyperv',
+    say:            'Hi-per V',
     folder:         'hyperv',
     vagrant_type:   'hyperv',
     packer_type:    'hyperv-iso',
@@ -199,6 +200,7 @@ $builders = builders = { # {{{
   qemu: # {{{
   {
     name:         'qemu',
+    say:          'KVM',
     folder:       'qemu',
     vagrant_type: 'libvirt',
     packer_type:  'qemu',
@@ -208,6 +210,7 @@ $builders = builders = { # {{{
   parallels: # {{{
   {
     name:         'parallels',
+    say:          'Parallels Desktop',
     folder:       'parallels',
     vagrant_type: 'parallels',
     packer_type:  'parallels-iso',
@@ -259,6 +262,7 @@ $builders = builders = { # {{{
   virtualbox: # {{{
   {
     name:         'virtualbox',
+    say:          'Virtual Box',
     folder:       'virtualbox',
     vagrant_type: 'virtualbox',
     packer_type:  'virtualbox-iso',
@@ -306,6 +310,7 @@ $builders = builders = { # {{{
   vmware: # {{{
   {
     name:         'vmware',
+    say:          'VM ware',
     folder:       'vmware',
     vagrant_type: 'vmware_desktop',
     packer_type:  'vmware-iso',
@@ -393,6 +398,7 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
     sh "packer build -only=#{builder[:packer_type]} -var-file=\"#{config_file}\" #{packer_args} \"#{template_file}\""
   }
   puts "Build time: #{build_time.real} seconds"
+  `say --voice=Samantha "Box built for #{builder[:say]}"` if RUBY_PLATFORM =~ /.*darwin.*/
   ensure
     case builder[:name]
       when 'hyperv'
@@ -490,6 +496,7 @@ builders.each do |builder_name, builder|
               sh "vagrant box add --force #{box_name} #{box_file}"
             }
             puts "Load time: #{load_time.real} seconds"
+            `say --voice=Samantha "Box loaded in Vagrant"` if RUBY_PLATFORM =~ /.*darwin.*/
             # Now move the new box in the proper version folder
             $logger.info "moving #{box_root}/0/#{vagrant_provider} to #{box_root}/#{version}"
             FileUtils.mv   "#{box_root}/0/#{vagrant_provider}", "#{box_root}/#{version}"
