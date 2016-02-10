@@ -215,77 +215,44 @@ $builders = builders = { # {{{
     preclean:     lambda { |box_name|
       tries = 3
       begin
-        $logger.info "Executing: \"prlctl list\""
-        stdin, stdout, stderr, wait_thread = Open3.popen3 "prlctl list"
-        $logger.info "PID #{wait_thread[:pid]}: started"
-        stdin.close
-        status = wait_thread.value
-        unless status.success?
-          $logger.error "PID #{status.pid}: exit status: #{status.exitstatus}"
-          case status.exitstatus
-            when 255 then return # The VM was not found, no need to clean
-            when   6 then raise RuntimeError, 'not initialized'
+        $logger.info "Checking if Parallels Desktop was initialized properly"
+        shell('prlctl list') do |error_code, error|
+          case error_code
+            when 6 then raise RuntimeError, 'not initialized'
             else
-              STDERR.puts "Error #{status.exitstatus} while executing prlctl"
-              STDERR.puts stderr.readlines
-              exit status.exitstatus
+              STDERR.puts "Error #{error_code} while checking Parallels Desktop"
+              STDERR.puts error
+              exit error_code
           end
         end
       rescue RuntimeError
-        $logger.error "Parallels Desktop is not initialized"
-        $logger.info "Executing: \"inittool\" in sudo mode"
+        $logger.warn "Parallels Desktop is not initialized"
         puts "Initializing Parallels Desktop"
-        stdin, stdout, stderr, wait_thread = Open3.popen3 "sudo \"/Applications/Parallels Desktop.app/Contents/MacOS/inittool\" init -b \"/Applications/Parallels Desktop.app\""
-        $logger.info "PID #{wait_thread[:pid]}: started"
-        status = wait_thread.value
-        stdin.close
-        puts stdout.readlines
-        STDERR.puts stderr.readlines unless status.success?
-        retry if status.success? && ! (tries -= 1).zero?
-        STDERR.puts "Error #{status.exitstatus} while initializing Parallels Desktop"
-        STDERR.puts stderr.readlines
-        exit status.exitstatus
-      end
-      $logger.info "PID #{status.pid}: exit status: #{status.exitstatus}"
-      stdout.close
-      stderr.close
-      puts "Cleaning #{box_name}"
-      stdin, stdout, stderr, wait_thread = Open3.popen3 "prlctl list --info --json \"packer-#{box_name}\""
-      case wait_thread.value
-        when 0
-          # All is good
-        when 6
-          STDERR.puts "Error while executing prlctl, Status: #{wait_thread.value}"
-          STDERR.puts stderr.readlines
-          exit 2
-        else
-          STDERR.puts "Error while executing prlctl, Status: #{wait_thread.value}"
-          STDERR.puts stderr.readlines
-          puts "  Deleting Virtual Machine in Virtualbox"
-          stdin, stdout, stderr = Open3.popen3 "prlctl unregister \"packer-#{box_name}\""
-          status = $?
-          errors = stderr.readlines
-          STDERR.puts "Errors while deleting the Virtual Machine: #{errors}" unless errors.nil?
+        shell('sudo "/Applications/Parallels Desktop.app/Contents/MacOS/inittool" init -b "/Applications/Parallels Desktop.app"') do |error_code, error|
+          STDERR.puts "Error #{error_code} while checking Parallels Desktop"
+          STDERR.puts error
+          exit error_code
+        end
+        retry unless (tries -= 1).zero?
       end
 
-      stdin, stdout, stderr, wait_thread = Open3.popen3 "prlsrvctl user list"
-      if wait_thread.value != 0
-        STDERR.puts "Error while executing prlsrvctl, Status: #{wait_thread.value}"
-        STDERR.puts stderr.readlines
-        exit 2
+      $logger.info "Checking if Virtual Machine packer-#{box_name} exists"
+      shell("prlctl list --info --json \"packer-#{box_name}\"") do |error_code, error|
+        case error_code
+          when 255 then return # The VM was not found, no need to clean
+          else
+            STDERR.puts "Error #{error_code} while checking Virtual Machine packer-#{box_name}"
+            STDERR.puts error
+            exit error_code
+        end
       end
-      while line = stdout.gets
-        next unless line =~ /^#{Etc.getlogin}/
-        vm_dir = File.join(line.chomp.split.last, "packer-#{box_name}")
-        break
-      end
-      if vm_dir.nil?
-        STDERR.puts "Errors while getting the Parallels user list."
-        exit 2
-      end
-      if Dir.exist? vm_dir
-        puts "  Deleting Virtual Machine folder"
-        FileUtils.rm_rf vm_dir
+
+      puts "Deleting Virtual Machine packer-#{box_name}"
+      $logger.info "Deleting Virtual Machine packer-#{box_name}"
+      shell("prlctl unregister \"packer-#{box_name}\"") do |error_code, error|
+        STDERR.puts "Error #{error_code} while deleting Virtual Machine packer-#{box_name}"
+        STDERR.puts error
+        exit error_code
       end
     }
   }, # }}}
