@@ -431,7 +431,7 @@ builders.each do |builder_name, builder|
         when 'cic'
           $logger.debug "  Calculating version..."
           $logger.debug "  Search cache in #{cache_dir}"
-          cic_iso = Rake::FileList.new(File.join(cache_dir, 'CIC_*.iso')).sort.last
+          cic_iso = Rake::FileList.new(File.join(cache_dir, 'CIC_[0-9]*.iso')).sort.last
           $logger.debug "  Using ISO: #{cic_iso}"
           /CIC_(\d+)_R(\d+)(?:_Patch(\d+))?\.iso/i =~ cic_iso ? "#{$1[2..-1]}.#{$2}.#{$3 || 0}" : '0.1.0'
         else '0.1.0'
