@@ -25,7 +25,7 @@ class NullIO # {{{
   def close        ; end
 end # }}}
 
-$logger = Logger.new(STDERR)
+$logger = Logger.new(NullIO.new)
 
 templates_dir  = 'templates'
 boxes_dir      = 'boxes'
