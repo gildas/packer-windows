@@ -48,12 +48,13 @@ process
       Write-Output "$Share from $Server will be used with $DriveLetter and connected as $User"
       if ($PSCmdlet.ShouldProcess($DriveLetter, "Mounting ${Server}\${Share}"))
       {
-        Write-Verbose "Testing connection information"
+        Write-Output "Testing connection information"
         $Drive = New-PSDrive -Name $DriveLetter -PSProvider FileSystem -Root \\${Server}\${Share} -Credential (New-Object System.Management.Automation.PSCredential("${Server}\${User}", (ConvertTo-SecureString -String $Password -AsPlainText -Force))) -ErrorAction Stop
         $ShareInfo['DriveLetter'] = $DriveLetter
         $ShareInfo['Path']        = "\\${Server}\${Share}"
         $ShareInfo['User']        = "${Server}\${User}";
         $ShareInfo['Password']    = $Password
+        Write-Output "connection information: name=${$Drive.Name}, root=${$Drive.Root} (${$Drive.displayRoot}), provider=${$Drive.Provider}, description=${$Drive.Description}"
       }
     }
   }
