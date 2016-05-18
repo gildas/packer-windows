@@ -248,6 +248,7 @@
     { "type": "file",       "source": "./data/vagrant.jpg",            "destination": "C:/Users/vagrant/Pictures/vagrant.jpg" },
     { "type": "powershell", "script": "./scripts/Set-AccountPicture.ps1" },
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
+    { "type": "powershell", "inline": [ "Install-WindowsFeature -Name Net-Framework-Core -Source D:\\sources\\sxs" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "windows-restart" },
 
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },

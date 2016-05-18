@@ -254,6 +254,7 @@
     { "type": "powershell", "inline": [ "Copy-Item C:/ProgramData/BGInfo/Set-Background.lnk \"C:/ProgramData/Microsoft/Windows/Start Menu/Programs/StartUp\"" ] },
     { "type": "powershell", "script": "./scripts/Set-AccountPicture.ps1" },
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
+    { "type": "powershell", "inline": [ "Install-WindowsFeature -Name Net-Framework-Core -Source D:\\sources\\sxs" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "windows-restart", "except": [ "hyperv-iso" ] },
 
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
