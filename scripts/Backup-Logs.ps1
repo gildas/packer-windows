@@ -45,9 +45,15 @@ process
     exit 2
   }
 
-  $log_dir = (Join-Path $log_dir "${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-$(Get-Date -Format 'yyyyMMddHHmmss')")
+  While (! (Test-Path $log_dir))
+  {
+    Write-Output "Waiting for shares to be available"
+    Start-Sleep 20
+  }
+  $log_dir = Join-Path $log_dir "${env:PACKER_BUILDER_TYPE}-${env:PACKER_BUILD_NAME}-$(Get-Date -Format 'yyyyMMddHHmmss')"
   if (! (Test-Path $log_dir)) { New-Item -ItemType Directory -Path $log_dir -ErrorAction Stop | Out-Null }
 
+  Write-Output "Backing up logs in $log_dir"
   if (Test-Path "C:\ProgramData\chocolatey\logs\chocolatey.log")
   {
     if ($PSCmdlet.ShouldProcess("chocolatey.log", "Backing up"))

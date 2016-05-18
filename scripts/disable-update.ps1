@@ -1,3 +1,9 @@
-$mgr = New-Object -ComObject Microsoft.Update.ServiceManager -Strict
-$mgr.ClientApplicationID = "packer"
-$mgr.RemoveService('7971f918-a847-4430-9279-4a52d1efe18d')
+$WindowsUpdateKey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update"
+
+$Update_Never    = 1
+$Update_Check    = 2
+$Update_Download = 3
+$Update_Auto     = 4
+
+Set-ItemProperty -Path $WindowsUpdateKey -Name AUOptions       -Value $Update_Never -Force -Confirm:$false
+Set-ItemProperty -Path $WindowsUpdateKey -Name CachedAUOptions -Value $Update_Never -Force -Confirm:$false

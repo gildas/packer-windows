@@ -38,7 +38,7 @@ process
         }
         $ShareArgs['Credential'] = New-Object System.Management.Automation.PSCredential($ShareInfo.User, (ConvertTo-SecureString -String $ShareInfo.Password -AsPlainText -Force))
       }
-      $Drive     = New-PSDrive -Name $ShareInfo.DriveLetter -Root $ShareInfo.Path @ShareArgs
+      $Drive     = New-PSDrive -Name $ShareInfo.DriveLetter -Root $ShareInfo.Path @ShareArgs -Persist -Scope Global
       $share_dir = $Drive.Root
     }
     else
@@ -86,6 +86,12 @@ process
     }
   }
   Write-Verbose "Found: $InstallISO"
+
+  While (! (Test-Path $share_dir))
+  {
+    Write-Output "Waiting for shars to be available"
+    Start-Sleep 20
+  }
 
   if ([string]::IsNullOrEmpty($DriveLetter))
   {

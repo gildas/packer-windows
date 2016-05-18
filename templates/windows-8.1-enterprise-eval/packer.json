@@ -91,7 +91,7 @@
     },
     {
       "type":                "parallels-iso",
-      "vm_name":             "packer_{{user `template`}}",
+      "vm_name":             "packer_win8.1",
       "guest_os_type":       "win-8",
       "iso_urls": [
         "{{user `cache_dir`}}/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_ENTERPRISE_EVAL_EN-US-IR3_CENA_X64FREE_EN-US_DV9.ISO",
@@ -248,6 +248,7 @@
     { "type": "file",       "source": "./data/vagrant.jpg",            "destination": "C:/Users/vagrant/Pictures/vagrant.jpg" },
     { "type": "powershell", "script": "./scripts/Set-AccountPicture.ps1" },
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
+    { "type": "powershell", "inline": [ "Install-WindowsFeature -Name Net-Framework-Core -Source D:\\sources\\sxs" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "windows-restart" },
 
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
