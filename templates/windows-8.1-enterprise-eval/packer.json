@@ -91,7 +91,7 @@
     },
     {
       "type":                "parallels-iso",
-      "vm_name":             "packer_{{user `template`}}",
+      "vm_name":             "packer_win8.1",
       "guest_os_type":       "win-8",
       "iso_urls": [
         "{{user `cache_dir`}}/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_ENTERPRISE_EVAL_EN-US-IR3_CENA_X64FREE_EN-US_DV9.ISO",

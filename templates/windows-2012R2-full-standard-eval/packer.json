@@ -92,7 +92,7 @@
     },
     {
       "type":                "parallels-iso",
-      "vm_name":             "packer_{{user `template`}}",
+      "vm_name":             "packer_win2012R2",
       "guest_os_type":       "win-2012",
       "iso_urls": [
         "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",

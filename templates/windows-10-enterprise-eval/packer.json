@@ -61,7 +61,7 @@
     },
     {
       "type":                "parallels-iso",
-      "vm_name":             "packer_{{user `template`}}",
+      "vm_name":             "packer_win10",
       "guest_os_type":       "win-2012",
       "iso_urls": [
         "{{user `cache_dir`}}/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
