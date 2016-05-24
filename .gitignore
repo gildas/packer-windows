@@ -27,6 +27,9 @@ log/
 # Bundler folder
 .bundle/
 
+# Bundler Gemfile.
+Gemfile.lock
+
 # .GitEye
 /.project
 
