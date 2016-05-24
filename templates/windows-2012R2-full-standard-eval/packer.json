@@ -92,7 +92,7 @@
     },
     {
       "type":                "parallels-iso",
-      "vm_name":             "packer_{{user `template`}}",
+      "vm_name":             "packer_win2012R2",
       "guest_os_type":       "win-2012",
       "iso_urls": [
         "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
@@ -254,6 +254,7 @@
     { "type": "powershell", "inline": [ "Copy-Item C:/ProgramData/BGInfo/Set-Background.lnk \"C:/ProgramData/Microsoft/Windows/Start Menu/Programs/StartUp\"" ] },
     { "type": "powershell", "script": "./scripts/Set-AccountPicture.ps1" },
     { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
+    { "type": "powershell", "inline": [ "Install-WindowsFeature -Name Net-Framework-Core -Source D:\\sources\\sxs" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "windows-restart", "except": [ "hyperv-iso" ] },
 
     { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
