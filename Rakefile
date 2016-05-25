@@ -330,6 +330,14 @@ directory temp_dir
 directory log_dir
 task :folders => [ boxes_dir, temp_dir, log_dir ]
 
+# rule .md5 {{{
+rule(/\.box\.md5$/ => [proc {|task_name| task_name.sub(/\.box\.md5$/, '.box') } ]) do |_rule|
+  puts "Calculating MD5 checksum for #{_rule.source.pathmap("%2d").pathmap("%f")}"
+  chksum = Digest::MD5.file _rule.source
+  puts "===> md5: #{chksum}"
+  File.write _rule.name, chksum
+end # }}}
+
 # rule .box {{{
 rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule|
   verbose "Found rule"
@@ -524,11 +532,7 @@ builders.each do |builder_name, builder|
       namespace :md5 do # {{{
         namespace builder_name.to_sym do
           desc "Calculate the MD5 checksum of the box #{box_name} in #{builder_name}"
-          task box_name => "build:#{builder_name}:#{box_name}" do
-            chksum = Digest::MD5.file box_file
-            puts "===> md5: #{chksum}"
-            File.write "#{box_file}.md5", chksum
-          end
+          task box_name => "#{box_file}.md5"
 
           $box_aliases[box_name].each do |box_alias|
             desc "Alias to calculate MD5 checksum of box #{box_name} in vagrant for #{builder_name}"
