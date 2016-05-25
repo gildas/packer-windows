@@ -8,7 +8,7 @@ require 'etc'
 require 'erb'
 require 'open3'
 require 'ostruct'
-require 'digest/sha1'
+require 'digest'
 require 'rake/clean'
 begin
   require 'rspec/core/rake_task'
@@ -519,6 +519,22 @@ builders.each do |builder_name, builder|
 
         desc "Load all boxes in vagrant"
         task :all => "#{builder_name}:all"
+      end # }}}
+
+      namespace :md5 do # {{{
+        namespace builder_name.to_sym do
+          desc "Calculate the MD5 checksum of the box #{box_name} in #{builder_name}"
+          task box_name => "build:#{builder_name}:#{box_name}" do
+            chksum = Digest::MD5.file box_file
+            puts "===> md5: #{chksum}"
+            File.write "#{box_file}.md5", chksum
+          end
+
+          $box_aliases[box_name].each do |box_alias|
+            desc "Alias to calculate MD5 checksum of box #{box_name} in vagrant for #{builder_name}"
+            task box_alias => box_name
+          end if $box_aliases[box_name]
+        end
       end # }}}
 
       namespace :up do # {{{
