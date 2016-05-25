@@ -569,47 +569,6 @@ builders.each do |builder_name, builder|
         end
       end if !ENV['VAGRANT_REPO'].nil? # }}}
 
-      namespace :up do # {{{
-        namespace builder_name.to_sym do
-          desc "Start a Virtual Machine after the box #{box_name} in #{builder_name}"
-          task box_name => "load:#{builder_name}:#{box_name}" do
-            sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant up --provider=#{builder[:vagrant_type]} --provision"
-          end
-        end
-      end # }}}
-
-      namespace :halt do # {{{
-        namespace builder_name.to_sym do
-          desc "Stop the Virtual Machine from the box #{box_name} in #{builder_name}"
-          task box_name do
-            sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant halt"
-          end
-
-          desc "Stop all boxes in #{builder_name}"
-          task :all => box_name
-        end
-
-        desc "Stop all boxes in all providers"
-        task :all => "#{builder_name}:all"
-      end # }}}
-
-      namespace :destroy do # {{{
-        namespace builder_name.to_sym do
-          desc "Destroy the Virtual Machine from the box #{box_name} from #{builder_name}"
-          task box_name do
-            if File.exists?("spec/.vagrant/machines/default/#{builder[:vagrant_type]}/id")
-              sh "cd spec ; BOX=\"#{box_name}\" BOX_URL=\"#{box_url}\" vagrant destroy -f"
-            end
-          end
-
-          desc "Destroy all Virtual Machines from all boxes from #{builder_name}"
-          task :all => box_name
-        end
-
-        desc "Destroy all Virtual Machines from all boxes from all providers"
-        task :all => "#{builder_name}:all"
-      end # }}}
-
       namespace :remove do # {{{
         namespace builder_name.to_sym do
           desc "Remove box #{box_name} from #{builder_name}"
