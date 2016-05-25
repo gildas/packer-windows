@@ -541,6 +541,34 @@ builders.each do |builder_name, builder|
         end
       end # }}}
 
+      namespace :push do # {{{
+        namespace builder_name.to_sym do
+          desc "Uploads box #{box_name} built with #{builder_name} to a repository"
+          task box_name => "md5:#{builder_name}:#{box_name}" do
+            # Retrieve the metadata.json from ENV['VAGRANT_REPO']
+            #   if not exist, create it
+            #     upload box and md5
+            #     update json
+            #     upload json
+            #   if exist,
+            #     find box_name, builder_name version in json
+            #       if exist
+            #         check md5 from repo
+            #           if same, end
+            #           if different, upload box and md5
+            #       if not exist
+            #         upload box and md5
+            #         update json
+            #         upload json
+          end
+
+          $box_aliases[box_name].each do |box_alias|
+            desc "Alias to upload box #{box_name} built with #{builder_name} to a repository"
+            task box_alias => box_name
+          end if $box_aliases[box_name]
+        end
+      end if !ENV['VAGRANT_REPO'].nil? # }}}
+
       namespace :up do # {{{
         namespace builder_name.to_sym do
           desc "Start a Virtual Machine after the box #{box_name} in #{builder_name}"
