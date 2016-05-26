@@ -386,7 +386,6 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
       $logger.info "Creating temporary user: #{builder[:share_user]}, password: #{share_password}"
       system "net user #{builder[:share_user]} /DEL >NUL"  if system("net user #{builder[:share_user]} 2>NUL >NUL")
       system "net user #{builder[:share_user]} #{share_password} /ADD"
-      puts "system \"net user #{builder[:share_user]} #{share_password} /ADD\""
       # Share log, full permission the temp user
       puts "Creating share: log at #{Dir.pwd}/log"
       shell "if (Get-SmbShare log -ErrorAction SilentlyContinue) { Remove-SmbShare log -Force }" 
