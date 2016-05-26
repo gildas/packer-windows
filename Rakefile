@@ -382,11 +382,11 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
       # Share log, full permission the temp user
       puts "Creating share: log at #{Dir.pwd}/log"
       shell "if (Get-SmbShare log -ErrorAction SilentlyContinue) { Remove-SmbShare log -Force }" 
-      shell "New-SmbShare -Name log -Path '#{Dir.pwd}/log' -FullAccess '#{builder[:share_user]}'"
+      shell "New-SmbShare -Name log -Path '#{Dir.pwd}/log' -Temporary -FullAccess '#{builder[:share_user]}'"
       # Share daas/cache, read permission the temp user
       puts "Creating share: daas-cache at #{cache_dir}"
       shell "if (Get-SmbShare daas-cache -ErrorAction SilentlyContinue) { Remove-SmbShare daas-cache -Force }" 
-      shell "New-SmbShare -Name daas-cache -Path '#{cache_dir}' -ReadAccess '#{builder[:share_user]}'"
+      shell "New-SmbShare -Name daas-cache -Path '#{cache_dir}' -Temporary -ReadAccess '#{builder[:share_user]}'"
       host_ip=shell("Get-NetIPConfiguration | Where InterfaceAlias -like '*Bridged Switch*' | Select -ExpandProperty IPv4Address | Select -ExpandProperty IPAddress")
       packer_args += " -var \"share_host=#{host_ip}\""
       packer_args += " -var \"share_username=#{builder[:share_user]}\""
