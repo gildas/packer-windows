@@ -2,6 +2,7 @@ require 'logger'
 require 'rake'
 require 'fileutils'
 require 'json'
+require 'socket'
 require 'securerandom'
 require 'benchmark'
 require 'etc'
@@ -47,6 +48,13 @@ $box_aliases = {
 }
 
 # Tools {{{
+
+def die(message, exit_code = 1) # {{{
+  $logger.error message
+  STDERR.puts message
+  exit exit_code
+end # }}}
+
 def alias_task(alias_task, original_task) # {{{
   desc "Alias #{original_task}" if Rake::Task[original_task].full_comment
   task alias_task, *Rake.application[:original_task].arg_names, needs: original_task
@@ -66,7 +74,7 @@ def which(f) # {{{
   nil
 end # }}}
 
-def shell(command) # {{{
+def shell(command, options={}) # {{{
   case RUBY_PLATFORM
     when 'x64-mingw32'
       stdin, stdout, stderr = Open3.popen3 "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -Command \" #{command} \""
@@ -74,7 +82,7 @@ def shell(command) # {{{
       output = stdout.readlines.join.chomp
       error  = stderr.readlines.join.chomp
       raise error unless error.empty?
-      return output
+      return options[:json] ? JSON.parse(output, symbolize_names: true) : output
     else
       $logger.info "Executing: %x(#{command})"
       stdin, stdout, stderr, wait_thread = Open3.popen3 command
@@ -88,7 +96,7 @@ def shell(command) # {{{
         $logger.error "PID #{status.pid}: exit status: #{status.exitstatus}"
         yield(status.exitstatus, error) if block_given?
       end
-      return output
+      return options[:json] ? JSON.parse(output, symbolize_names: true) : output
   end
 end # }}}
 
@@ -383,6 +391,8 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
       puts "Creating share: log at #{Dir.pwd}/log"
       shell "if (Get-SmbShare log -ErrorAction SilentlyContinue) { Remove-SmbShare log -Force }" 
       shell "New-SmbShare -Name log -Path '#{Dir.pwd}/log' -Temporary -FullAccess '#{builder[:share_user]}'"
+      share_info = shell("Get-SmbShareAccess -Name log | ConvertTo-Json -Compress", json: true)
+      die "Could not give full access to share 'log' to user #{builder[:share_user]}" unless share_info[:AccountName].casecmp(Socket.gethostname + "\\" + builder[:share_user]) == 0
       # Share daas/cache, read permission the temp user
       puts "Creating share: daas-cache at #{cache_dir}"
       shell "if (Get-SmbShare daas-cache -ErrorAction SilentlyContinue) { Remove-SmbShare daas-cache -Force }" 
