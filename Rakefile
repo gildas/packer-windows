@@ -88,9 +88,9 @@ def shell(command, options={}) # {{{
       stdin, stdout, stderr, wait_thread = Open3.popen3 command
       $logger.info "  PID #{wait_thread[:pid]}: started"
       stdin.close
-      status = wait_thread.value
       output = stdout.readlines.join.chomp
       error  = stderr.readlines.join.chomp
+      status = wait_thread.value
       $logger.debug "  PID #{wait_thread[:pid]}: ended. Status: success=#{status.success?}, exitstatus=#{status.exitstatus}, pid=#{status.pid}"
       unless status.success?
         $logger.error "PID #{status.pid}: exit status: #{status.exitstatus}"
@@ -289,25 +289,27 @@ $builders = builders = { # {{{
         else
           VBOXMGR='VBoxManage'
       end
-      stdin, stdout, stderr = Open3.popen3 "\"#{VBOXMGR}\" showvminfo \"packer-#{box_name}\" --machinereadable"
-      status = $?
-      errors = stderr.readlines
-      if errors.empty?
+      begin
+        shell "\"#{VBOXMGR}\" showvminfo \"packer-#{box_name}\" --machinereadable"
+      rescue
         puts "  Deleting Virtual Machine in Virtualbox"
-        stdin, stdout, stderr = Open3.popen3 "\"#{VBOXMGR}\" unregistervm \"packer-#{box_name}\" --delete"
-        status = $?
-        errors = stderr.readlines
-        STDERR.puts "Errors while deleting the Virtual Machine: #{errors}" unless errors.empty?
+        begin
+          shell "\"#{VBOXMGR}\" unregistervm \"packer-#{box_name}\" --delete"
+        rescue
+          STDERR.puts "Errors while deleting the Virtual Machine: #{$!}"
+        end
       end
 
       vm_dir = nil
-      stdin, stdout, stderr = Open3.popen3 "\"#{VBOXMGR}\" list systemproperties"
-      errors = stderr.readlines
-      STDERR.puts "Errors while querying Virtualbox configuration: #{errors}" unless errors.empty?
-      stdout.readlines.each do |line|
-        next unless line =~ /^Default machine folder/
-        vm_dir = File.join(line.chomp.sub(/^[^:]+:\s+/, ''), "packer-#{box_name}")
-        break
+      begin
+        stdout = shell "\"#{VBOXMGR}\" list systemproperties"
+        stdout.each_line do |line|
+          next unless line =~ /^Default machine folder/
+          vm_dir = File.join(line.chomp.sub(/^[^:]+:\s+/, ''), "packer-#{box_name}")
+          break
+        end
+      rescue
+        STDERR.puts "Errors while querying Virtualbox configuration: #{$!}"
       end
       if !vm_dir.nil? && Dir.exist?(vm_dir)
         puts "  Deleting Virtual Machine folder"
