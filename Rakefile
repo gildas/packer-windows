@@ -444,7 +444,7 @@ builders.each do |builder_name, builder|
     TEMPLATE_FILES.each do |template_file|
       config        = load_json(template_file.pathmap("%d/config.json"))
       $logger.info "Processing Template: #{config['template']}"
-      version       = config['version'] || case config['template']
+      box_version   = config['version'] || case config['template']
         when 'cic'
           $logger.debug "  Calculating version..."
           $logger.debug "  Search cache in #{cache_dir}"
@@ -453,15 +453,15 @@ builders.each do |builder_name, builder|
           /CIC_(\d+)_R(\d+)(?:_Patch(\d+))?\.iso/i =~ cic_iso ? "#{$1[2..-1]}.#{$2}.#{$3 || 0}" : '0.1.0'
         else '0.1.0'
       end
-      $logger.info "  Version: #{version}"
+      $logger.info "  Box Version: #{box_version}"
       box_name      = template_file.pathmap("%{templates/,}d")
-      box_file      = "#{boxes_dir}/#{box_name}/#{builder[:folder]}/#{box_name}-#{version}.box"
+      box_file      = "#{boxes_dir}/#{box_name}/#{builder[:folder]}/#{box_name}-#{box_version}.box"
       box_url       = "file://#{Dir.pwd}/#{box_file}"
       metadata_file = "#{boxes_dir}/#{box_name}/metadata.json"
 
       namespace :validate do # {{{
         namespace builder_name.to_sym do
-          desc "Validate template #{box_name} version #{version} with #{builder_name}"
+          desc "Validate template #{box_name} version #{box_version} with #{builder_name}"
           task box_name do
             sh "packer validate -only=#{builder[:packer_type]} -var-file=#{template_file.pathmap("%d")}/config.json #{template_file}"
           end
@@ -476,7 +476,7 @@ builders.each do |builder_name, builder|
 
       namespace :build do # {{{
         namespace builder_name.to_sym do
-          desc "Build box #{box_name} version #{version} with #{builder_name}"
+          desc "Build box #{box_name} version #{box_version} with #{builder_name}"
           task box_name => [ :folders, box_file ]
 
           $box_aliases[box_name].each do |box_alias|
@@ -496,17 +496,17 @@ builders.each do |builder_name, builder|
         namespace builder_name.to_sym do
           box_root = "#{ENV['VAGRANT_HOME'] || (ENV['HOME'] + '/.vagrant.d')}/boxes/#{box_name}"
           vagrant_provider = builders[builder_name][:vagrant_type]
-          loaded_box_marker = "#{box_root}/#{version}/#{vagrant_provider}/metadata.json"
+          loaded_box_marker = "#{box_root}/#{box_version}/#{vagrant_provider}/metadata.json"
 
           file loaded_box_marker => box_file do |_task|
             $logger.info _task.investigation
 
-            if Dir.exist? "#{box_root}/#{version}"
-              $logger.info "removing #{box_root}/#{version}/#{vagrant_provider}"
-              FileUtils.rm_r "#{box_root}/#{version}/#{vagrant_provider}", force: true
+            if Dir.exist? "#{box_root}/#{box_version}"
+              $logger.info "removing #{box_root}/#{box_version}/#{vagrant_provider}"
+              FileUtils.rm_r "#{box_root}/#{box_version}/#{vagrant_provider}", force: true
             else
-              $logger.info "removing #{box_root}/#{version}"
-              FileUtils.mkdir_p "#{box_root}/#{version}"
+              $logger.info "removing #{box_root}/#{box_version}"
+              FileUtils.mkdir_p "#{box_root}/#{box_version}"
             end
             $logger.info "adding #{box_file} as #{box_name}"
             load_time = Benchmark.measure {
@@ -514,12 +514,12 @@ builders.each do |builder_name, builder|
             }
             puts "Load time: #{load_time.real} seconds"
             `say --voice=Samantha "Box loaded in Vagrant"` if RUBY_PLATFORM =~ /.*darwin.*/
-            # Now move the new box in the proper version folder
-            $logger.info "moving #{box_root}/0/#{vagrant_provider} to #{box_root}/#{version}"
-            FileUtils.mv   "#{box_root}/0/#{vagrant_provider}", "#{box_root}/#{version}"
+            # Now move the new box in the proper box_version folder
+            $logger.info "moving #{box_root}/0/#{vagrant_provider} to #{box_root}/#{box_version}"
+            FileUtils.mv   "#{box_root}/0/#{vagrant_provider}", "#{box_root}/#{box_version}"
             $logger.info "removing #{box_root}/0"
             FileUtils.rm_r "#{box_root}/0", force: true
-            puts "==> box: Successfully updated box '#{box_name}' version to #{version} for '#{vagrant_provider}'"
+            puts "==> box: Successfully updated box '#{box_name}' version to #{box_version} for '#{vagrant_provider}'"
           end
 
           desc "Load box #{box_name} in vagrant for #{builder_name}"
@@ -551,16 +551,38 @@ builders.each do |builder_name, builder|
       end # }}}
 
       namespace :push do # {{{
+        require 'rest-client'
+
         namespace builder_name.to_sym do
-          desc "Uploads box #{box_name} built with #{builder_name} to a repository"
+          desc "Uploads box #{box_name} built with #{builder_name} to Atlas"
           task box_name => "md5:#{builder_name}:#{box_name}" do
-            # Retrieve the metadata.json from ENV['VAGRANT_REPO']
+            die "Please set ATLAS_ACCESS_TOKEN!" unless ENV['ATLAS_ACCESS_TOKEN']
+            url = "https://atlas.hashicorp.com/api/v1/box/daas/#{box_name}/version/#{box_version}/provider/#{builder_name}/upload?access_token=#{ENV['ATLAS_ACCESS_TOKEN']}"
+            $logger.info "Query URL: #{url}"
+            response = RestClient.get "https://atlas.hashicorp.com/api/v1/box/daas/#{box_name}/version/#{box_version}/provider/#{builder_name}/upload", { params: {access_token: ENV['ATLAS_ACCESS_TOKEN'] }, accept: :json }
+            response = JSON.parse(response, symbolize_names: true)
+            $logger.info "Response: #{response}"
+            hosted_token = response[:token]
+            upload_url   = response[:upload_path]
+            $logger.info "Box token: #{hosted_token}, url: #{upload_url}"
+            puts "Uploading image to Atlas... (this can take a really long time)"
+            shell("curl --progress-bar --show-error --request PUT --upload-file \"#{box_file}\" #{upload_url}")
+            response = RestClient.get "https://atlas.hashicorp.com/api/v1/box/daas/#{box_name}/version/#{box_version}/provider/#{builder_name}", { params: {access_token: ENV['ATLAS_ACCESS_TOKEN'] }, accept: :json }
+            response = JSON.parse(response, symbolize_names: true)
+            die "uploaded token is different! :(" unless hosted_token == response[:hosted_token]
+            # Verify:
+            # curl "https://atlas.hashicorp.com/api/v1/box/daas/#{box_name}/version/#{box_version}/provider/#{builder_name}?access_token=#{ENV['ATLAS_ACCESS_TOKEN']}"
+            # response:
+            #  {"name":"parallels","hosted":true,"hosted_token":"a0bb0df8-9aaf-499a-885f-730d905714d6","original_url":null,"created_at":"2016-06-28T13:58:07.828Z","updated_at":"2016-06-28T13:58:07.828Z","download_url":"https://atlas.hashicorp.com/daas/boxes/cic/versions/16.3.0/providers/parallels.box"}
+
+
+            # For simple http sites, Retrieve the metadata.json from ENV['VAGRANT_REPO']
             #   if not exist, create it
             #     upload box and md5
             #     update json
             #     upload json
             #   if exist,
-            #     find box_name, builder_name version in json
+            #     find box_name, builder_name box_version in json
             #       if exist
             #         check md5 from repo
             #           if same, end
