@@ -259,10 +259,10 @@
     { "type": "powershell", "inline": [ "chocolatey install -y sysinternals" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y md5" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y git --params '/GitOnlyOnPath'" ] },
-    { "type": "powershell", "inline": [ "chocolatey install -y vim" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y --allow-empty-checksums vim" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y ruby" ] },
-    { "type": "powershell", "inline": [ "chocolatey install -y classic-shell" ] },
-    { "type": "powershell", "inline": [ "chocolatey install -y puppet" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y --allow-empty-checksums classic-shell" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y --allow-empty-checksums puppet" ] },
 
     { "type": "powershell", "script": "./scripts/enable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" },
