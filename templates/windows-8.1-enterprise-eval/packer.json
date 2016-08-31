@@ -45,7 +45,7 @@
       "ram_size_mb":          "{{user `mem_size`}}",
       "enable_secure_boot":   true,
       "floppy_files": [
-        "./templates/windows-2012R2-core-standard-eval/Autounattend.xml",
+        "./templates/windows-8.1-enterprise-eval/Autounattend.xml",
         "./scripts/00-run-all-scripts.cmd",
         "./scripts/01-config-os.cmd",
         "./scripts/02-config-posh.cmd",
