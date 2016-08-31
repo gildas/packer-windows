@@ -277,7 +277,7 @@
       "type":                "vagrant",
       "keep_input_artifact": false,
       "vagrantfile_template": "templates/{{user `template`}}/vagrantfile.template",
-      "output": "./boxes/{{user `template`}}/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
+      "output": "./boxes/{{user `template`}}_{{user `version`}}_{{.Provider}}.box"
     }
   ]
 }

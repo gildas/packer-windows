@@ -136,14 +136,16 @@ class Binder # {{{
 end # }}}
 
 def sources_for_box(box_file, sources_root, scripts_root) # {{{
-  # box_file should be like: boxes/#{box_name}/#{provider}/#{box_name}-#{box_version}.box
+  # box_file should be like: #{boxes_dir}/#{box_name}_#{box_version}_#{provider}.box
   $logger.info "box file: #{box_file}"
-  box_name = box_file.pathmap("%2d").pathmap("%f")
-  $logger.info "  Finding sources for box: #{box_name}"
+  box_name     = box_file.pathmap("%{_.*,}n")
+  box_provider = box_file.pathmap("%{.*_,}n")
+  box_version  = box_file.pathmap("%{[^_]*_,;_.*,}n")
+  $logger.info "  Finding sources for box: #{box_name} version #{box_version} with provider #{box_provider}"
   box_sources = Rake::FileList.new("#{sources_root}/#{box_name}/*")
   $logger.info "  ==> Box sources: #{box_sources.join(', ')}"
   raise Errno::ENOENT, "no source for #{box_file}" if box_sources.empty?
-  current_builder = $builders.find { |builder| builder[1][:folder] == box_file.pathmap("%3d").pathmap("%f") }
+  current_builder = $builders.find { |builder| builder[1][:folder] == box_provider }
   raise ArgumentError, box_name if current_builder.nil?
   current_builder = current_builder[1]
   $logger.info "  Collecting scripts for #{current_builder[:name]}"
@@ -350,16 +352,15 @@ end # }}}
 
 # rule .box {{{
 rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule|
-  verbose "Found rule"
+  verbose "Found rule: #{rule}"
   box_filename  = _rule.name.pathmap("%f")
-  box_name      = _rule.source.pathmap("%2d").pathmap("%f")
-  box_version   = /.*-(\d+\.\d+\.\d+)\.box/i =~ box_filename ? $1 : '0.1.0'
+  box_name      = box_filename.pathmap("%{_.*,}n")
+  box_provider  = box_filename.pathmap("%{.*_,}n")
+  box_version   = box_filename.pathmap("%{[^_]*_,;_.*,}n") || '0.1.0'
   template_path = _rule.source.pathmap("%d")
-  builder       = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
-  raise ArgumentError, File.basename(_rule.name.pathmap("%d")) if builder.nil?
-  mkdir_p _rule.name.pathmap("%d")
+  builder       = builders[box_provider.to_sym] || raise(ArgumentError, box_filename)
   builder[:preclean].call(box_name)
-  puts "Building box #{box_name} in #{box_filename} using #{builder[:name]}"
+  puts "Building box #{box_name} version #{box_version} in #{box_filename} using #{builder[:name]}"
   $logger.info "  Rule source: #{_rule.source}"
   FileUtils.rm_rf "output-#{builder[:packer_type]}-#{box_name}"
   packer_log    = File.join(log_dir, "packer-build-#{builder[:name]}-#{box_filename}.log")
@@ -457,8 +458,8 @@ builders.each do |builder_name, builder|
       end
       $logger.info "  Box Version: #{box_version}"
       box_name      = template_file.pathmap("%{templates/,}d")
-      box_file      = "#{boxes_dir}/#{box_name}/#{builder[:folder]}/#{box_name}-#{box_version}.box"
-      box_url       = "file://#{Dir.pwd}/#{box_file}"
+      box_file      = "#{boxes_dir}/#{box_name}_#{box_version}_#{builder[:folder]}.box"
+      box_url       = "file:///#{Dir.pwd}/#{box_file}"
       metadata_file = "#{boxes_dir}/#{box_name}/metadata.json"
 
       namespace :validate do # {{{
