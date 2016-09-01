@@ -38,6 +38,7 @@
       "winrm_timeout":        "20m",
       "switch_name":          "{{user `hyperv_switch`}}",
       "shutdown_command":     "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
+      "shutdown_timeout":     "10m",
       "guest_additions_mode": "none",
       "generation":           "1",
       "disk_size":            "{{user `disk_size`}}",
@@ -45,7 +46,7 @@
       "ram_size_mb":          "{{user `mem_size`}}",
       "enable_secure_boot":   true,
       "floppy_files": [
-        "./templates/windows-8.1-enterprise-eval/Autounattend.xml",
+        "./templates/{{user `template`}}/Autounattend.xml",
         "./scripts/00-run-all-scripts.cmd",
         "./scripts/01-config-os.cmd",
         "./scripts/02-config-posh.cmd",
@@ -264,7 +265,6 @@
     { "type": "powershell", "inline": [ "chocolatey install -y --allow-empty-checksums classic-shell" ] },
     { "type": "powershell", "inline": [ "chocolatey install -y --allow-empty-checksums puppet" ] },
 
-    { "type": "powershell", "script": "./scripts/enable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
     { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" },
     { "type": "powershell", "inline": [ "Remove-Item $env:HOME/*.info -Force" ] }
   ],
