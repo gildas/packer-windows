@@ -47,6 +47,14 @@ $box_aliases = {
   'windows-2012R2-full-standard-eval' => [ 'windows-2012R2-full', 'windows-2012R2', 'windows-2012r2' ],
 }
 
+$box_storages = {
+  'cic'                               => { name: 'daas/cic',                 folder: '/cic', description: 'Customer Interaction Center' },
+  'windows-10-enterprise-eval'        => [ name: 'daas/windows-10',          folder: '/windows-10', description: 'Windows 10 Enterprise Edition with Evaluation License' ],
+  'windows-8.1-enterprise-eval'       => [ name: 'daas/windows-8.1',         folder: '/windows-8.1', description: 'Windows 10 Enterprise Edition with Evaluation License' ],
+  'windows-2012R2-core-standard-eval' => [ name: 'daas/windows-2012R2-core', folder: '/windows-2012R2-core', description: 'Windows 10 Enterprise Edition with Evaluation License' ],
+  'windows-2012R2-full-standard-eval' => [ name: 'daas/windows-2012R2',      folder: '/windows-2012R2', description: 'Windows 10 Enterprise Edition with Evaluation License' ],
+}
+
 # Tools {{{
 
 def die(message, exit_code = 1) # {{{
@@ -554,25 +562,51 @@ builders.each do |builder_name, builder|
       end # }}}
 
       namespace :push do # {{{
-        require 'rest-client'
 
         namespace builder_name.to_sym do
-          desc "Uploads box #{box_name} built with #{builder_name} to Atlas"
+          desc "Uploads box #{box_name} built with #{builder_name} to Atlas or the LAN"
           task box_name => "md5:#{builder_name}:#{box_name}" do
-            die "Please set ATLAS_ACCESS_TOKEN!" unless ENV['ATLAS_ACCESS_TOKEN']
-            url = "https://atlas.hashicorp.com/api/v1/box/daas/#{box_name}/version/#{box_version}/provider/#{builder_name}/upload?access_token=#{ENV['ATLAS_ACCESS_TOKEN']}"
-            $logger.info "Query URL: #{url}"
-            response = RestClient.get "https://atlas.hashicorp.com/api/v1/box/daas/#{box_name}/version/#{box_version}/provider/#{builder_name}/upload", { params: {access_token: ENV['ATLAS_ACCESS_TOKEN'] }, accept: :json }
-            response = JSON.parse(response, symbolize_names: true)
-            $logger.info "Response: #{response}"
-            hosted_token = response[:token]
-            upload_url   = response[:upload_path]
-            $logger.info "Box token: #{hosted_token}, url: #{upload_url}"
-            puts "Uploading image to Atlas... (this can take a really long time)"
-            shell("curl --progress-bar --show-error --request PUT --upload-file \"#{box_file}\" #{upload_url}")
-            response = RestClient.get "https://atlas.hashicorp.com/api/v1/box/daas/#{box_name}/version/#{box_version}/provider/#{builder_name}", { params: {access_token: ENV['ATLAS_ACCESS_TOKEN'] }, accept: :json }
-            response = JSON.parse(response, symbolize_names: true)
-            die "uploaded token is different! :(" unless hosted_token == response[:hosted_token]
+            box_storage = $box_storages[box_name]
+            verbose "Uploading box #{box_name} built with #{builder_name} to storage box #{box_storage.name}"
+            if  ENV['ATLAS_ACCESS_TOKEN'] # {{{2
+              require 'rest-client'
+
+              url = "https://atlas.hashicorp.com/api/v1/box/daas/#{box_name}/version/#{box_version}/provider/#{builder_name}/upload?access_token=#{ENV['ATLAS_ACCESS_TOKEN']}"
+              $logger.info "Query URL: #{url}"
+              response = RestClient.get "https://atlas.hashicorp.com/api/v1/box/daas/#{box_name}/version/#{box_version}/provider/#{builder_name}/upload", { params: {access_token: ENV['ATLAS_ACCESS_TOKEN'] }, accept: :json }
+              response = JSON.parse(response, symbolize_names: true)
+              $logger.info "Response: #{response}"
+              hosted_token = response[:token]
+              upload_url   = response[:upload_path]
+              $logger.info "Box token: #{hosted_token}, url: #{upload_url}"
+              puts "Uploading image to Atlas... (this can take a really long time)"
+              shell("curl --progress-bar --show-error --request PUT --upload-file \"#{box_file}\" #{upload_url}")
+              response = RestClient.get "https://atlas.hashicorp.com/api/v1/box/daas/#{box_name}/version/#{box_version}/provider/#{builder_name}", { params: {access_token: ENV['ATLAS_ACCESS_TOKEN'] }, accept: :json }
+              response = JSON.parse(response, symbolize_names: true)
+              die "uploaded token is different! :(" unless hosted_token == response[:hosted_token]
+              # }}}2
+            elsif ENV['PACKER_STORAGE']  # {{{2
+              remote_storage = ENV['PACKER_STORAGE']
+              verbose "Uploading to  #{remote_storage}"
+              verbose " >> box_name: #{box_name}"
+              verbose " >> builder:  #{builder_name}"
+              metadata_file = "#{remote_storage}/#{box_storage.folder}/metadata.json"
+              if File.exist? metadata_file
+                metadata = File.open(metadata_file) { | file| JSON.parse(file.read, symbolize_names: true) }
+              else
+                metadata =  <<-EOF
+EOF
+
+                metadata = JSON.parse(metadata)
+              end
+              box_storage_info = {
+                name: box_storage.name,
+                description: box_storage.description,
+              }
+              # }}}2
+            else
+              die "No upload method. Either set 'ATLAS_ACCESS_TOKEN' for Atlas push or 'PACKER_STORAGE' for LAN push'"
+            end
             # Verify:
             # curl "https://atlas.hashicorp.com/api/v1/box/daas/#{box_name}/version/#{box_version}/provider/#{builder_name}?access_token=#{ENV['ATLAS_ACCESS_TOKEN']}"
             # response:
@@ -601,7 +635,7 @@ builders.each do |builder_name, builder|
             task box_alias => box_name
           end if $box_aliases[box_name]
         end
-      end if !ENV['VAGRANT_REPO'].nil? # }}}
+      end # }}}
 
       namespace :remove do # {{{
         namespace builder_name.to_sym do
