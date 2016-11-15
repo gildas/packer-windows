@@ -413,6 +413,7 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
       end
   end
   packer_args += " -var \"cache_dir=#{cache_dir}\" -var \"version=#{box_version}\""
+  $logger.info "Executing: packer build -only=#{builder[:packer_type]} -var-file=\"#{config_file}\" #{packer_args} \"#{template_file}\""
   begin
   build_time = Benchmark.measure {
     sh "packer build -only=#{builder[:packer_type]} -var-file=\"#{config_file}\" #{packer_args} \"#{template_file}\""
