@@ -33,11 +33,11 @@ boxes_dir      = 'boxes'
 scripts_dir    = 'scripts'
 log_dir        = 'log'
 temp_dir       = 'tmp'
-cache_dir      = ENV['DAAS_CACHE'] || case RUBY_PLATFORM
+$cache_dir      = ENV['DAAS_CACHE'] || case RUBY_PLATFORM
   when 'x64-mingw32' then File.join(ENV['PROGRAMDATA'], 'DaaS', 'cache')
   else File.join('/var', 'cache', 'daas')
 end
-cache_dir = cache_dir.gsub(/\\/, '/')
+$cache_dir = $cache_dir.gsub(/\\/, '/')
 TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json}")
 
 $box_aliases = {
@@ -164,10 +164,10 @@ def sources_for_box(box_file, sources_root, scripts_root) # {{{
       # TODO: support 'only', and 'except' from the JSON data
       $logger.debug "  Checking provisioner: #{provisioner['type']}"
       case provisioner['type']
-        when 'file'          then box_scripts << provisioner['source']
+        when 'file'          then box_scripts << provisioner['source'].sub(/{{user `cache_dir`}}/, $cache_dir)
         when 'powershell', 'windows-shell', 'shell'
-          box_scripts << provisioner['script'] if provisioner['script']
-          box_scripts += provisioner['scripts'] if provisioner['scripts']
+          box_scripts << provisioner['script'].sub(/{{user `cache_dir`}}/, $cache_dir)  if provisioner['script']
+          box_scripts += provisioner['scripts'].sub(/{{user `cache_dir`}}/, $cache_dir) if provisioner['scripts']
       end
     end
   end
@@ -399,9 +399,9 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
       share_info = shell("Get-SmbShareAccess -Name log | ConvertTo-Json -Compress", json: true)
       die "Could not give full access to share 'log' to user #{builder[:share_user]}" unless share_info[:AccountName].casecmp(Socket.gethostname + "\\" + builder[:share_user]) == 0
       # Share daas/cache, read permission the temp user
-      puts "Creating share: daas-cache at #{cache_dir}"
+      puts "Creating share: daas-cache at #{$cache_dir}"
       shell "if (Get-SmbShare daas-cache -ErrorAction SilentlyContinue) { Remove-SmbShare daas-cache -Force }" 
-      shell "New-SmbShare -Name daas-cache -Path '#{cache_dir}' -Temporary -ReadAccess '#{builder[:share_user]}'"
+      shell "New-SmbShare -Name daas-cache -Path '#{$cache_dir}' -Temporary -ReadAccess '#{builder[:share_user]}'"
       host_ip=shell("Get-NetIPConfiguration | Where InterfaceAlias -like '*Bridged Switch*' | Select -ExpandProperty IPv4Address | Select -ExpandProperty IPAddress")
       packer_args += " -var \"share_host=#{host_ip}\""
       packer_args += " -var \"share_username=#{builder[:share_user]}\""
@@ -415,7 +415,7 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
           packer_args += " -var \"vmware_iso_dir=/Applications/VMware Fusion.app/Contents/Library/isoimages\""
       end
   end
-  packer_args += " -var \"cache_dir=#{cache_dir}\" -var \"version=#{box_version}\""
+  packer_args += " -var \"cache_dir=#{$cache_dir}\" -var \"version=#{box_version}\""
   $logger.info "Executing: packer build -only=#{builder[:packer_type]} -var-file=\"#{config_file}\" #{packer_args} \"#{template_file}\""
   begin
   build_time = Benchmark.measure {
@@ -454,8 +454,8 @@ builders.each do |builder_name, builder|
       box_version   = config['version'] || case config['template']
         when 'cic'
           $logger.debug "  Calculating version..."
-          $logger.debug "  Search cache in #{cache_dir}"
-          cic_iso = Rake::FileList.new(File.join(cache_dir, 'CIC_[0-9]*.iso')).sort.last
+          $logger.debug "  Search cache in #{$cache_dir}"
+          cic_iso = Rake::FileList.new(File.join($cache_dir, 'CIC_[0-9]*.iso')).sort.last
           $logger.debug "  Using ISO: #{cic_iso}"
           /CIC_(\d+)_R(\d+)(?:_Patch(\d+))?\.iso/i =~ cic_iso ? "#{$1[2..-1]}.#{$2}.#{$3 || 0}" : '0.1.0'
         else '0.1.0'
