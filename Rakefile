@@ -158,7 +158,7 @@ def sources_for_box(box_file, sources_root, scripts_root) # {{{
       $logger.debug "  Checking builder: #{packer_builder['type']}"
       next unless packer_builder['type'] == current_builder[:packer_type]
       $logger.debug "  Adding floppy scripts..."
-      box_scripts += packer_builder['floppy_files'].find_all {|path| ['.cmd', '.ps1'].include? path.pathmap("%x") }
+      box_scripts += packer_builder['floppy_files'].find_all {|path| ['.cmd', '.ps1'].include? path.pathmap("%x") } if packer_builder['floppy_files']
     end
     config['provisioners'].each do |provisioner|
       # TODO: support 'only', and 'except' from the JSON data
@@ -167,7 +167,7 @@ def sources_for_box(box_file, sources_root, scripts_root) # {{{
         when 'file'          then box_scripts << provisioner['source'].sub(/{{user `cache_dir`}}/, $cache_dir)
         when 'powershell', 'windows-shell', 'shell'
           box_scripts << provisioner['script'].sub(/{{user `cache_dir`}}/, $cache_dir)  if provisioner['script']
-          box_scripts += provisioner['scripts'].sub(/{{user `cache_dir`}}/, $cache_dir) if provisioner['scripts']
+          box_scripts += provisioner['scripts'].collect {|script| script.sub(/{{user `cache_dir`}}/, $cache_dir)} if provisioner['scripts']
       end
     end
   end
