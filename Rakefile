@@ -144,7 +144,7 @@ def sources_for_box(box_file, sources_root, scripts_root) # {{{
   $logger.info "  Finding sources for box: #{box_name} version #{box_version} with provider #{box_provider}"
   box_sources = Rake::FileList.new("#{sources_root}/#{box_name}/*")
   $logger.info "  ==> Box sources: #{box_sources.join(', ')}"
-  raise Errno::ENOENT, "no source for #{box_file}" if box_sources.empty?
+  raise Errno::ENOENT, box_file if box_sources.empty?
   current_builder = $builders.find { |builder| builder[1][:folder] == box_provider }
   raise ArgumentError, box_name if current_builder.nil?
   current_builder = current_builder[1]
@@ -171,15 +171,18 @@ def sources_for_box(box_file, sources_root, scripts_root) # {{{
       end
     end
   end
-  $logger.info "  Box scripts ##{box_scripts.size}: #{box_scripts.join(', ')}"
   sources = box_sources + box_scripts
+  missing = sources.reject { |source| File.exist? source }
   $logger.info "  Box sources ##{sources.size}: #{sources.join(', ')}"
+  raise Errno::ENOENT, "\n  " + missing.join("\n  ") unless missing.empty?
   return sources
-rescue JSON::UnparserError
-  STDERR.puts "JSON Format error in #{source}:\n#{$!}"
+rescue Errno::ENOENT
+  $logger.error "Missing sources: \n#{$!}.\nBacktrace: " + $!.backtrace.join("\n")
+  STDERR.puts $!
   exit 1
-rescue
-  STDERR.puts "Cannot find sources for #{box_file}, #{$!}"
+rescue JSON::UnparserError
+  $logger.error "JSON Format error in #{source}: #{$!}.\nBacktrace: " + $!.backtrace.join("\n")
+  STDERR.puts "JSON Format error in #{source}:\n#{$!}"
   exit 1
 end # }}}
 # }}}
