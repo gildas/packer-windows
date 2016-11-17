@@ -392,6 +392,8 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
       $logger.info "Creating temporary user: #{builder[:share_user]}, password: #{share_password}"
       system "net user #{builder[:share_user]} /DEL >NUL"  if system("net user #{builder[:share_user]} 2>NUL >NUL")
       system "net user #{builder[:share_user]} #{share_password} /ADD"
+      # Makes sure the user can write to the log folder
+      shell "$acl = (Get-Item \"#{Dir.pwd}/log\").GetAccessControl('Access') ; $ar = New-Object System.Security.AccessControl.FileSystemAccessRule('BUILTIN\\Users', 'Modify', 'ContainerInherit,ObjectInherit','None','Allow') ; $acl.SetAccessRule($ar) ; Set-Acl -Path \"#{Dir.pwd}/log\" -AclObject $acl"
       # Share log, full permission the temp user
       puts "Creating share: log at #{Dir.pwd}/log"
       shell "if (Get-SmbShare log -ErrorAction SilentlyContinue) { Remove-SmbShare log -Force }" 
