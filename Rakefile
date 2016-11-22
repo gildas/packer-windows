@@ -355,8 +355,8 @@ end # }}}
 
 # rule .box {{{
 rule(/\.box$/ => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir]) do |_rule|
-  $logger.info "Executing rule: #{rule}"
-  verbose "Found rule: #{rule}"
+  $logger.info "Executing rule: #{_rule}"
+  verbose "Building: #{_rule}"
   box_filename  = _rule.name.pathmap("%f")
   box_name      = box_filename.pathmap("%{_.*,}n")
   box_provider  = box_filename.pathmap("%{.*_,}n")
