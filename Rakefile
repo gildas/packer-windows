@@ -355,6 +355,7 @@ end # }}}
 
 # rule .box {{{
 rule(/\.box$/ => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir]) do |_rule|
+  $logger.info "Executing rule: #{rule}"
   verbose "Found rule: #{rule}"
   box_filename  = _rule.name.pathmap("%f")
   box_name      = box_filename.pathmap("%{_.*,}n")
@@ -362,7 +363,9 @@ rule(/\.box$/ => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, 
   box_version   = box_filename.pathmap("%{[^_]*_,;_.*,}n") || '0.1.0'
   template_path = _rule.source.pathmap("%d")
   builder       = builders[box_provider.to_sym] || raise(ArgumentError, box_filename)
+  $logger.debug "  builder: #{builder[:name]}, calling preclean"
   builder[:preclean].call(box_name)
+  $logger.info "Building box #{box_name} version #{box_version} in #{box_filename} using #{builder[:name]}"
   puts "Building box #{box_name} version #{box_version} in #{box_filename} using #{builder[:name]}"
   $logger.info "  Rule source: #{_rule.source}"
   FileUtils.rm_rf "output-#{builder[:packer_type]}-#{box_name}"
