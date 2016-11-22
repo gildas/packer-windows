@@ -1,0 +1,82 @@
+{
+  "variables":
+  {
+    "template":          "box",
+    "organization":      "{{env `USERNAME` }}",
+    "description":       "This is a packer generated box",
+    "version":           "0.1.0",
+    "cache_dir":         "./iso",
+    "vmware_iso_dir":    "",
+    "os":                "",
+    "os_version":        "",
+    "os_install":        "",
+    "os_edition":        "",
+    "os_license":        "",
+    "admin_username":    "vagrant",
+    "admin_password":    "vagrant",
+    "share_host":        "",
+    "share_username":    "",
+    "share_password":    "",
+    "disk_size":         "8192",
+    "mem_size":          "512",
+    "cpus":              "1",
+    "hyperv_switch":     ""
+  },
+  "builders":
+  [
+    {
+      "type":                 "virtualbox-iso",
+      "vm_name":              "packer-{{user `template`}}",
+      "guest_os_type":        "RedHat_64",
+      "iso_urls": [
+        "{{user `cache_dir`}}/CentOS-7-x86_64-NetInstall-1511.iso",
+        "http://ftp.riken.jp/Linux/centos/7/isos/x86_64/CentOS-7-x86_64-NetInstall-1511.iso"
+      ],
+      "iso_checksum_type":    "sha256",
+      "iso_checksum":         "9ed9ffb5d89ab8cca834afce354daa70a21dcb410f58287d6316259ff89758f5",
+      "output_directory":     "output-virtualbox-{{user `template`}}",
+      "boot_wait":            "10s",
+      "headless":             true,
+      "ssh_username":         "{{user `admin_username`}}",
+      "ssh_password":         "{{user `admin_password`}}",
+      "ssh_wait_timeout":     "20m",
+      "shutdown_command":     "echo 'vagrant' | sudo -S /sbin/halt -h -p",
+      "shutdown_timeout":     "1h",
+      "post_shutdown_delay":  "30s",
+      "guest_additions_mode": "upload",
+      "disk_size":            "{{user `disk_size`}}",
+      "http_directory":       ".",
+      "boot_command": [ "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/templates/centos-7/ks.cfg<enter>" ],      
+      "vboxmanage":
+      [
+        ["modifyvm", "{{.Name}}", "--ioapic", "on"],
+        ["modifyvm", "{{.Name}}", "--memory", "{{user `mem_size`}}"],
+        ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
+        ["modifyvm", "{{.Name}}", "--vram",   "64"],
+        ["setextradata", "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"]
+      ]
+    }
+  ],
+  "provisioners":
+  [
+    {
+      "type":    "shell",
+      "scripts": [
+        "./scripts/create-user-vagrant.sh",
+        "./scripts/install-vmhost-additions.sh",
+        "./scripts/centos-cleanup.sh"
+      ],
+      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'"
+    }
+  ],
+  "post-processors":
+  [
+    {
+      "type": "vagrant",
+      "keep_input_artifact": false,
+      "compression_level":   9,
+      "vagrantfile_template": "templates/{{user `template`}}/vagrantfile.template",
+      "output": "./boxes/{{user `template`}}_{{user `version`}}_{{.Provider}}.box"
+    }
+  ]
+}

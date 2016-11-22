@@ -1,0 +1,21 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.define "vagrant-centos-7"
+  config.vm.box = "centos-7"
+
+  config.vm.provider :parallels do |provider, override|
+    provider.update_guest_tools = true
+  end
+
+  config.vm.provider :vmware_fusion do |provider, override|
+    provider.gui = true
+  end
+
+  config.vm.provider :virtualbox do |provider, override|
+    provider.gui = true
+    provider.customize ['modifyvm', :id, '--ioapic', 'on'] #To assign >1 CPUs
+    provider.customize ['modifyvm', :id, '--vram',   30]
+  end
+end
