@@ -346,7 +346,7 @@ directory log_dir
 task :folders => [ boxes_dir, temp_dir, log_dir ]
 
 # rule .md5 {{{
-rule(/\.box\.md5$/ => [proc {|task_name| task_name.sub(/\.box\.md5$/, '.box') } ]) do |_rule|
+rule(/\.box\.md5$/ => proc {|task_name| task_name.sub(/\.box\.md5$/, '.box') }) do |_rule|
   puts "Calculating MD5 checksum for #{_rule.source.pathmap("%2d").pathmap("%f")}"
   chksum = Digest::MD5.file _rule.source
   puts "===> md5: #{chksum}"
@@ -354,7 +354,7 @@ rule(/\.box\.md5$/ => [proc {|task_name| task_name.sub(/\.box\.md5$/, '.box') } 
 end # }}}
 
 # rule .box {{{
-rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule|
+rule(/\.box$/ => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir]) do |_rule|
   verbose "Found rule: #{rule}"
   box_filename  = _rule.name.pathmap("%f")
   box_name      = box_filename.pathmap("%{_.*,}n")
