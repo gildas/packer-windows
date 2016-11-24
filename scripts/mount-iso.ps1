@@ -64,7 +64,10 @@ process
   if ($PSBoundParameters.ContainsKey('Version'))   { $pattern += "${Version}"     } else { $pattern += '\d{4}' }
   if ($PSBoundParameters.ContainsKey('Release'))   { $pattern += "_R${Release}"   } else { $pattern += '_R\d+' }
   if ($LastPatch)                                  { $pattern += '_Patch\d+'      }
-  elseif ($PSBoundParameters.ContainsKey('Patch')) { $pattern += "_Patch${Patch}" }
+  elseif ($PSBoundParameters.ContainsKey('Patch'))
+  {
+    if ($Patch -eq 9999) { $pattern += '_Patch\d+' } else { $pattern += "_Patch${Patch}" }
+  }
   $pattern += '\.iso$'
   Write-Verbose "Checking $share_dir for $Product Installation (Version: $Version, Release: $Release, Patch: $Patch)"
   Write-Verbose "Pattern: $pattern"

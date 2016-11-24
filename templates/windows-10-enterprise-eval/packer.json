@@ -62,7 +62,7 @@
     {
       "type":                "parallels-iso",
       "vm_name":             "packer_win10",
-      "guest_os_type":       "win-2012",
+      "guest_os_type":       "win-10",
       "iso_urls": [
         "{{user `cache_dir`}}/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO",
         "http://download.microsoft.com/download/C/3/9/C399EEA8-135D-4207-92C9-6AAB3259F6EF/10240.16384.150709-1700.TH1_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
@@ -70,7 +70,7 @@
       "iso_checksum_type":      "md5",
       "iso_checksum":           "6cd2f47f2c32faa7be85f1dc81af3220",
       "output_directory":       "output-parallels-{{user `template`}}",
-      "boot_wait":              "30s",
+      "boot_wait":              "50s",
       "communicator":           "winrm",
       "winrm_username":         "{{user `admin_username`}}",
       "winrm_password":         "{{user `admin_password`}}",
@@ -176,6 +176,7 @@
       "winrm_password":       "{{user `admin_password`}}",
       "winrm_timeout":        "20m",
       "shutdown_command":     "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "post_shutdown_delay":  "30s",
       "guest_additions_mode": "attach",
       "disk_size":            "{{user `disk_size`}}",
       "floppy_files":
@@ -233,7 +234,7 @@
       "keep_input_artifact": false,
       "compression_level":   0,
       "vagrantfile_template": "./templates/windows-10-enterprise-eval/vagrantfile.template",
-      "output": "./boxes/{{user `template`}}/{{.Provider}}/{{user `template`}}-{{user `version`}}.box"
+      "output": "./boxes/{{user `template`}}_{{user `version`}}_{{.Provider}}.box"
     }
   ]
 }

@@ -1,0 +1,9 @@
+{
+  "template":          "centos-7",
+  "organization":      "Interactive Intelligence",
+  "description":       "This box contains CentOS 7",
+  "os":                "centos",
+  "os_version":        "7",
+  "cache_dir":         "/var/cache/daas",
+  "hyperv_switch":     "Bridged Switch"
+}

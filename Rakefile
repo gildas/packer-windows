@@ -33,14 +33,15 @@ boxes_dir      = 'boxes'
 scripts_dir    = 'scripts'
 log_dir        = 'log'
 temp_dir       = 'tmp'
-cache_dir      = ENV['DAAS_CACHE'] || case RUBY_PLATFORM
+$cache_dir      = ENV['DAAS_CACHE'] || case RUBY_PLATFORM
   when 'x64-mingw32' then File.join(ENV['PROGRAMDATA'], 'DaaS', 'cache')
   else File.join('/var', 'cache', 'daas')
 end
-cache_dir = cache_dir.gsub(/\\/, '/')
+$cache_dir = $cache_dir.gsub(/\\/, '/')
 TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json}")
 
 $box_aliases = {
+  'centos-7'                          => [ 'centos' ],
   'windows-10-enterprise-eval'        => [ 'windows-10' ],
   'windows-8.1-enterprise-eval'       => [ 'windows-8.1' ],
   'windows-2012R2-core-standard-eval' => [ 'windows-2012R2-core' ],
@@ -136,14 +137,16 @@ class Binder # {{{
 end # }}}
 
 def sources_for_box(box_file, sources_root, scripts_root) # {{{
-  # box_file should be like: boxes/#{box_name}/#{provider}/#{box_name}-#{box_version}.box
+  # box_file should be like: #{boxes_dir}/#{box_name}_#{box_version}_#{provider}.box
   $logger.info "box file: #{box_file}"
-  box_name = box_file.pathmap("%2d").pathmap("%f")
-  $logger.info "  Finding sources for box: #{box_name}"
+  box_name     = box_file.pathmap("%{_.*,}n")
+  box_provider = box_file.pathmap("%{.*_,}n")
+  box_version  = box_file.pathmap("%{[^_]*_,;_.*,}n")
+  $logger.info "  Finding sources for box: #{box_name} version #{box_version} with provider #{box_provider}"
   box_sources = Rake::FileList.new("#{sources_root}/#{box_name}/*")
   $logger.info "  ==> Box sources: #{box_sources.join(', ')}"
-  raise Errno::ENOENT, "no source for #{box_file}" if box_sources.empty?
-  current_builder = $builders.find { |builder| builder[1][:folder] == box_file.pathmap("%3d").pathmap("%f") }
+  raise Errno::ENOENT, box_file if box_sources.empty?
+  current_builder = $builders.find { |builder| builder[1][:folder] == box_provider }
   raise ArgumentError, box_name if current_builder.nil?
   current_builder = current_builder[1]
   $logger.info "  Collecting scripts for #{current_builder[:name]}"
@@ -156,28 +159,31 @@ def sources_for_box(box_file, sources_root, scripts_root) # {{{
       $logger.debug "  Checking builder: #{packer_builder['type']}"
       next unless packer_builder['type'] == current_builder[:packer_type]
       $logger.debug "  Adding floppy scripts..."
-      box_scripts += packer_builder['floppy_files'].find_all {|path| ['.cmd', '.ps1'].include? path.pathmap("%x") }
+      box_scripts += packer_builder['floppy_files'].find_all {|path| ['.cmd', '.ps1'].include? path.pathmap("%x") } if packer_builder['floppy_files']
     end
     config['provisioners'].each do |provisioner|
       # TODO: support 'only', and 'except' from the JSON data
       $logger.debug "  Checking provisioner: #{provisioner['type']}"
       case provisioner['type']
-        when 'file'          then box_scripts << provisioner['source']
+        when 'file'          then box_scripts << provisioner['source'].sub(/{{user `cache_dir`}}/, $cache_dir)
         when 'powershell', 'windows-shell', 'shell'
-          box_scripts << provisioner['script'] if provisioner['script']
-          box_scripts += provisioner['scripts'] if provisioner['scripts']
+          box_scripts << provisioner['script'].sub(/{{user `cache_dir`}}/, $cache_dir)  if provisioner['script']
+          box_scripts += provisioner['scripts'].collect {|script| script.sub(/{{user `cache_dir`}}/, $cache_dir)} if provisioner['scripts']
       end
     end
   end
-  $logger.info "  Box scripts ##{box_scripts.size}: #{box_scripts.join(', ')}"
   sources = box_sources + box_scripts
+  missing = sources.reject { |source| File.exist? source }
   $logger.info "  Box sources ##{sources.size}: #{sources.join(', ')}"
+  raise Errno::ENOENT, "\n  " + missing.join("\n  ") unless missing.empty?
   return sources
-rescue JSON::UnparserError
-  STDERR.puts "JSON Format error in #{source}:\n#{$!}"
+rescue Errno::ENOENT
+  $logger.error "Missing sources: \n#{$!}.\nBacktrace: " + $!.backtrace.join("\n")
+  STDERR.puts $!
   exit 1
-rescue
-  STDERR.puts "Cannot find sources for #{box_file}, #{$!}"
+rescue JSON::UnparserError
+  $logger.error "JSON Format error in #{source}: #{$!}.\nBacktrace: " + $!.backtrace.join("\n")
+  STDERR.puts "JSON Format error in #{source}:\n#{$!}"
   exit 1
 end # }}}
 # }}}
@@ -341,7 +347,7 @@ directory log_dir
 task :folders => [ boxes_dir, temp_dir, log_dir ]
 
 # rule .md5 {{{
-rule(/\.box\.md5$/ => [proc {|task_name| task_name.sub(/\.box\.md5$/, '.box') } ]) do |_rule|
+rule(/\.box\.md5$/ => proc {|task_name| task_name.sub(/\.box\.md5$/, '.box') }) do |_rule|
   puts "Calculating MD5 checksum for #{_rule.source.pathmap("%2d").pathmap("%f")}"
   chksum = Digest::MD5.file _rule.source
   puts "===> md5: #{chksum}"
@@ -349,17 +355,19 @@ rule(/\.box\.md5$/ => [proc {|task_name| task_name.sub(/\.box\.md5$/, '.box') } 
 end # }}}
 
 # rule .box {{{
-rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir] do |_rule|
-  verbose "Found rule"
+rule(/\.box$/ => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, boxes_dir, log_dir]) do |_rule|
+  $logger.info "Executing rule: #{_rule}"
+  verbose "Building: #{_rule}"
   box_filename  = _rule.name.pathmap("%f")
-  box_name      = _rule.source.pathmap("%2d").pathmap("%f")
-  box_version   = /.*-(\d+\.\d+\.\d+)\.box/i =~ box_filename ? $1 : '0.1.0'
+  box_name      = box_filename.pathmap("%{_.*,}n")
+  box_provider  = box_filename.pathmap("%{.*_,}n")
+  box_version   = box_filename.pathmap("%{[^_]*_,;_.*,}n") || '0.1.0'
   template_path = _rule.source.pathmap("%d")
-  builder       = builders[File.basename(_rule.name.pathmap("%d")).to_sym]
-  raise ArgumentError, File.basename(_rule.name.pathmap("%d")) if builder.nil?
-  mkdir_p _rule.name.pathmap("%d")
+  builder       = builders[box_provider.to_sym] || raise(ArgumentError, box_filename)
+  $logger.debug "  builder: #{builder[:name]}, calling preclean"
   builder[:preclean].call(box_name)
-  puts "Building box #{box_name} in #{box_filename} using #{builder[:name]}"
+  $logger.info "Building box #{box_name} version #{box_version} in #{box_filename} using #{builder[:name]}"
+  puts "Building box #{box_name} version #{box_version} in #{box_filename} using #{builder[:name]}"
   $logger.info "  Rule source: #{_rule.source}"
   FileUtils.rm_rf "output-#{builder[:packer_type]}-#{box_name}"
   packer_log    = File.join(log_dir, "packer-build-#{builder[:name]}-#{box_filename}.log")
@@ -388,6 +396,8 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
       $logger.info "Creating temporary user: #{builder[:share_user]}, password: #{share_password}"
       system "net user #{builder[:share_user]} /DEL >NUL"  if system("net user #{builder[:share_user]} 2>NUL >NUL")
       system "net user #{builder[:share_user]} #{share_password} /ADD"
+      # Makes sure the user can write to the log folder
+      shell "$acl = (Get-Item \"#{Dir.pwd}/log\").GetAccessControl('Access') ; $ar = New-Object System.Security.AccessControl.FileSystemAccessRule('BUILTIN\\Users', 'Modify', 'ContainerInherit,ObjectInherit','None','Allow') ; $acl.SetAccessRule($ar) ; Set-Acl -Path \"#{Dir.pwd}/log\" -AclObject $acl"
       # Share log, full permission the temp user
       puts "Creating share: log at #{Dir.pwd}/log"
       shell "if (Get-SmbShare log -ErrorAction SilentlyContinue) { Remove-SmbShare log -Force }" 
@@ -395,9 +405,9 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
       share_info = shell("Get-SmbShareAccess -Name log | ConvertTo-Json -Compress", json: true)
       die "Could not give full access to share 'log' to user #{builder[:share_user]}" unless share_info[:AccountName].casecmp(Socket.gethostname + "\\" + builder[:share_user]) == 0
       # Share daas/cache, read permission the temp user
-      puts "Creating share: daas-cache at #{cache_dir}"
+      puts "Creating share: daas-cache at #{$cache_dir}"
       shell "if (Get-SmbShare daas-cache -ErrorAction SilentlyContinue) { Remove-SmbShare daas-cache -Force }" 
-      shell "New-SmbShare -Name daas-cache -Path '#{cache_dir}' -Temporary -ReadAccess '#{builder[:share_user]}'"
+      shell "New-SmbShare -Name daas-cache -Path '#{$cache_dir}' -Temporary -ReadAccess '#{builder[:share_user]}'"
       host_ip=shell("Get-NetIPConfiguration | Where InterfaceAlias -like '*Bridged Switch*' | Select -ExpandProperty IPv4Address | Select -ExpandProperty IPAddress")
       packer_args += " -var \"share_host=#{host_ip}\""
       packer_args += " -var \"share_username=#{builder[:share_user]}\""
@@ -411,7 +421,8 @@ rule '.box' => [->(box) { sources_for_box(box, templates_dir, scripts_dir) }, bo
           packer_args += " -var \"vmware_iso_dir=/Applications/VMware Fusion.app/Contents/Library/isoimages\""
       end
   end
-  packer_args += " -var \"cache_dir=#{cache_dir}\" -var \"version=#{box_version}\""
+  packer_args += " -var \"cache_dir=#{$cache_dir}\" -var \"version=#{box_version}\""
+  $logger.info "Executing: packer build -only=#{builder[:packer_type]} -var-file=\"#{config_file}\" #{packer_args} \"#{template_file}\""
   begin
   build_time = Benchmark.measure {
     sh "packer build -only=#{builder[:packer_type]} -var-file=\"#{config_file}\" #{packer_args} \"#{template_file}\""
@@ -449,16 +460,16 @@ builders.each do |builder_name, builder|
       box_version   = config['version'] || case config['template']
         when 'cic'
           $logger.debug "  Calculating version..."
-          $logger.debug "  Search cache in #{cache_dir}"
-          cic_iso = Rake::FileList.new(File.join(cache_dir, 'CIC_[0-9]*.iso')).sort.last
+          $logger.debug "  Search cache in #{$cache_dir}"
+          cic_iso = Rake::FileList.new(File.join($cache_dir, 'CIC_[0-9]*.iso')).sort.last
           $logger.debug "  Using ISO: #{cic_iso}"
           /CIC_(\d+)_R(\d+)(?:_Patch(\d+))?\.iso/i =~ cic_iso ? "#{$1[2..-1]}.#{$2}.#{$3 || 0}" : '0.1.0'
         else '0.1.0'
       end
       $logger.info "  Box Version: #{box_version}"
       box_name      = template_file.pathmap("%{templates/,}d")
-      box_file      = "#{boxes_dir}/#{box_name}/#{builder[:folder]}/#{box_name}-#{box_version}.box"
-      box_url       = "file://#{Dir.pwd}/#{box_file}"
+      box_file      = "#{boxes_dir}/#{box_name}_#{box_version}_#{builder[:folder]}.box"
+      box_url       = "file:///#{Dir.pwd}/#{box_file}"
       metadata_file = "#{boxes_dir}/#{box_name}/metadata.json"
 
       namespace :validate do # {{{
