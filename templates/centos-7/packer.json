@@ -17,6 +17,9 @@
     "share_host":        "",
     "share_username":    "",
     "share_password":    "",
+    "http_proxy":        "{{env `HTTP_PROXY`}}",
+    "https_proxy":       "{{env `HTTPS_PROXY`}}",
+    "no_proxy":          "{{env `NO_PROXY`}}",
     "disk_size":         "8192",
     "mem_size":          "512",
     "cpus":              "1",
@@ -24,6 +27,61 @@
   },
   "builders":
   [
+    {
+      "type":                   "parallels-iso",
+      "vm_name":                "packer-{{user `template`}}",
+      "guest_os_type":          "centos",
+      "iso_urls": [
+        "{{user `cache_dir`}}/CentOS-7-x86_64-NetInstall-1511.iso",
+        "http://ftp.riken.jp/Linux/centos/7/isos/x86_64/CentOS-7-x86_64-NetInstall-1511.iso"
+      ],
+      "iso_checksum_type":      "sha256",
+      "iso_checksum":           "9ed9ffb5d89ab8cca834afce354daa70a21dcb410f58287d6316259ff89758f5",
+      "output_directory":       "output-virtualbox-{{user `template`}}",
+      "boot_wait":              "10s",
+      "ssh_username":           "{{user `admin_username`}}",
+      "ssh_password":           "{{user `admin_password`}}",
+      "ssh_wait_timeout":       "20m",
+      "shutdown_command":       "echo 'vagrant' | sudo -S /sbin/halt -h -p",
+      "shutdown_timeout":       "1h",
+      "parallels_tools_flavor": "lin",
+      "parallels_tools_mode":   "upload",
+      "disk_size":              "{{user `disk_size`}}",
+      "http_directory":         "templates/centos-7",
+      "boot_command": [ "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>" ],      
+      "prlctl_version_file":    ".prlctl_version",
+      "prlctl":
+      [
+        ["set", "{{.Name}}", "--startup-view",           "window"],
+        ["set", "{{.Name}}", "--memsize",                "{{user `mem_size`}}"],
+        ["set", "{{.Name}}", "--cpus",                   "{{user `cpus`}}"],
+        ["set", "{{.Name}}", "--shared-profile",         "off"],
+        ["set", "{{.Name}}", "--shared-cloud",           "off"],
+        ["set", "{{.Name}}", "--sh-app-guest-to-host",   "off"],
+        ["set", "{{.Name}}", "--sh-app-host-to-guest",   "off"],
+        ["set", "{{.Name}}", "--shf-host-add",           "log",        "--path", "{{pwd}}/log",          "--mode", "rw", "--enable"]
+      ]
+    },
+    {
+      "type":                  "qemu",
+      "vm_name":              "packer-{{user `template`}}",
+      "iso_urls": [
+        "{{user `cache_dir`}}/CentOS-7-x86_64-NetInstall-1511.iso",
+        "http://ftp.riken.jp/Linux/centos/7/isos/x86_64/CentOS-7-x86_64-NetInstall-1511.iso"
+      ],
+      "iso_checksum_type":    "sha256",
+      "iso_checksum":         "9ed9ffb5d89ab8cca834afce354daa70a21dcb410f58287d6316259ff89758f5",
+      "output_directory":     "output-qemu-{{user `template`}}",
+      "boot_wait":            "10s",
+      "ssh_username":         "{{user `admin_username`}}",
+      "ssh_password":         "{{user `admin_password`}}",
+      "ssh_wait_timeout":     "20m",
+      "shutdown_command":     "echo 'vagrant' | sudo -S /sbin/halt -h -p",
+      "shutdown_timeout":     "1h",
+      "disk_size":            "{{user `disk_size`}}",
+      "http_directory":       "templates/centos-7",
+      "boot_command":         [ "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>" ]
+    },
     {
       "type":                 "virtualbox-iso",
       "vm_name":              "packer-{{user `template`}}",
@@ -45,8 +103,8 @@
       "post_shutdown_delay":  "30s",
       "guest_additions_mode": "upload",
       "disk_size":            "{{user `disk_size`}}",
-      "http_directory":       ".",
-      "boot_command": [ "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/templates/centos-7/ks.cfg<enter>" ],      
+      "http_directory":       "templates/centos-7",
+      "boot_command": [ "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>" ],      
       "vboxmanage":
       [
         ["modifyvm", "{{.Name}}", "--ioapic", "on"],
@@ -61,7 +119,14 @@
   [
     {
       "type":    "shell",
+      "environment_vars": [
+        "HOME_DIR=/home/vagrant",
+        "http_proxy={{user `http_proxy`}}",
+        "https_proxy=((user `https_proxy`}}",
+        "no_proxy={{user `no_proxy`}}"
+      ],
       "scripts": [
+        "./scripts/config-network.sh",
         "./scripts/create-user-vagrant.sh",
         "./scripts/install-vmhost-additions.sh",
         "./scripts/centos-cleanup.sh"

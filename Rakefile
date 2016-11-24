@@ -41,6 +41,7 @@ $cache_dir = $cache_dir.gsub(/\\/, '/')
 TEMPLATE_FILES = Rake::FileList.new("#{templates_dir}/**/{packer.json}")
 
 $box_aliases = {
+  'centos-7'                          => [ 'centos' ],
   'windows-10-enterprise-eval'        => [ 'windows-10' ],
   'windows-8.1-enterprise-eval'       => [ 'windows-8.1' ],
   'windows-2012R2-core-standard-eval' => [ 'windows-2012R2-core' ],
