@@ -131,7 +131,7 @@
         "./scripts/install-vmhost-additions.sh",
         "./scripts/centos-cleanup.sh"
       ],
-      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'"
+      "execute_command": "echo '{{user `admin_password`}}' | {{.Vars}} sudo -S -E bash '{{.Path}}'"
     }
   ],
   "post-processors":
