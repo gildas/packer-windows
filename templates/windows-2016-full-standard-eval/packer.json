@@ -1,0 +1,291 @@
+{
+  "variables":
+  {
+    "template":          "box",
+    "organization":      "{{env `USERNAME` }}",
+    "description":       "This is a packer generated box",
+    "version":           "0.1.0",
+    "cache_dir":         "./iso",
+    "vmware_iso_dir":    "",
+    "os":                "",
+    "os_version":        "",
+    "os_install":        "",
+    "os_edition":        "",
+    "os_license":        "",
+    "admin_username":    "vagrant",
+    "admin_password":    "vagrant",
+    "share_host":        "",
+    "share_username":    "",
+    "share_password":    "",
+    "disk_size":         "40960",
+    "mem_size":          "1024",
+    "cpus":              "1",
+    "hyperv_switch":     ""
+  },
+  "builders":
+  [
+    {
+      "type":                "hyperv-iso",
+      "vm_name":             "packer-{{user `template`}}",
+      "iso_url":             "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+      "iso_checksum_type":   "md5",
+      "iso_checksum":        "458ff91f8abc21b75cb544744bf92e6a",
+      "output_directory":    "output-hyperv-{{user `template`}}",
+      "boot_wait":           "0",
+      "communicator":        "winrm",
+      "winrm_username":      "{{user `admin_username`}}",
+      "winrm_password":      "{{user `admin_password`}}",
+      "winrm_timeout":       "20m",
+      "switch_name":          "{{user `hyperv_switch`}}",
+      "shutdown_command":    "shutdown /s /t 1 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_additions_mode": "none",
+      "generation":          "1",
+      "disk_size":           "{{user `disk_size`}}",
+      "cpu":                 "{{user `cpus`}}",
+      "ram_size_mb":         "{{user `mem_size`}}",
+      "enable_secure_boot":  true,
+      "floppy_files": [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/_packer_config.cmd",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
+        "./scripts/04-install-imdisk.cmd",
+        "./scripts/99-start-services.cmd"
+      ]
+    },
+    {
+      "type":                "qemu",
+      "vm_name":             "packer_{{user `template`}}",
+      "iso_urls": [
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
+      ],
+      "iso_checksum_type":      "md5",
+      "iso_checksum":           "458ff91f8abc21b75cb544744bf92e6a",
+      "output_directory":       "output-qemu-{{user `template`}}",
+      "boot_wait":              "30s",
+      "communicator":           "winrm",
+      "winrm_username":         "{{user `admin_username`}}",
+      "winrm_password":         "{{user `admin_password`}}",
+      "winrm_timeout":          "20m",
+      "shutdown_command":       "shutdown /s /t 1 /f /d p:4:1 /c 'Packer Shutdown'",
+      "format":                 "qcow2",
+      "accelerator":            "kvm",
+      "net_device":             "virtio-net",
+      "disk_interface":         "virtio",
+      "disk_size":              "{{user `disk_size`}}",
+      "floppy_files": [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./data/drivers/virtio-win-0.1-100/win7/amd64/*",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
+        "./scripts/99-start-services.cmd"
+      ],
+      "qemuargs":
+      [
+        [ "-m", "{{user `mem_size`}}M" ]
+      ]
+    },
+    {
+      "type":                "parallels-iso",
+      "vm_name":             "packer_win2012R2",
+      "guest_os_type":       "win-2012",
+      "iso_urls": [
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
+      ],
+      "iso_checksum_type":      "md5",
+      "iso_checksum":           "458ff91f8abc21b75cb544744bf92e6a",
+      "output_directory":       "output-parallels-{{user `template`}}",
+      "boot_wait":              "30s",
+      "communicator":           "winrm",
+      "winrm_username":         "{{user `admin_username`}}",
+      "winrm_password":         "{{user `admin_password`}}",
+      "winrm_timeout":          "20m",
+      "shutdown_command":       "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "parallels_tools_flavor": "win",
+      "parallels_tools_mode":   "attach",
+      "disk_size":              "{{user `disk_size`}}",
+      "floppy_files": [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
+        "./scripts/04-install-imdisk.cmd",
+        "./scripts/99-start-services.cmd"
+      ],
+      "prlctl":
+      [
+        ["set", "{{.Name}}", "--startup-view",           "window"],
+        ["set", "{{.Name}}", "--memsize",                "{{user `mem_size`}}"],
+        ["set", "{{.Name}}", "--cpus",                   "{{user `cpus`}}"],
+        ["set", "{{.Name}}", "--smart-mount",            "off"],
+        ["set", "{{.Name}}", "--efi-boot",               "off"],
+        ["set", "{{.Name}}", "--shared-profile",         "off"],
+        ["set", "{{.Name}}", "--shared-cloud",           "off"],
+        ["set", "{{.Name}}", "--sh-app-guest-to-host",   "off"],
+        ["set", "{{.Name}}", "--sh-app-host-to-guest",   "off"],
+        ["set", "{{.Name}}", "--shf-host-add",           "log",        "--path", "{{pwd}}/log",          "--mode", "rw", "--enable"]
+      ]
+    },
+    {
+      "type":                "vmware-iso",
+      "vm_name":             "packer_{{user `template`}}",
+      "guest_os_type":       "windows8srv-64",
+      "iso_urls": [
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
+      ],
+      "iso_checksum_type":   "md5",
+      "iso_checksum":        "458ff91f8abc21b75cb544744bf92e6a",
+      "output_directory":    "output-vmware-{{user `template`}}",
+      "boot_wait":           "30s",
+      "communicator":        "winrm",
+      "winrm_username":      "{{user `admin_username`}}",
+      "winrm_password":      "{{user `admin_password`}}",
+      "winrm_timeout":       "20m",
+      "shutdown_command":    "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "disk_size":           "{{user `disk_size`}}",
+      "floppy_files": [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
+        "./scripts/04-install-imdisk.cmd",
+        "./scripts/99-start-services.cmd"
+      ],
+      "vmx_data":
+      {
+        "memsize":                      "{{user `mem_size`}}",
+        "numvcpus":                     "{{user `cpus`}}",
+        "cpuid.coresPerSocket":         "1",
+        "isolation.tools.hgfs.disable": "FALSE",
+        "scsi0.virtualDev":             "lsisas1068",
+        "sata0.present":                "TRUE",
+        "sata0:1.present":              "TRUE",
+        "sata0:1.startConnected":       "TRUE",
+        "sata0:1.deviceType":           "cdrom-image",
+        "sata0:1.fileName":             "{{user `vmware_iso_dir`}}/windows.iso",
+        "sharedFolder.maxNum":          "1",
+        "sharedFolder0.present":        "TRUE",
+        "sharedFolder0.enabled":        "TRUE",
+        "sharedFolder0.expiration":     "never",
+        "sharedFolder0.readAccess":     "TRUE",
+        "sharedFolder0.writeAccess":    "TRUE",
+        "sharedFolder0.hostPath":       "{{pwd}}/log",
+        "sharedFolder0.guestName":      "log"
+      },
+      "vmx_data_post":
+      {
+        "sata0:1.present":           "FALSE",
+        "sata0:1.startConnected":    "FALSE",
+        "sata0:1.deviceType":        "cdrom-raw",
+        "sata0:1.fileName":          "auto detect",
+        "sharedFolder.maxNum":       "0"
+      }
+    },
+    {
+      "type":                 "virtualbox-iso",
+      "vm_name":              "packer-{{user `template`}}",
+      "guest_os_type":        "Windows2012_64",
+      "iso_urls": [
+        "{{user `cache_dir`}}/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO"
+      ],
+      "iso_checksum_type":    "md5",
+      "iso_checksum":         "458ff91f8abc21b75cb544744bf92e6a",
+      "output_directory":     "output-virtualbox-{{user `template`}}",
+      "boot_wait":            "30s",
+      "headless":             "true",
+      "communicator":         "winrm",
+      "winrm_username":       "{{user `admin_username`}}",
+      "winrm_password":       "{{user `admin_password`}}",
+      "winrm_timeout":        "20m",
+      "shutdown_command":     "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "shutdown_timeout":     "1h",
+      "guest_additions_mode": "attach",
+      "disk_size":            "{{user `disk_size`}}",
+      "floppy_files":
+      [
+        "./templates/{{user `template`}}/Autounattend.xml",
+        "./scripts/_packer_config.cmd",
+        "./scripts/00-run-all-scripts.cmd",
+        "./scripts/01-config-os.cmd",
+        "./scripts/02-config-posh.cmd",
+        "./scripts/03-config-winrm.cmd",
+        "./scripts/04-install-imdisk.cmd",
+        "./scripts/99-start-services.cmd"
+      ],
+      "vboxmanage":
+      [
+        ["modifyvm", "{{.Name}}", "--ioapic", "on"],
+        ["modifyvm", "{{.Name}}", "--memory", "{{user `mem_size`}}"],
+        ["modifyvm", "{{.Name}}", "--cpus",   "{{user `cpus`}}"],
+        ["modifyvm", "{{.Name}}", "--vram",   "64"],
+        ["setextradata",  "{{.Name}}", "VBoxInternal/CPUM/CMPXCHG16B", "1"],
+        ["sharedfolder", "add", "{{.Name}}", "--name", "log", "--hostpath", "{{pwd}}/log", "--automount"]
+      ],
+      "vboxmanage_post":
+      [
+        ["sharedfolder", "remove", "{{.Name}}", "--name", "log"]
+      ]
+    }
+  ],
+  "provisioners":
+  [
+    { "type": "powershell",
+      "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=log", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Z" ],
+      "script": "./scripts/prep-share.ps1" },
+    { "type": "powershell",
+      "environment_vars": [ "SMBHOST={{user `share_host`}}", "SMBSHARE=daas-cache", "SMBUSER={{user `share_username`}}", "SMBPASSWORD={{user `share_password`}}", "SMBDRIVE=Y" ],
+      "script": "./scripts/prep-share.ps1" },
+
+    { "type": "powershell", "script": "./scripts/disable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Regular Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "inline": [ "Disable-ScheduledTask '\\Microsoft\\Windows\\TaskScheduler\\Idle Maintenance'" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "inline": [ "Write-Host 'Configuring passwords' ; net accounts /maxpwage:unlimited" ] },
+    { "type": "file",       "source": "./data/GeoTrust_Global_CA.pem", "destination": "C:/Windows/Temp/GeoTrust_Global_CA.pem" },
+    { "type": "file",       "source": "./data/bginfo",                 "destination": "C:/ProgramData/BGInfo" },
+    { "type": "file",       "source": "./data/vagrant.jpg",            "destination": "C:/Users/vagrant/Pictures/vagrant.jpg" },
+    { "type": "powershell", "inline": [ "Copy-Item C:/ProgramData/BGInfo/Set-Background.lnk \"C:/ProgramData/Microsoft/Windows/Start Menu/Programs/StartUp\"" ] },
+    { "type": "powershell", "script": "./scripts/Set-AccountPicture.ps1" },
+    { "type": "powershell", "script": "./scripts/install-vmhost-additions.ps1" },
+    { "type": "powershell", "inline": [ "Install-WindowsFeature -Name Net-Framework-Core -Source D:\\sources\\sxs" ], "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "windows-restart", "except": [ "hyperv-iso" ] },
+
+    { "type": "powershell", "script": "./scripts/install-chocolatey.ps1" },
+    { "type": "powershell", "inline": [ "if (! (Test-Path C:/ProgramData/chocolatey/bin)) { Write-Error 'Chocolatey is not installed, please re-run packer' ; exit 1 }" ] },
+    { "type": "file",       "source": "./scripts/Set-AccountPicture.ps1", "destination": "C:/ProgramData/chocolatey/bin/Set-AccountPicture.ps1" },
+    { "type": "file",       "source": "./scripts/mount-iso.ps1",          "destination": "C:/ProgramData/chocolatey/bin/Mount-ISO.ps1" },
+    { "type": "file",       "source": "./scripts/unmount-iso.ps1",        "destination": "C:/ProgramData/chocolatey/bin/Unmount-ISO.ps1" },
+    { "type": "powershell", "inline": [ "chocolatey install -y sysinternals" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y md5" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y git --params '/GitOnlyOnPath'" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y --allow-empty-checksums vim" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y ruby" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y bginfo" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y --allow-empty-checksums classic-shell" ] },
+    { "type": "powershell", "inline": [ "chocolatey install -y --allow-empty-checksums puppet" ] },
+    { "type": "windows-shell", "script": "./scripts/install-puppet-modules.cmd" },
+
+    { "type": "powershell", "script": "./scripts/enable-update.ps1", "elevated_user": "vagrant", "elevated_password": "vagrant" },
+    { "type": "powershell", "script": "./scripts/Backup-Logs.ps1" },
+    { "type": "powershell", "inline": [ "Remove-Item $env:HOME/*.info -Force" ] }
+  ],
+  "post-processors":
+  [
+    {
+      "type": "vagrant",
+      "keep_input_artifact": false,
+      "compression_level":   0,
+      "vagrantfile_template": "./templates/{{user `template`}}/vagrantfile.template",
+      "output": "./boxes/{{user `template`}}_{{user `version`}}_{{.Provider}}.box"
+    }
+  ]
+}
