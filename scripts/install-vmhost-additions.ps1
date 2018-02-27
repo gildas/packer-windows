@@ -102,13 +102,29 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
   }
 
   $drive=$volume.DriveLetter
-  # cd ${drive}:\cert ; VBoxCertUtil add-trusted-publisher oracle-vbox.cer --root oracle-vbox.cer
-  certutil -addstore -f "TrustedPublisher" ${drive}:\cert\oracle-vbox.cer
-  if (! $?)
-  {
-    Write-Error "ERROR $LastExitCode while adding Oracle certificate to the trusted publishers"
-    Start-Sleep 10
-    exit 2
+  if (Test-Path ${drive}:\cert\oracle-vbox.cer) {
+    Write-Host "Adding Oracle as a trusted publisher"
+    certutil -addstore -f "TrustedPublisher" ${drive}:\cert\oracle-vbox.cer
+    if (! $?)
+    {
+      Write-Error "ERROR $LastExitCode while adding Oracle certificate to the trusted publishers"
+      Start-Sleep 10
+      exit 2
+    }
+  }
+  if (Test-Path ${drive}:\cert\VBoxCertUtil.exe) {
+    Write-Host "Adding Oracle as a trusted publisher"
+    pushd ${drive}:\cert
+    .\VBoxCertUtil.exe add-trusted-publisher .\vbox-sha1.cer      --root vbox-sha1.cer
+    .\VBoxCertUtil.exe add-trusted-publisher .\vbox-sha256.cer    --root vbox-sha256.cer
+    .\VBoxCertUtil.exe add-trusted-publisher .\vbox-sha256-r3.cer --root vbox-sha256-r3.cer
+    if (! $?)
+    {
+      Write-Error "ERROR $LastExitCode while adding Oracle certificate to the trusted publishers"
+      Start-Sleep 10
+      exit 2
+    }
+    popd
   }
   Write-Host "Installing Virtualbox Guest Additions"
   $process = Start-Process -Wait -PassThru -FilePath ${drive}:\VBoxWindowsAdditions.exe -ArgumentList '/S /l C:\Windows\Logs\virtualbox-tools.log /v"/qn REBOOT=R"'
@@ -125,8 +141,8 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
   }
   else
   {
-    Write-Error "Installation failed: Error= $($process.ExitCode), Logs=C:\Windows\Logs\vmware-tools.log"
-    Start-Sleep 2; exit $process.ExitCode
+    Write-Error "Installation failed: Error= $($process.ExitCode), Logs=C:\Windows\Logs\virtualbox-tools.log"
+    Start-Sleep 900; exit $process.ExitCode
   }
   Eject-Drive -DriveLetter $drive
   Start-Sleep 2
