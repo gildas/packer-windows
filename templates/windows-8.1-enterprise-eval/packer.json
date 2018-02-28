@@ -110,7 +110,7 @@
       "winrm_timeout":          "20m",
       "shutdown_command":       "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
       "parallels_tools_flavor": "win",
-      "parallels_tools_mode":   "attach",
+      "parallels_tools_mode":   "upload",
       "disk_size":              "{{user `disk_size`}}",
       "floppy_files": [
         "./templates/{{user `template`}}/Autounattend.xml",

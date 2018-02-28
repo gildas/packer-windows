@@ -149,15 +149,26 @@ elseif ($env:PACKER_BUILDER_TYPE -match 'virtualbox')
 }
 elseif ($env:PACKER_BUILDER_TYPE -match 'parallels')
 {
-  $volume = Get-Volume | where FileSystemLabel -eq 'Parallels Tools'
+  if (Test-Path $HOME/prl-tools-win.iso) {
+    Write-Host "Mounting ISO from $HOME"
+    $image = Mount-DiskImage -ImagePath "$HOME/prl-tools-win.iso" -PassThru
+    if (! $image)
+    {
+      Write-Error "Could not load the Parallels Desktop Tools ISO"
+      Start-Sleep 10
+      exit 3
+    }
+    $volume = $image | Get-Volume
+  } else {
+    $volume = Get-Volume | where FileSystemLabel -eq 'Parallels Tools'
 
-  if (! $volume)
-  {
-    Write-Error "Could not find the Parallels Desktop Tools CD-ROM"
-    Start-Sleep 10
-    exit 3
+    if (! $volume)
+    {
+      Write-Error "Could not find the Parallels Desktop Tools CD-ROM"
+      Start-Sleep 10
+      exit 3
+    }
   }
-
   $drive=$volume.DriveLetter
   Write-Host "ISO Mounted on $drive"
   Write-Host "Installing Parallels Guest Additions"
